@@ -18,7 +18,7 @@
 ---
 
 ## 🚀 Estructura del Proyecto
-
+```bash
 GearMind/
 ├─ pom.xml
 ├─ src/
@@ -35,9 +35,7 @@ GearMind/
 │ └─ test/ → Tests (JUnit 5)
 └─ .gitignore
 
-yaml
-Copiar código
-
+```
 ---
 
 ## 🖥️ Requisitos Previos
@@ -68,5 +66,6 @@ mvn clean javafx:run
 📘 Licencia
 Este proyecto forma parte del Trabajo Fin de Grado (TFG) de Mario Rodríguez Gómez.
 Uso académico y educativo permitido.
+```
 
 © 2025 Mario Rodríguez Gómez · Todos los derechos reservados.
