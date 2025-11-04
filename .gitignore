@@ -1,0 +1,35 @@
+
+# ========================================
+# MAVEN & JAVA
+# ========================================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+*.log
+*.class
+
+# ========================================
+# NETBEANS
+# ========================================
+nbactions.xml
+nb-configuration.xml
+nbproject/private/
+build/
+dist/
+nbbuild/
+nblibraries.properties
+
+# ========================================
+# IDEs & SYSTEM FILES
+# ========================================
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# ========================================
+# BACKUPS / TEMP
+# ========================================
+*.bak
+*.tmp
