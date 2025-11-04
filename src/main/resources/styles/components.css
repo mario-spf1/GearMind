@@ -1,0 +1,71 @@
+.button {
+  -fx-background-radius: 10;
+  -fx-padding: 10 14 10 14;
+  -fx-font-weight: 600;
+  -fx-background-color: #20232b;
+  -fx-text-fill: -tfx-text;
+  -fx-border-color: -tfx-border;
+  -fx-border-width: 1;
+}
+.button:hover {
+    -fx-background-color: #262a33;
+}
+
+.button:armed {
+    -fx-background-color: #1d2027;
+}
+
+.tfx-btn-primary {
+  -fx-background-color: -tfx-primary;
+  -fx-text-fill: white;
+  -fx-border-color: transparent;
+}
+
+.tfx-btn-primary:hover {
+    -fx-background-color: -tfx-primary-600;
+}
+
+.tfx-btn-ghost {
+  -fx-background-color: transparent;
+  -fx-text-fill: -tfx-text;
+  -fx-border-color: -tfx-border;
+}
+
+.text-field, .password-field, .combo-box-base {
+  -fx-background-color: #0f1116, #0f1116;
+  -fx-text-fill: -tfx-text;
+  -fx-background-radius: 10;
+  -fx-padding: 10 12 10 12;
+  -fx-border-color: -tfx-border;
+  -fx-border-width: 1;
+  -fx-border-radius: 10;
+}
+
+.text-field:focused, .password-field:focused {
+  -fx-border-color: -tfx-focus;
+}
+
+.tfx-toolbar {
+  -fx-background-color: -tfx-surface;
+  -fx-padding: 10 16 10 16;
+  -fx-border-color: -tfx-border;
+  -fx-border-width: 0 0 1 0;
+}
+.tfx-toolbar-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+}
+
+.tfx-search {
+  -fx-background-color: #0f1116;
+  -fx-padding: 8 12 8 12;
+  -fx-background-radius: 10;
+  -fx-border-color: -tfx-border;
+  -fx-border-width: 1;
+  -fx-border-radius: 10;
+}
+
+.tfx-grid {
+  -fx-hgap: 12;
+  -fx-vgap: 12;
+}

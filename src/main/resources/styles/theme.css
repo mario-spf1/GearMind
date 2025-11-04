@@ -1,0 +1,94 @@
+.root {
+  -fx-font-family: "Segoe UI", "Inter", "Roboto", "Arial";
+  -fx-font-size: 13px;
+  -fx-background-color: -tfx-bg;
+}
+
+* {
+  -tfx-bg: #0e0f12;
+  -tfx-surface: #14161b;
+  -tfx-card: #1a1d24;
+  -tfx-border: #24262c;
+
+  -tfx-text: #e9ecf1;
+  -tfx-muted: #a6adbb;
+
+  -tfx-primary: #4f7cff;
+  -tfx-primary-600: #3f66d1;
+  -tfx-accent: #38d6ae;
+
+  -tfx-success: #29c070;
+  -tfx-danger: #e05454;
+  -tfx-warning: #f0c24b;
+  -tfx-focus: #99b3ff;
+
+  -tfx-radius: 12;
+  -tfx-gap: 12;
+  -tfx-pad: 16;
+}
+
+.label {
+    -fx-text-fill: -tfx-text;
+}
+
+.tfx-title-xxl {
+    -fx-font-size: 28px;
+    -fx-font-weight: 800;
+}
+
+.tfx-title-xl {
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+}
+
+.tfx-subtitle {
+    -fx-text-fill: -tfx-muted;
+}
+
+.tfx-muted {
+    -fx-text-fill: -tfx-muted;
+}
+
+.tfx-page {
+    -fx-background-color: -tfx-bg;
+    -fx-padding: 24;
+}
+
+.tfx-row {
+    -fx-spacing: 12;
+}
+
+.tfx-col  {
+    -fx-spacing: 12;
+}
+
+.tfx-surface {
+  -fx-background-color: -tfx-surface;
+  -fx-background-radius: -tfx-radius;
+  -fx-padding: 16;
+  -fx-border-color: -tfx-border;
+  -fx-border-width: 1;
+  -fx-border-radius: -tfx-radius;
+}
+
+.tfx-card {
+  -fx-background-color: -tfx-card;
+  -fx-background-radius: -tfx-radius;
+  -fx-padding: 16;
+  -fx-border-color: -tfx-border;
+  -fx-border-width: 1;
+  -fx-border-radius: -tfx-radius;
+}
+
+.tfx-ok {
+    -fx-text-fill: -tfx-success;
+}
+
+.tfx-error {
+    -fx-text-fill: -tfx-danger;
+}
+
+.tfx-warn {
+    -fx-text-fill: -tfx-warning;
+}
+

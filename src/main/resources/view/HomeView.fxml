@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.gearmind.presentation.controller.HomeController" >
+
+  <top>
+    <HBox spacing="12" styleClass="tfx-toolbar">
+      <children>
+        <Label text="GearMind" styleClass="tfx-toolbar-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <TextField promptText="Buscar…" styleClass="tfx-search" />
+        <Button text="Abrir" onAction="#onOpen"/>
+        <Button text="Nuevo" styleClass="tfx-btn-primary" onAction="#onNewProject"/>
+      </children>
+    </HBox>
+  </top>
+
+  <!-- Center: hero / tarjetas -->
+  <center>
+    <VBox spacing="18" BorderPane.alignment="CENTER" styleClass="tfx-page">
+      <children>
+
+        <VBox spacing="6">
+          <Label text="Bienvenido a GearMind" styleClass="tfx-title-xxl"/>
+          <Label fx:id="lblSubtitle" styleClass="tfx-subtitle"/>
+        </VBox>
+
+        <HBox spacing="12">
+          <Button text="Iniciar sesión" styleClass="tfx-btn-primary"/>
+          <Button text="Explorar" styleClass="tfx-btn-ghost"/>
+        </HBox>
+
+        <GridPane styleClass="tfx-grid">
+          <columnConstraints>
+            <ColumnConstraints percentWidth="33"/>
+            <ColumnConstraints percentWidth="33"/>
+            <ColumnConstraints percentWidth="33"/>
+          </columnConstraints>
+
+          <children>
+            <VBox GridPane.columnIndex="0" spacing="8" styleClass="tfx-card">
+              <Label text="Clientes" styleClass="tfx-title-xl"/>
+              <Label text="Gestión de clientes y vehículos" styleClass="tfx-muted"/>
+              <Button text="Ir a Clientes" />
+            </VBox>
+
+            <VBox GridPane.columnIndex="1" spacing="8" styleClass="tfx-card">
+              <Label text="Citas" styleClass="tfx-title-xl"/>
+              <Label text="Agenda y confirmaciones" styleClass="tfx-muted"/>
+              <Button text="Ir a Citas" />
+            </VBox>
+
+            <VBox GridPane.columnIndex="2" spacing="8" styleClass="tfx-card">
+              <Label text="Órdenes" styleClass="tfx-title-xl"/>
+              <Label text="Partes y reparaciones" styleClass="tfx-muted"/>
+              <Button text="Ir a Órdenes" />
+            </VBox>
+          </children>
+        </GridPane>
+
+      </children>
+    </VBox>
+  </center>
+</BorderPane>
