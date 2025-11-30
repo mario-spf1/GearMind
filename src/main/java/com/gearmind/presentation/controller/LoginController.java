@@ -1,6 +1,7 @@
 package com.gearmind.presentation.controller;
 
 import com.gearmind.application.auth.*;
+import com.gearmind.application.common.SessionManager;
 import com.gearmind.domain.user.User;
 import com.gearmind.infrastructure.auth.BCryptPasswordHasher;
 import com.gearmind.infrastructure.auth.MySqlUserRepository;
@@ -48,7 +49,10 @@ public class LoginController {
             LoginResponse response = loginUseCase.login(request);
 
             User loggedUser = response.user();
-            goToHome(loggedUser);
+
+            SessionManager.getInstance().startSession(loggedUser);
+
+            goToHome();
 
         } catch (InvalidCredentialsException e) {
             showError("Usuario o contraseña incorrectos.");
@@ -59,12 +63,9 @@ public class LoginController {
         }
     }
 
-    private void goToHome(User user) throws IOException {
+    private void goToHome() throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/HomeView.fxml"));
         Parent root = loader.load();
-
-        HomeController homeController = loader.getController();
-        homeController.setCurrentUser(user);
 
         Stage stage = (Stage) loginButton.getScene().getWindow();
 

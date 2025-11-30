@@ -1,5 +1,6 @@
 package com.gearmind.presentation.controller;
 
+import com.gearmind.application.common.SessionManager;
 import com.gearmind.domain.user.User;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -11,13 +12,13 @@ public class HomeController {
 
     @FXML
     public void initialize() {
-        // Texto por defecto si aún no hay usuario
-        lblSubtitle.setText("Gestión de talleres · JavaFX + Clean Architecture");
-    }
+        User user = SessionManager.getInstance().getCurrentUser();
 
-    public void setCurrentUser(User user) {
         if (user != null) {
-            lblSubtitle.setText("Bienvenido, " + user.getNombre());
+            long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+            lblSubtitle.setText("Bienvenido, " + user.getNombre() + " · Empresa " + empresaId);
+        } else {
+            lblSubtitle.setText("Gestión de talleres · GearMind");
         }
     }
 
