@@ -13,6 +13,9 @@
         <TextField promptText="Buscar…" styleClass="tfx-search" />
         <Button text="Abrir" onAction="#onOpen"/>
         <Button text="Nuevo" styleClass="tfx-btn-primary" onAction="#onNewProject"/>
+        <Button text="Cerrar sesión"
+                onAction="#onLogout"
+                styleClass="tfx-btn-ghost"/>
       </children>
     </HBox>
   </top>
@@ -28,7 +31,7 @@
         </VBox>
 
         <HBox spacing="12">
-          <Button text="Iniciar sesión" styleClass="tfx-btn-primary"/>
+          <Button text="Ver módulos" styleClass="tfx-btn-primary"/>
           <Button text="Explorar" styleClass="tfx-btn-ghost"/>
         </HBox>
 
