@@ -2,8 +2,8 @@ package com.gearmind.presentation.controller;
 
 import com.gearmind.application.auth.*;
 import com.gearmind.domain.user.User;
+import com.gearmind.infrastructure.auth.BCryptPasswordHasher;
 import com.gearmind.infrastructure.auth.MySqlUserRepository;
-import com.gearmind.infrastructure.auth.PlainTextPasswordHasher;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -29,7 +29,7 @@ public class LoginController {
     public LoginController() {
         this.loginUseCase = new LoginUseCase(
                 new MySqlUserRepository(),
-                new PlainTextPasswordHasher()
+                new BCryptPasswordHasher()
         );
     }
 
