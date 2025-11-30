@@ -1,25 +1,36 @@
 package com.gearmind.presentation.controller;
 
+import com.gearmind.domain.user.User;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 
 public class HomeController {
-    @FXML private Label lblSubtitle;
+
+    @FXML
+    private Label lblSubtitle;
+
+    private User currentUser;
 
     @FXML
     public void initialize() {
+        // Texto por defecto si aún no hay usuario
         lblSubtitle.setText("Gestión de talleres · JavaFX + Clean Architecture");
+    }
+
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+        if (user != null) {
+            lblSubtitle.setText("Bienvenido, " + user.getNombre());
+        }
     }
 
     @FXML
     public void onNewProject() {
-        // Aquí iría la navegación a “Nuevo proyecto / flujo inicial”
         System.out.println("Nuevo proyecto (placeholder)");
     }
 
     @FXML
     public void onOpen() {
-        // Aquí iría la navegación al login o al dashboard
         System.out.println("Abrir (placeholder)");
     }
 }

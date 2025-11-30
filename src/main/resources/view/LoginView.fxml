@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.gearmind.presentation.controller.LoginController">
+
+    <children>
+
+        <!-- Fondo (opcional, puedes quitarlo si aún no tienes la imagen) -->
+        <ImageView preserveRatio="false" opacity="0.55">
+            <image>
+                <Image url="@../img/login-background.jpg"/>
+            </image>
+        </ImageView>
+
+        <!-- Tarjeta centrada -->
+        <VBox alignment="CENTER">
+            <children>
+                <VBox maxWidth="420" spacing="18" styleClass="tfx-card">
+
+                    <!-- Logo + nombre -->
+                    <VBox alignment="CENTER" spacing="6">
+                        <ImageView fitWidth="120" fitHeight="120" preserveRatio="true">
+                            <image>
+                                <Image url="@../img/logo-gearmind.png"/>
+                            </image>
+                        </ImageView>
+                        <Label text="GearMind Taller" styleClass="tfx-title-xl"/>
+                        <Label text="Gestión de taller" styleClass="tfx-subtitle"/>
+                    </VBox>
+
+                    <!-- Campos -->
+                    <VBox spacing="10">
+                        <Label text="USUARIO"/>
+                        <TextField fx:id="usernameField" promptText="Usuario"/>
+
+                        <Label text="CONTRASEÑA"/>
+                        <PasswordField fx:id="passwordField" promptText="Contraseña"/>
+                    </VBox>
+
+                    <!-- Enlace + botón -->
+                    <HBox alignment="CENTER_RIGHT" spacing="12">
+                        <Hyperlink fx:id="forgotPasswordLink"
+                                   text="He olvidado la contraseña"/>
+                        <Button fx:id="loginButton"
+                                text="Entrar"
+                                onAction="#onLogin"
+                                styleClass="tfx-btn-primary"/>
+                    </HBox>
+
+                </VBox>
+            </children>
+        </VBox>
+    </children>
+</StackPane>
