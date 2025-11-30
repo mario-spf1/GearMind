@@ -43,23 +43,81 @@
           </columnConstraints>
 
           <children>
-            <VBox GridPane.columnIndex="0" spacing="8" styleClass="tfx-card">
+            <VBox GridPane.columnIndex="0" GridPane.rowIndex="0"
+                  spacing="8" styleClass="tfx-card">
               <Label text="Clientes" styleClass="tfx-title-xl"/>
               <Label text="Gestión de clientes y vehículos" styleClass="tfx-muted"/>
-              <Button text="Ir a Clientes" />
+              <Button text="Ir a Clientes" onAction="#onGoToClientes"/>
             </VBox>
 
-            <VBox GridPane.columnIndex="1" spacing="8" styleClass="tfx-card">
+            <VBox GridPane.columnIndex="1" GridPane.rowIndex="0"
+                  spacing="8" styleClass="tfx-card">
               <Label text="Citas" styleClass="tfx-title-xl"/>
               <Label text="Agenda y confirmaciones" styleClass="tfx-muted"/>
-              <Button text="Ir a Citas" />
+              <Button text="Ir a Citas" onAction="#onGoToCitas"/>
             </VBox>
 
-            <VBox GridPane.columnIndex="2" spacing="8" styleClass="tfx-card">
-              <Label text="Órdenes" styleClass="tfx-title-xl"/>
-              <Label text="Partes y reparaciones" styleClass="tfx-muted"/>
-              <Button text="Ir a Órdenes" />
+            <VBox GridPane.columnIndex="2" GridPane.rowIndex="0"
+                  spacing="8" styleClass="tfx-card">
+              <Label text="Reparaciones" styleClass="tfx-title-xl"/>
+              <Label text="Órdenes de trabajo y reparaciones" styleClass="tfx-muted"/>
+              <Button text="Ir a Reparaciones" onAction="#onGoToReparaciones"/>
             </VBox>
+
+            <VBox GridPane.columnIndex="0" GridPane.rowIndex="1"
+                  spacing="8" styleClass="tfx-card">
+              <Label text="Presupuestos" styleClass="tfx-title-xl"/>
+              <Label text="Propuestas económicas y aceptación" styleClass="tfx-muted"/>
+              <Button text="Ir a Presupuestos" onAction="#onGoToPresupuestos"/>
+            </VBox>
+
+            <VBox GridPane.columnIndex="1" GridPane.rowIndex="1"
+                  spacing="8" styleClass="tfx-card">
+              <Label text="Facturación" styleClass="tfx-title-xl"/>
+              <Label text="Facturas, cobros y pendientes" styleClass="tfx-muted"/>
+              <Button text="Ir a Facturación" onAction="#onGoToFacturacion"/>
+            </VBox>
+
+            <VBox GridPane.columnIndex="2" GridPane.rowIndex="1"
+                  spacing="8" styleClass="tfx-card">
+              <Label text="Comunicaciones" styleClass="tfx-title-xl"/>
+              <Label text="Avisos a clientes y notificaciones" styleClass="tfx-muted"/>
+              <Button text="Ir a Comunicaciones" onAction="#onGoToComunicaciones"/>
+            </VBox>
+
+            <VBox fx:id="cardUsuarios"
+                  GridPane.columnIndex="0" GridPane.rowIndex="2"
+                  spacing="8" styleClass="tfx-card">
+              <Label text="Usuarios &amp; Roles" styleClass="tfx-title-xl"/>
+              <Label text="Gestión de empleados y permisos" styleClass="tfx-muted"/>
+              <Button text="Ir a Usuarios" onAction="#onGoToUsuarios"/>
+            </VBox>
+
+            <VBox fx:id="cardInventario"
+                  GridPane.columnIndex="1" GridPane.rowIndex="2"
+                  spacing="8" styleClass="tfx-card">
+              <Label text="Inventario" styleClass="tfx-title-xl"/>
+              <Label text="Productos, stock y proveedores" styleClass="tfx-muted"/>
+              <Button text="Ir a Inventario" onAction="#onGoToInventario"/>
+            </VBox>
+
+            <VBox fx:id="cardConfiguracion"
+                  GridPane.columnIndex="2" GridPane.rowIndex="2"
+                  spacing="8" styleClass="tfx-card">
+              <Label text="Configuración" styleClass="tfx-title-xl"/>
+              <Label text="Datos del taller e integraciones" styleClass="tfx-muted"/>
+              <Button text="Ir a Configuración" onAction="#onGoToConfiguracion"/>
+            </VBox>
+
+            <VBox fx:id="cardInformes"
+                  GridPane.columnIndex="0" GridPane.rowIndex="3"
+                  GridPane.columnSpan="3"
+                  spacing="8" styleClass="tfx-card">
+              <Label text="Informes &amp; KPIs" styleClass="tfx-title-xl"/>
+              <Label text="Indicadores clave del taller" styleClass="tfx-muted"/>
+              <Button text="Ir a Informes" onAction="#onGoToInformes"/>
+            </VBox>
+
           </children>
         </GridPane>
 

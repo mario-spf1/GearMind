@@ -1,6 +1,10 @@
 package com.gearmind.presentation.controller;
 
-import com.gearmind.application.auth.*;
+import com.gearmind.application.auth.InactiveUserException;
+import com.gearmind.application.auth.InvalidCredentialsException;
+import com.gearmind.application.auth.LoginRequest;
+import com.gearmind.application.auth.LoginResponse;
+import com.gearmind.application.auth.LoginUseCase;
 import com.gearmind.application.common.SessionManager;
 import com.gearmind.domain.user.User;
 import com.gearmind.infrastructure.auth.BCryptPasswordHasher;
@@ -13,6 +17,7 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.URL;
 
 public class LoginController {
 
@@ -25,6 +30,9 @@ public class LoginController {
     @FXML
     private Button loginButton;
 
+    @FXML
+    private Hyperlink forgotPasswordLink;
+
     private final LoginUseCase loginUseCase;
 
     public LoginController() {
@@ -35,9 +43,23 @@ public class LoginController {
     }
 
     @FXML
+    private void initialize() {
+        if (loginButton != null) {
+            loginButton.setDefaultButton(true);
+        }
+        if (passwordField != null) {
+            passwordField.setOnAction(e -> onLogin());
+        }
+    }
+
+    @FXML
     private void onLogin() {
-        String emailOrUser = usernameField.getText().trim();
-        String password = passwordField.getText().trim();
+        String emailOrUser = usernameField.getText() != null
+                ? usernameField.getText().trim()
+                : "";
+        String password = passwordField.getText() != null
+                ? passwordField.getText().trim()
+                : "";
 
         if (emailOrUser.isEmpty() || password.isEmpty()) {
             showError("Debes introducir usuario y contraseña.");
@@ -59,22 +81,37 @@ public class LoginController {
         } catch (InactiveUserException e) {
             showError("El usuario está inactivo.");
         } catch (IOException e) {
-            showError("Se ha producido un error al iniciar sesión.");
+            e.printStackTrace();
+            showError("No se ha podido cargar la pantalla principal.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("Se ha producido un error inesperado al iniciar sesión.");
         }
     }
 
     private void goToHome() throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/HomeView.fxml"));
+        URL fxml = getClass().getResource("/view/HomeView.fxml");
+        if (fxml == null) {
+            throw new IOException("No se encuentra el recurso /view/HomeView.fxml en el classpath");
+        }
+
+        FXMLLoader loader = new FXMLLoader(fxml);
         Parent root = loader.load();
 
         Stage stage = (Stage) loginButton.getScene().getWindow();
 
-        Scene scene = new Scene(root,
+        Scene scene = new Scene(
+                root,
                 stage.getScene().getWidth(),
-                stage.getScene().getHeight());
+                stage.getScene().getHeight()
+        );
 
-        scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
-        scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+        scene.getStylesheets().add(
+                getClass().getResource("/styles/theme.css").toExternalForm()
+        );
+        scene.getStylesheets().add(
+                getClass().getResource("/styles/components.css").toExternalForm()
+        );
 
         stage.setTitle("GearMind — Inicio");
         stage.setScene(scene);
