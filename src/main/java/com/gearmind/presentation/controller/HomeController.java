@@ -9,8 +9,6 @@ public class HomeController {
     @FXML
     private Label lblSubtitle;
 
-    private User currentUser;
-
     @FXML
     public void initialize() {
         // Texto por defecto si aún no hay usuario
@@ -18,7 +16,6 @@ public class HomeController {
     }
 
     public void setCurrentUser(User user) {
-        this.currentUser = user;
         if (user != null) {
             lblSubtitle.setText("Bienvenido, " + user.getNombre());
         }
