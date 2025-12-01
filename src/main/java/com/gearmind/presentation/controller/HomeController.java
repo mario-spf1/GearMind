@@ -75,10 +75,35 @@ public class HomeController {
         System.out.println("Nuevo (placeholder)");
     }
 
-    // Navegación a módulos (placeholders)
     @FXML
     private void onGoToClientes() {
-        System.out.println("Ir a Clientes (módulo)");
+        try {
+            Stage stage = (Stage) lblSubtitle.getScene().getWindow();
+
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/view/ClientesView.fxml")
+            );
+            Parent root = loader.load();
+
+            Scene scene = new Scene(
+                    root,
+                    stage.getScene().getWidth(),
+                    stage.getScene().getHeight()
+            );
+
+            scene.getStylesheets().add(
+                    getClass().getResource("/styles/theme.css").toExternalForm()
+            );
+            scene.getStylesheets().add(
+                    getClass().getResource("/styles/components.css").toExternalForm()
+            );
+
+            stage.setTitle("GearMind — Clientes");
+            stage.setScene(scene);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
