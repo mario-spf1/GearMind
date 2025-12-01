@@ -21,8 +21,9 @@ public class BCryptPasswordHasher implements PasswordHasher {
 
     /**
      * Método de ayuda para generar hashes cuando crees usuarios.
+     *
      * @param rawPassword
-     * @return 
+     * @return
      */
     public String hash(String rawPassword) {
         if (rawPassword == null || rawPassword.isBlank()) {
@@ -31,4 +32,3 @@ public class BCryptPasswordHasher implements PasswordHasher {
         return BCrypt.hashpw(rawPassword, BCrypt.gensalt(COST));
     }
 }
-

@@ -15,27 +15,17 @@ public class SaveCustomerUseCase {
         validate(request);
 
         if (request.id() == null) {
-            return repository.create(
-                    request.empresaId(),
-                    request.nombre(),
-                    request.email(),
-                    request.telefono()
-            );
+            return repository.create(request.empresaId(), request.nombre(), request.email(), request.telefono());
         }
 
-        return repository.update(
-                request.id(),
-                request.empresaId(),
-                request.nombre(),
-                request.email(),
-                request.telefono()
-        );
+        return repository.update(request.id(), request.empresaId(), request.nombre(), request.email(), request.telefono());
     }
 
     private void validate(SaveCustomerRequest r) {
         if (r.empresaId() <= 0) {
             throw new IllegalArgumentException("empresaId debe ser > 0");
         }
+
         if (r.nombre() == null || r.nombre().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre es obligatorio");
         }

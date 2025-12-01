@@ -80,23 +80,13 @@ public class HomeController {
         try {
             Stage stage = (Stage) lblSubtitle.getScene().getWindow();
 
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/ClientesView.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ClientesView.fxml"));
             Parent root = loader.load();
 
-            Scene scene = new Scene(
-                    root,
-                    stage.getScene().getWidth(),
-                    stage.getScene().getHeight()
-            );
+            Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
 
-            scene.getStylesheets().add(
-                    getClass().getResource("/styles/theme.css").toExternalForm()
-            );
-            scene.getStylesheets().add(
-                    getClass().getResource("/styles/components.css").toExternalForm()
-            );
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
 
             stage.setTitle("GearMind — Clientes");
             stage.setScene(scene);
@@ -158,23 +148,13 @@ public class HomeController {
 
             Stage stage = (Stage) lblSubtitle.getScene().getWindow();
 
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/LoginView.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/LoginView.fxml"));
             Parent root = loader.load();
 
-            Scene scene = new Scene(
-                    root,
-                    stage.getScene().getWidth(),
-                    stage.getScene().getHeight()
-            );
+            Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
 
-            scene.getStylesheets().add(
-                    getClass().getResource("/styles/theme.css").toExternalForm()
-            );
-            scene.getStylesheets().add(
-                    getClass().getResource("/styles/components.css").toExternalForm()
-            );
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
 
             stage.setTitle("GearMind — Acceso");
             stage.setScene(scene);

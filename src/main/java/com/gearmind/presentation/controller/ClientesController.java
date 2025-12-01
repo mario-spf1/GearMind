@@ -102,9 +102,7 @@ public class ClientesController {
             String nombre = safe(c.getNombre());
             String email = safe(c.getEmail());
             String telefono = safe(c.getTelefono());
-            return nombre.contains(filtro)
-                    || email.contains(filtro)
-                    || telefono.contains(filtro);
+            return nombre.contains(filtro) || email.contains(filtro) || telefono.contains(filtro);
         };
     }
 
@@ -132,9 +130,7 @@ public class ClientesController {
 
     private void openClienteForm(Customer customer) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/ClienteFormView.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ClienteFormView.fxml"));
             Parent root = loader.load();
 
             ClienteFormController controller = loader.getController();
@@ -166,23 +162,13 @@ public class ClientesController {
         try {
             Stage stage = (Stage) tblClientes.getScene().getWindow();
 
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/HomeView.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/HomeView.fxml"));
             Parent root = loader.load();
 
-            Scene scene = new Scene(
-                    root,
-                    stage.getScene().getWidth(),
-                    stage.getScene().getHeight()
-            );
+            Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
 
-            scene.getStylesheets().add(
-                    getClass().getResource("/styles/theme.css").toExternalForm()
-            );
-            scene.getStylesheets().add(
-                    getClass().getResource("/styles/components.css").toExternalForm()
-            );
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
 
             stage.setTitle("GearMind — Inicio");
             stage.setScene(scene);

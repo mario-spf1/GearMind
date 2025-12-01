@@ -7,6 +7,8 @@ public interface CustomerRepository {
 
     /**
      * Devuelve todos los clientes de una empresa.
+     * @param empresaId
+     * @return 
      */
     List<Customer> findByEmpresaId(long empresaId);
 

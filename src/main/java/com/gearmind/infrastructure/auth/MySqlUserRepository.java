@@ -33,8 +33,7 @@ public class MySqlUserRepository implements UserRepository {
             WHERE email = ?
         """;
 
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, email);
 
@@ -53,15 +52,7 @@ public class MySqlUserRepository implements UserRepository {
 
                 UserRole rol = UserRole.valueOf(rolStr);
 
-                User user = new User(
-                        id,
-                        empresaId,
-                        nombre,
-                        emailDb,
-                        passwordHash,
-                        rol,
-                        activo
-                );
+                User user = new User(id, empresaId, nombre, emailDb, passwordHash, rol, activo);
 
                 return Optional.of(user);
             }
@@ -71,4 +62,3 @@ public class MySqlUserRepository implements UserRepository {
         }
     }
 }
-

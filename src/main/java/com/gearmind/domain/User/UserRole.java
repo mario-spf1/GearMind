@@ -4,4 +4,3 @@ public enum UserRole {
     ADMIN,
     EMPLEADO
 }
-

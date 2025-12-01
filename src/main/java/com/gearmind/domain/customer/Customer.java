@@ -8,11 +8,7 @@ public class Customer {
     private final String email;
     private final String telefono;
 
-    public Customer(long id,
-                    long empresaId,
-                    String nombre,
-                    String email,
-                    String telefono) {
+    public Customer(long id, long empresaId, String nombre, String email, String telefono) {
         this.id = id;
         this.empresaId = empresaId;
         this.nombre = nombre;
@@ -40,4 +36,3 @@ public class Customer {
         return telefono;
     }
 }
-

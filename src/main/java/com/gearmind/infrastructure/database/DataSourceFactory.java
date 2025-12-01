@@ -10,13 +10,12 @@ public final class DataSourceFactory {
 
     private static HikariDataSource dataSource;
 
-    private DataSourceFactory() { }
+    private DataSourceFactory() {
+    }
 
     public static synchronized DataSource getDataSource() {
         if (dataSource == null) {
-            Dotenv dotenv = Dotenv.configure()
-                    .ignoreIfMissing()
-                    .load();
+            Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
             String url = dotenv.get("DB_URL");
 
@@ -25,8 +24,7 @@ public final class DataSourceFactory {
                 String port = dotenv.get("DB_PORT", "3306");
                 String dbName = dotenv.get("DB_NAME", "gearmind");
 
-                url = "jdbc:mysql://" + host + ":" + port + "/" + dbName
-                        + "?serverTimezone=UTC&characterEncoding=UTF-8";
+                url = "jdbc:mysql://" + host + ":" + port + "/" + dbName + "?serverTimezone=UTC&characterEncoding=UTF-8";
             }
 
             String user = dotenv.get("DB_USER", "root");

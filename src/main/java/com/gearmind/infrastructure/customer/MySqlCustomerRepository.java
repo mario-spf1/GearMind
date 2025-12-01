@@ -33,8 +33,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
                 ORDER BY nombre ASC
                 """;
 
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setLong(1, empresaId);
 
@@ -63,8 +62,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
                 WHERE id = ?
                 """;
 
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setLong(1, id);
 
@@ -88,8 +86,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
                 VALUES (?, ?, ?, ?)
                 """;
 
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setLong(1, empresaId);
             ps.setString(2, nombre);
@@ -120,8 +117,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
                 WHERE id = ? AND empresa_id = ?
                 """;
 
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, nombre);
             ps.setString(2, email);
@@ -139,12 +135,6 @@ public class MySqlCustomerRepository implements CustomerRepository {
     }
 
     private Customer mapRow(ResultSet rs) throws SQLException {
-        return new Customer(
-                rs.getLong("id"),
-                rs.getLong("empresa_id"),
-                rs.getString("nombre"),
-                rs.getString("email"),
-                rs.getString("telefono")
-        );
+        return new Customer(rs.getLong("id"), rs.getLong("empresa_id"), rs.getString("nombre"), rs.getString("email"), rs.getString("telefono"));
     }
 }

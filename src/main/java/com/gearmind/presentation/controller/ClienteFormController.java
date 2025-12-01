@@ -27,13 +27,11 @@ public class ClienteFormController {
 
     private final SaveCustomerUseCase saveCustomerUseCase;
 
-    private Long editingId = null; // null -> nuevo, no null -> editar
+    private Long editingId = null;
     private boolean saved = false;
 
     public ClienteFormController() {
-        this.saveCustomerUseCase = new SaveCustomerUseCase(
-                new MySqlCustomerRepository()
-        );
+        this.saveCustomerUseCase = new SaveCustomerUseCase(new MySqlCustomerRepository());
     }
 
     public void initForNew() {
@@ -59,13 +57,7 @@ public class ClienteFormController {
         try {
             long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
 
-            SaveCustomerRequest request = new SaveCustomerRequest(
-                    editingId,
-                    empresaId,
-                    txtNombre.getText(),
-                    txtEmail.getText(),
-                    txtTelefono.getText()
-            );
+            SaveCustomerRequest request = new SaveCustomerRequest(editingId, empresaId, txtNombre.getText(), txtEmail.getText(), txtTelefono.getText());
 
             Customer result = saveCustomerUseCase.save(request);
             System.out.println("Cliente guardado: " + result.getId() + " - " + result.getNombre());

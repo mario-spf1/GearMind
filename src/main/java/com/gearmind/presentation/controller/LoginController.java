@@ -36,10 +36,7 @@ public class LoginController {
     private final LoginUseCase loginUseCase;
 
     public LoginController() {
-        this.loginUseCase = new LoginUseCase(
-                new MySqlUserRepository(),
-                new BCryptPasswordHasher()
-        );
+        this.loginUseCase = new LoginUseCase(new MySqlUserRepository(), new BCryptPasswordHasher());
     }
 
     @FXML
@@ -54,12 +51,8 @@ public class LoginController {
 
     @FXML
     private void onLogin() {
-        String emailOrUser = usernameField.getText() != null
-                ? usernameField.getText().trim()
-                : "";
-        String password = passwordField.getText() != null
-                ? passwordField.getText().trim()
-                : "";
+        String emailOrUser = usernameField.getText() != null ? usernameField.getText().trim() : "";
+        String password = passwordField.getText() != null ? passwordField.getText().trim() : "";
 
         if (emailOrUser.isEmpty() || password.isEmpty()) {
             showError("Debes introducir usuario y contraseña.");
@@ -100,18 +93,10 @@ public class LoginController {
 
         Stage stage = (Stage) loginButton.getScene().getWindow();
 
-        Scene scene = new Scene(
-                root,
-                stage.getScene().getWidth(),
-                stage.getScene().getHeight()
-        );
+        Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
 
-        scene.getStylesheets().add(
-                getClass().getResource("/styles/theme.css").toExternalForm()
-        );
-        scene.getStylesheets().add(
-                getClass().getResource("/styles/components.css").toExternalForm()
-        );
+        scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
 
         stage.setTitle("GearMind — Inicio");
         stage.setScene(scene);

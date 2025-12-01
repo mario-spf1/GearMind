@@ -10,13 +10,7 @@ public class User {
     private final UserRole rol;
     private final boolean activo;
 
-    public User(long id,
-                long empresaId,
-                String nombre,
-                String email,
-                String passwordHash,
-                UserRole rol,
-                boolean activo) {
+    public User(long id, long empresaId, String nombre, String email, String passwordHash, UserRole rol, boolean activo) {
         this.id = id;
         this.empresaId = empresaId;
         this.nombre = nombre;
@@ -26,17 +20,31 @@ public class User {
         this.activo = activo;
     }
 
-    public long getId() { return id; }
+    public long getId() {
+        return id;
+    }
 
-    public long getEmpresaId() { return empresaId; }
+    public long getEmpresaId() {
+        return empresaId;
+    }
 
-    public String getNombre() { return nombre; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public String getEmail() { return email; }
+    public String getEmail() {
+        return email;
+    }
 
-    public String getPasswordHash() { return passwordHash; }
+    public String getPasswordHash() {
+        return passwordHash;
+    }
 
-    public UserRole getRol() { return rol; }
+    public UserRole getRol() {
+        return rol;
+    }
 
-    public boolean isActivo() { return activo; }
+    public boolean isActivo() {
+        return activo;
+    }
 }

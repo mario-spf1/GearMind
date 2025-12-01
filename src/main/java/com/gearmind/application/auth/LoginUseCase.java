@@ -18,8 +18,7 @@ public class LoginUseCase {
         String email = request.email().trim().toLowerCase();
         String password = request.password();
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(InvalidCredentialsException::new);
+        User user = userRepository.findByEmail(email).orElseThrow(InvalidCredentialsException::new);
 
         if (!user.isActivo()) {
             throw new InactiveUserException();

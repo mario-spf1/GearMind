@@ -4,7 +4,6 @@ import com.gearmind.domain.user.User;
 
 /**
  * Gestiona la sesión actual de la aplicación.
- * En app de escritorio solo hay una sesión a la vez.
  */
 public final class SessionManager {
 
