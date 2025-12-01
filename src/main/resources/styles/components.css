@@ -69,3 +69,20 @@
   -fx-hgap: 12;
   -fx-vgap: 12;
 }
+
+.table-view {
+    -fx-background-color: #111827;
+    -fx-control-inner-background: #111827;
+    -fx-table-cell-border-color: #1f2933;
+    -fx-table-header-border-color: #1f2933;
+    -fx-text-background-color: #e5e7eb;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #111827;
+}
+
+.table-view .column-header, 
+.table-view .column-header .label {
+    -fx-text-fill: #9ca3af;
+}

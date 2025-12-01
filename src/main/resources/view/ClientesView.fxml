@@ -10,7 +10,17 @@
             <children>
                 <Label text="Clientes" styleClass="tfx-toolbar-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button text="Volver a inicio"
+
+                <TextField fx:id="txtBuscar"
+                           promptText="Buscar cliente..."
+                           prefWidth="220"/>
+
+                <Button text="Nuevo cliente"
+                        fx:id="btnNuevoCliente"
+                        styleClass="tfx-btn-primary"
+                        onAction="#onNuevoCliente"/>
+
+                <Button text="Inicio"
                         onAction="#onVolverHome"
                         styleClass="tfx-btn-ghost"/>
             </children>
@@ -20,15 +30,15 @@
     <center>
         <VBox spacing="12" styleClass="tfx-page">
             <children>
-                <TableView fx:id="tblClientes">
+                <TableView fx:id="tblClientes"
+                           prefHeight="400">
                     <columns>
-                        <TableColumn fx:id="colNombre"  text="Nombre"   prefWidth="200"/>
-                        <TableColumn fx:id="colEmail"   text="Email"    prefWidth="220"/>
-                        <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="140"/>
+                        <TableColumn fx:id="colNombre" text="Nombre"/>
+                        <TableColumn fx:id="colEmail" text="Email"/>
+                        <TableColumn fx:id="colTelefono" text="Teléfono"/>
                     </columns>
                 </TableView>
             </children>
         </VBox>
     </center>
 </BorderPane>
-

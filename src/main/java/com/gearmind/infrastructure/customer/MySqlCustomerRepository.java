@@ -5,12 +5,10 @@ import com.gearmind.domain.customer.CustomerRepository;
 import com.gearmind.infrastructure.database.DataSourceFactory;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class MySqlCustomerRepository implements CustomerRepository {
 
@@ -42,14 +40,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Customer c = new Customer(
-                            rs.getLong("id"),
-                            rs.getLong("empresa_id"),
-                            rs.getString("nombre"),
-                            rs.getString("email"),
-                            rs.getString("telefono")
-                    );
-                    result.add(c);
+                    result.add(mapRow(rs));
                 }
             }
 
@@ -58,5 +49,102 @@ public class MySqlCustomerRepository implements CustomerRepository {
         }
 
         return result;
+    }
+
+    @Override
+    public Optional<Customer> findById(long id) {
+        String sql = """
+                SELECT id,
+                       empresa_id,
+                       nombre,
+                       email,
+                       telefono
+                FROM cliente
+                WHERE id = ?
+                """;
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public Customer create(long empresaId, String nombre, String email, String telefono) {
+        String sql = """
+                INSERT INTO cliente (empresa_id, nombre, email, telefono)
+                VALUES (?, ?, ?, ?)
+                """;
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setLong(1, empresaId);
+            ps.setString(2, nombre);
+            ps.setString(3, email);
+            ps.setString(4, telefono);
+
+            ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    long id = keys.getLong(1);
+                    return new Customer(id, empresaId, nombre, email, telefono);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return new Customer(0L, empresaId, nombre, email, telefono);
+    }
+
+    @Override
+    public Customer update(long id, long empresaId, String nombre, String email, String telefono) {
+        String sql = """
+                UPDATE cliente
+                SET nombre = ?, email = ?, telefono = ?
+                WHERE id = ? AND empresa_id = ?
+                """;
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, nombre);
+            ps.setString(2, email);
+            ps.setString(3, telefono);
+            ps.setLong(4, id);
+            ps.setLong(5, empresaId);
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return new Customer(id, empresaId, nombre, email, telefono);
+    }
+
+    private Customer mapRow(ResultSet rs) throws SQLException {
+        return new Customer(
+                rs.getLong("id"),
+                rs.getLong("empresa_id"),
+                rs.getString("nombre"),
+                rs.getString("email"),
+                rs.getString("telefono")
+        );
     }
 }
