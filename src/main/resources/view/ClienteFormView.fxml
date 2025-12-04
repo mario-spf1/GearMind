@@ -30,6 +30,9 @@
 
                 <Label text="Teléfono:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                 <TextField fx:id="txtTelefono" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                <Label text="Notas:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <TextArea fx:id="txtNotas" GridPane.rowIndex="3" GridPane.columnIndex="1" prefRowCount="4"/>
             </children>
         </GridPane>
 

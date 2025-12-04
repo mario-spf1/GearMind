@@ -1,26 +1,30 @@
 package com.gearmind.presentation.controller;
 
 import com.gearmind.application.common.SessionManager;
+import com.gearmind.application.customer.DeactivateCustomerUseCase;
 import com.gearmind.application.customer.ListCustomersUseCase;
 import com.gearmind.domain.customer.Customer;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Predicate;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ClientesController {
 
@@ -31,10 +35,16 @@ public class ClientesController {
     private TableColumn<Customer, String> colNombre;
 
     @FXML
+    private TableColumn<Customer, String> colTelefono;
+
+    @FXML
     private TableColumn<Customer, String> colEmail;
 
     @FXML
-    private TableColumn<Customer, String> colTelefono;
+    private TableColumn<Customer, String> colNotas;
+
+    @FXML
+    private TableColumn<Customer, Customer> colAcciones;
 
     @FXML
     private TextField txtBuscar;
@@ -42,14 +52,21 @@ public class ClientesController {
     @FXML
     private Button btnNuevoCliente;
 
-    private final ListCustomersUseCase listCustomersUseCase;
+    @FXML
+    private ComboBox<Integer> cmbPageSize;
 
-    private ObservableList<Customer> masterData;
+    @FXML
+    private Label lblResumen;
+
+    private final ListCustomersUseCase listCustomersUseCase;
+    private final DeactivateCustomerUseCase deactivateCustomerUseCase;
+
+    private final ObservableList<Customer> masterData = FXCollections.observableArrayList();
 
     public ClientesController() {
-        this.listCustomersUseCase = new ListCustomersUseCase(
-                new MySqlCustomerRepository()
-        );
+        MySqlCustomerRepository repo = new MySqlCustomerRepository();
+        this.listCustomersUseCase = new ListCustomersUseCase(repo);
+        this.deactivateCustomerUseCase = new DeactivateCustomerUseCase(repo);
     }
 
     @FXML
@@ -57,53 +74,103 @@ public class ClientesController {
         tblClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+        colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
 
-        masterData = FXCollections.observableArrayList();
-        loadClientes();
-        setupSearch();
-        setupRowDoubleClick();
-    }
-
-    private void loadClientes() {
-        long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
-        List<Customer> clientes = listCustomersUseCase.listByEmpresa(empresaId);
-
-        if (masterData == null) {
-            masterData = FXCollections.observableArrayList(clientes);
-        } else {
-            masterData.setAll(clientes);
-        }
-    }
-
-    private void setupSearch() {
-        FilteredList<Customer> filtered = new FilteredList<>(masterData, c -> true);
-
-        txtBuscar.textProperty().addListener((obs, oldVal, newVal) -> {
-            String filtro = newVal == null ? "" : newVal.trim().toLowerCase(Locale.ROOT);
-            if (filtro.isEmpty()) {
-                filtered.setPredicate(c -> true);
-            } else {
-                filtered.setPredicate(buildFilterPredicate(filtro));
+        colNotas.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().getNotas())
+        );
+        colNotas.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null || item.isBlank()) {
+                    setText(null);
+                    setTooltip(null);
+                } else {
+                    String trimmed = item.length() > 40 ? item.substring(0, 37) + "..." : item;
+                    setText(trimmed);
+                    setTooltip(new Tooltip(item));
+                }
             }
         });
 
-        SortedList<Customer> sorted = new SortedList<>(filtered);
-        sorted.comparatorProperty().bind(tblClientes.comparatorProperty());
-        tblClientes.setItems(sorted);
+        colAcciones.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
+        colAcciones.setCellFactory(col -> new TableCell<>() {
+
+            private final Button btnEditar = new Button("Editar");
+            private final Button btnDesactivar = new Button("Desactivar");
+            private final HBox box = new HBox(5, btnEditar, btnDesactivar);
+
+            {
+                btnEditar.setOnAction(e -> {
+                    Customer c = getItem();
+                    if (c != null) {
+                        openClienteForm(c);
+                    }
+                });
+
+                btnDesactivar.setOnAction(e -> {
+                    Customer c = getItem();
+                    if (c != null) {
+                        deactivateCustomer(c);
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Customer customer, boolean empty) {
+                super.updateItem(customer, empty);
+                if (empty || customer == null) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(box);
+                }
+            }
+        });
+        colAcciones.setSortable(false);
+
+        cmbPageSize.setItems(FXCollections.observableArrayList(5, 10, 25, 50));
+        cmbPageSize.getSelectionModel().select(Integer.valueOf(10));
+        cmbPageSize.valueProperty().addListener((obs, o, n) -> refreshTable());
+        txtBuscar.textProperty().addListener((obs, o, n) -> refreshTable());
+        setupRowDoubleClick();
+        loadClientesFromDb();
     }
 
-    private Predicate<Customer> buildFilterPredicate(String filtro) {
-        return c -> {
-            if (c == null) {
-                return false;
-            }
-            String nombre = safe(c.getNombre());
-            String email = safe(c.getEmail());
-            String telefono = safe(c.getTelefono());
-            return nombre.contains(filtro) || email.contains(filtro) || telefono.contains(filtro);
-        };
+    private void loadClientesFromDb() {
+        long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+        List<Customer> clientes = listCustomersUseCase.listByEmpresa(empresaId);
+        masterData.setAll(clientes);
+        refreshTable();
+    }
+
+    private void refreshTable() {
+        String filtro = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim().toLowerCase(Locale.ROOT);
+
+        int limit = Optional.ofNullable(cmbPageSize.getValue()).orElse(Integer.MAX_VALUE);
+
+        List<Customer> filtered = masterData.stream()
+                .filter(c -> matchesFilter(c, filtro))
+                .sorted(Comparator.comparing(Customer::getNombre,
+                String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList());
+
+        int total = filtered.size();
+        List<Customer> visible = filtered.subList(0, Math.min(limit, total));
+
+        tblClientes.setItems(FXCollections.observableArrayList(visible));
+
+        lblResumen.setText("Mostrando " + visible.size() + " de " + total + " clientes");
+    }
+
+    private boolean matchesFilter(Customer c, String filtro) {
+        if (filtro.isEmpty()) return true;
+        String nombre = safe(c.getNombre());
+        String email = safe(c.getEmail());
+        String telefono = safe(c.getTelefono());
+        String notas = safe(c.getNotas());
+        return nombre.contains(filtro) || email.contains(filtro) || telefono.contains(filtro) || notas.contains(filtro);
     }
 
     private String safe(String s) {
@@ -128,9 +195,16 @@ public class ClientesController {
         openClienteForm(null);
     }
 
+    @FXML
+    private void onRefrescar() {
+        loadClientesFromDb();
+    }
+
     private void openClienteForm(Customer customer) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ClienteFormView.fxml"));
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/view/ClienteFormView.fxml")
+            );
             Parent root = loader.load();
 
             ClienteFormController controller = loader.getController();
@@ -149,7 +223,7 @@ public class ClientesController {
             dialog.showAndWait();
 
             if (controller.isSaved()) {
-                loadClientes();
+                loadClientesFromDb();
             }
 
         } catch (IOException e) {
@@ -157,18 +231,43 @@ public class ClientesController {
         }
     }
 
+    private void deactivateCustomer(Customer customer) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Desactivar cliente");
+        alert.setHeaderText("¿Desactivar cliente?");
+        alert.setContentText("El cliente \"" + customer.getNombre() + "\" dejará de estar disponible en los listados.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+                deactivateCustomerUseCase.deactivate(customer.getId(), empresaId);
+                loadClientesFromDb();
+            }
+        });
+    }
+
     @FXML
     private void onVolverHome() {
         try {
             Stage stage = (Stage) tblClientes.getScene().getWindow();
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/HomeView.fxml"));
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/view/HomeView.fxml")
+            );
             Parent root = loader.load();
 
-            Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
+            Scene scene = new Scene(
+                    root,
+                    stage.getScene().getWidth(),
+                    stage.getScene().getHeight()
+            );
 
-            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+            scene.getStylesheets().add(
+                    getClass().getResource("/styles/theme.css").toExternalForm()
+            );
+            scene.getStylesheets().add(
+                    getClass().getResource("/styles/components.css").toExternalForm()
+            );
 
             stage.setTitle("GearMind — Inicio");
             stage.setScene(scene);

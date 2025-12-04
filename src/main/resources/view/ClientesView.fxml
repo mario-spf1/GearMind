@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.gearmind.presentation.controller.ClientesController">
@@ -11,33 +13,40 @@
                 <Label text="Clientes" styleClass="tfx-toolbar-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
 
-                <TextField fx:id="txtBuscar"
-                           promptText="Buscar cliente..."
-                           prefWidth="220"/>
+                <Label text="Mostrar"/>
+                <ComboBox fx:id="cmbPageSize" prefWidth="70"/>
+                <Label text="clientes"/>
 
-                <Button text="Nuevo cliente"
-                        fx:id="btnNuevoCliente"
-                        styleClass="tfx-btn-primary"
-                        onAction="#onNuevoCliente"/>
+                <TextField fx:id="txtBuscar" promptText="Buscar cliente..." styleClass="tfx-search"/>
 
-                <Button text="Inicio"
-                        onAction="#onVolverHome"
-                        styleClass="tfx-btn-ghost"/>
+                <Button text="Refrescar" onAction="#onRefrescar"/>
+
+                <Button fx:id="btnNuevoCliente" text="Nuevo cliente" styleClass="tfx-btn-primary" onAction="#onNuevoCliente"/>
+
+                <Button text="Inicio" styleClass="tfx-btn-ghost" onAction="#onVolverHome"/>
             </children>
         </HBox>
     </top>
 
     <center>
-        <VBox spacing="12" styleClass="tfx-page">
+        <VBox spacing="8" styleClass="tfx-page">
             <children>
-                <TableView fx:id="tblClientes"
-                           prefHeight="400">
+                <TableView fx:id="tblClientes" prefHeight="400">
                     <columns>
                         <TableColumn fx:id="colNombre" text="Nombre"/>
+                        <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="120"/>
                         <TableColumn fx:id="colEmail" text="Email"/>
-                        <TableColumn fx:id="colTelefono" text="Teléfono"/>
+                        <TableColumn fx:id="colNotas" text="Notas"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
                     </columns>
                 </TableView>
+
+                <HBox>
+                    <children>
+                        <Label fx:id="lblResumen"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                    </children>
+                </HBox>
             </children>
         </VBox>
     </center>

@@ -72,12 +72,12 @@
 }
 
 .tfx-card {
-    -fx-background-color: -tfx-card;
-    -fx-background-radius: -tfx-radius;
-    -fx-padding: 16;
-    -fx-border-color: -tfx-border;
-    -fx-border-width: 1;
-    -fx-border-radius: -tfx-radius;
+  -fx-background-color: -tfx-card;
+  -fx-background-radius: -tfx-radius;
+  -fx-padding: 16;
+  -fx-border-color: -tfx-border;
+  -fx-border-width: 1;
+  -fx-border-radius: -tfx-radius;
 }
 
 .tfx-ok {

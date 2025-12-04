@@ -6,9 +6,7 @@ import com.gearmind.application.customer.SaveCustomerUseCase;
 import com.gearmind.domain.customer.Customer;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 public class ClienteFormController {
@@ -25,13 +23,18 @@ public class ClienteFormController {
     @FXML
     private TextField txtTelefono;
 
+    @FXML
+    private TextArea txtNotas;
+
     private final SaveCustomerUseCase saveCustomerUseCase;
 
     private Long editingId = null;
     private boolean saved = false;
 
     public ClienteFormController() {
-        this.saveCustomerUseCase = new SaveCustomerUseCase(new MySqlCustomerRepository());
+        this.saveCustomerUseCase = new SaveCustomerUseCase(
+                new MySqlCustomerRepository()
+        );
     }
 
     public void initForNew() {
@@ -46,6 +49,7 @@ public class ClienteFormController {
         txtNombre.setText(customer.getNombre());
         txtEmail.setText(customer.getEmail());
         txtTelefono.setText(customer.getTelefono());
+        txtNotas.setText(customer.getNotas());
     }
 
     public boolean isSaved() {
@@ -57,7 +61,7 @@ public class ClienteFormController {
         try {
             long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
 
-            SaveCustomerRequest request = new SaveCustomerRequest(editingId, empresaId, txtNombre.getText(), txtEmail.getText(), txtTelefono.getText());
+            SaveCustomerRequest request = new SaveCustomerRequest(editingId, empresaId, txtNombre.getText(), txtEmail.getText(), txtTelefono.getText(), txtNotas.getText());
 
             Customer result = saveCustomerUseCase.save(request);
             System.out.println("Cliente guardado: " + result.getId() + " - " + result.getNombre());

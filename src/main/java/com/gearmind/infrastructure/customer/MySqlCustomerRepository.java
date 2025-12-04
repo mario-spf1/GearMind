@@ -27,13 +27,17 @@ public class MySqlCustomerRepository implements CustomerRepository {
                        empresa_id,
                        nombre,
                        email,
-                       telefono
+                       telefono,
+                       notas,
+                       activo
                 FROM cliente
                 WHERE empresa_id = ?
+                  AND activo = 1
                 ORDER BY nombre ASC
                 """;
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setLong(1, empresaId);
 
@@ -57,12 +61,15 @@ public class MySqlCustomerRepository implements CustomerRepository {
                        empresa_id,
                        nombre,
                        email,
-                       telefono
+                       telefono,
+                       notas,
+                       activo
                 FROM cliente
                 WHERE id = ?
                 """;
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setLong(1, id);
 
@@ -80,25 +87,27 @@ public class MySqlCustomerRepository implements CustomerRepository {
     }
 
     @Override
-    public Customer create(long empresaId, String nombre, String email, String telefono) {
+    public Customer create(long empresaId, String nombre, String email, String telefono, String notas) {
         String sql = """
-                INSERT INTO cliente (empresa_id, nombre, email, telefono)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO cliente (empresa_id, nombre, email, telefono, notas, activo)
+                VALUES (?, ?, ?, ?, ?, 1)
                 """;
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setLong(1, empresaId);
             ps.setString(2, nombre);
             ps.setString(3, email);
             ps.setString(4, telefono);
+            ps.setString(5, notas);
 
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
                     long id = keys.getLong(1);
-                    return new Customer(id, empresaId, nombre, email, telefono);
+                    return new Customer(id, empresaId, nombre, email, telefono, notas, true);
                 }
             }
 
@@ -106,24 +115,29 @@ public class MySqlCustomerRepository implements CustomerRepository {
             e.printStackTrace();
         }
 
-        return new Customer(0L, empresaId, nombre, email, telefono);
+        return new Customer(0L, empresaId, nombre, email, telefono, notas, true);
     }
 
     @Override
-    public Customer update(long id, long empresaId, String nombre, String email, String telefono) {
+    public Customer update(long id, long empresaId, String nombre, String email, String telefono, String notas) {
         String sql = """
                 UPDATE cliente
-                SET nombre = ?, email = ?, telefono = ?
+                SET nombre  = ?,
+                    email   = ?,
+                    telefono = ?,
+                    notas   = ?
                 WHERE id = ? AND empresa_id = ?
                 """;
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, nombre);
             ps.setString(2, email);
             ps.setString(3, telefono);
-            ps.setLong(4, id);
-            ps.setLong(5, empresaId);
+            ps.setString(4, notas);
+            ps.setLong(5, id);
+            ps.setLong(6, empresaId);
 
             ps.executeUpdate();
 
@@ -131,10 +145,38 @@ public class MySqlCustomerRepository implements CustomerRepository {
             e.printStackTrace();
         }
 
-        return new Customer(id, empresaId, nombre, email, telefono);
+        return new Customer(id, empresaId, nombre, email, telefono, notas, true);
+    }
+
+    @Override
+    public void deactivate(long id, long empresaId) {
+        String sql = """
+                UPDATE cliente
+                SET activo = 0
+                WHERE id = ? AND empresa_id = ?
+                """;
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+            ps.setLong(2, empresaId);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private Customer mapRow(ResultSet rs) throws SQLException {
-        return new Customer(rs.getLong("id"), rs.getLong("empresa_id"), rs.getString("nombre"), rs.getString("email"), rs.getString("telefono"));
+        return new Customer(
+                rs.getLong("id"),
+                rs.getLong("empresa_id"),
+                rs.getString("nombre"),
+                rs.getString("email"),
+                rs.getString("telefono"),
+                rs.getString("notas"),
+                rs.getBoolean("activo")
+        );
     }
 }
