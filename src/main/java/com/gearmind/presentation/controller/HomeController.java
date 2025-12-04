@@ -123,7 +123,23 @@ public class HomeController {
 
     @FXML
     private void onGoToUsuarios() {
-        System.out.println("Ir a Usuarios & Roles (módulo ADMIN)");
+        try {
+            Stage stage = (Stage) lblSubtitle.getScene().getWindow();
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/UsuariosView.fxml"));
+            Parent root = loader.load();
+
+            Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
+
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+
+            stage.setTitle("GearMind — Usuarios & Roles");
+            stage.setScene(scene);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -159,7 +175,7 @@ public class HomeController {
             stage.setTitle("GearMind — Acceso");
             stage.setScene(scene);
 
-        } catch (IOException e) {
+        } catch (IOException e) { 
             e.printStackTrace();
         }
     }

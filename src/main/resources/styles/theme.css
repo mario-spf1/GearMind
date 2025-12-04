@@ -64,20 +64,20 @@
 
 .tfx-surface {
     -fx-background-color: -tfx-surface;
-    -fx-background-radius: -tfx-radius;
+    -fx-background-radius: 12;
     -fx-padding: 16;
     -fx-border-color: -tfx-border;
     -fx-border-width: 1;
-    -fx-border-radius: -tfx-radius;
+    -fx-border-radius: 12;
 }
 
 .tfx-card {
   -fx-background-color: -tfx-card;
-  -fx-background-radius: -tfx-radius;
+  -fx-background-radius: 12;
   -fx-padding: 16;
   -fx-border-color: -tfx-border;
   -fx-border-width: 1;
-  -fx-border-radius: -tfx-radius;
+  -fx-border-radius: 12;
 }
 
 .tfx-ok {
