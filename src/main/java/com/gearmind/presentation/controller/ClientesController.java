@@ -1,6 +1,7 @@
 package com.gearmind.presentation.controller;
 
 import com.gearmind.application.common.SessionManager;
+import com.gearmind.application.customer.ActivateCustomerUseCase;
 import com.gearmind.application.customer.DeactivateCustomerUseCase;
 import com.gearmind.application.customer.ListCustomersUseCase;
 import com.gearmind.domain.customer.Customer;
@@ -44,6 +45,9 @@ public class ClientesController {
     private TableColumn<Customer, String> colNotas;
 
     @FXML
+    private TableColumn<Customer, String> colEstado;
+
+    @FXML
     private TableColumn<Customer, Customer> colAcciones;
 
     @FXML
@@ -60,6 +64,7 @@ public class ClientesController {
 
     private final ListCustomersUseCase listCustomersUseCase;
     private final DeactivateCustomerUseCase deactivateCustomerUseCase;
+    private final ActivateCustomerUseCase activateCustomerUseCase;
 
     private final ObservableList<Customer> masterData = FXCollections.observableArrayList();
 
@@ -67,6 +72,7 @@ public class ClientesController {
         MySqlCustomerRepository repo = new MySqlCustomerRepository();
         this.listCustomersUseCase = new ListCustomersUseCase(repo);
         this.deactivateCustomerUseCase = new DeactivateCustomerUseCase(repo);
+        this.activateCustomerUseCase = new ActivateCustomerUseCase(repo);
     }
 
     @FXML
@@ -95,12 +101,13 @@ public class ClientesController {
             }
         });
 
+        colEstado.setCellValueFactory(c ->new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo"));
         colAcciones.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
         colAcciones.setCellFactory(col -> new TableCell<>() {
 
             private final Button btnEditar = new Button("Editar");
-            private final Button btnDesactivar = new Button("Desactivar");
-            private final HBox box = new HBox(5, btnEditar, btnDesactivar);
+            private final Button btnToggle = new Button();
+            private final HBox box = new HBox(5, btnEditar, btnToggle);
 
             {
                 btnEditar.setOnAction(e -> {
@@ -110,10 +117,10 @@ public class ClientesController {
                     }
                 });
 
-                btnDesactivar.setOnAction(e -> {
+                btnToggle.setOnAction(e -> {
                     Customer c = getItem();
                     if (c != null) {
-                        deactivateCustomer(c);
+                        toggleCustomerActive(c);
                     }
                 });
             }
@@ -124,6 +131,7 @@ public class ClientesController {
                 if (empty || customer == null) {
                     setGraphic(null);
                 } else {
+                    btnToggle.setText(customer.isActivo() ? "Desactivar" : "Activar");
                     setGraphic(box);
                 }
             }
@@ -150,11 +158,7 @@ public class ClientesController {
 
         int limit = Optional.ofNullable(cmbPageSize.getValue()).orElse(Integer.MAX_VALUE);
 
-        List<Customer> filtered = masterData.stream()
-                .filter(c -> matchesFilter(c, filtro))
-                .sorted(Comparator.comparing(Customer::getNombre,
-                String.CASE_INSENSITIVE_ORDER))
-                .collect(Collectors.toList());
+        List<Customer> filtered = masterData.stream().filter(c -> matchesFilter(c, filtro)).sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList());
 
         int total = filtered.size();
         List<Customer> visible = filtered.subList(0, Math.min(limit, total));
@@ -170,7 +174,8 @@ public class ClientesController {
         String email = safe(c.getEmail());
         String telefono = safe(c.getTelefono());
         String notas = safe(c.getNotas());
-        return nombre.contains(filtro) || email.contains(filtro) || telefono.contains(filtro) || notas.contains(filtro);
+        String estado = c.isActivo() ? "activo" : "inactivo";
+        return nombre.contains(filtro) || email.contains(filtro) || telefono.contains(filtro) || notas.contains(filtro) || estado.contains(filtro);
     }
 
     private String safe(String s) {
@@ -187,6 +192,48 @@ public class ClientesController {
                 }
             });
             return row;
+        });
+    }
+
+    /**
+     * Si está activo → desactiva.
+     * Si está inactivo → activa.
+     */
+    private void toggleCustomerActive(Customer customer) {
+        if (customer.isActivo()) {
+            deactivateCustomer(customer);
+        } else {
+            activateCustomer(customer);
+        }
+    }
+
+    private void deactivateCustomer(Customer customer) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Desactivar cliente");
+        alert.setHeaderText("¿Desactivar cliente?");
+        alert.setContentText("El cliente \"" + customer.getNombre() + "\" dejará de estar disponible en los listados.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+                deactivateCustomerUseCase.deactivate(customer.getId(), empresaId);
+                loadClientesFromDb();
+            }
+        });
+    }
+
+    private void activateCustomer(Customer customer) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Activar cliente");
+        alert.setHeaderText("¿Activar cliente?");
+        alert.setContentText("El cliente \"" + customer.getNombre() + "\" volverá a estar disponible en los listados.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+                activateCustomerUseCase.activate(customer.getId(), empresaId);
+                loadClientesFromDb();
+            }
         });
     }
 
@@ -229,21 +276,6 @@ public class ClientesController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private void deactivateCustomer(Customer customer) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Desactivar cliente");
-        alert.setHeaderText("¿Desactivar cliente?");
-        alert.setContentText("El cliente \"" + customer.getNombre() + "\" dejará de estar disponible en los listados.");
-
-        alert.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.OK) {
-                long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
-                deactivateCustomerUseCase.deactivate(customer.getId(), empresaId);
-                loadClientesFromDb();
-            }
-        });
     }
 
     @FXML

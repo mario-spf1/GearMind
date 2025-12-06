@@ -18,5 +18,7 @@ public interface CustomerRepository {
 
     Customer update(long id, long empresaId, String nombre, String email, String telefono, String notas);
 
-    void deactivate(long id, long empresaId);
+    void deactivate(long customerId, long empresaId);
+
+    void activate(long customerId, long empresaId);
 }

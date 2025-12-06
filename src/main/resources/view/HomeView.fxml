@@ -117,7 +117,16 @@
               <Label text="Indicadores clave del taller" styleClass="tfx-muted"/>
               <Button text="Ir a Informes" onAction="#onGoToInformes"/>
             </VBox>
-
+            
+            <VBox fx:id="cardSuperAdmin"
+                  GridPane.columnIndex="0" GridPane.rowIndex="4"
+                  GridPane.columnSpan="3"
+                  spacing="8" styleClass="tfx-card">
+                <Label text="Super Admin" styleClass="tfx-title-xl"/>
+                <Label text="Gestión global de empresas y usuarios" styleClass="tfx-muted"/>
+                <Button text="Ir a Super Admin" onAction="#onGoToSuperAdmin"/>
+            </VBox>
+            
           </children>
         </GridPane>
 

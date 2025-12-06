@@ -33,6 +33,17 @@ public final class AuthContext {
         return user.getRol() == UserRole.EMPLEADO;
     }
 
+    public static boolean isSuperAdmin() {
+        User user = getUserOrThrow();
+        return user.getRol() == UserRole.SUPER_ADMIN;
+    }
+
+    public static boolean isAdminOrSuperAdmin() {
+        User user = getUserOrThrow();
+        UserRole rol = user.getRol();
+        return rol == UserRole.ADMIN || rol == UserRole.SUPER_ADMIN;
+    }
+
     public static UserRole getRole() {
         return getUserOrThrow().getRol();
     }
@@ -45,4 +56,3 @@ public final class AuthContext {
         return getUserOrThrow();
     }
 }
-

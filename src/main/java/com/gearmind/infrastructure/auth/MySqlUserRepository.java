@@ -81,7 +81,7 @@ public class MySqlUserRepository implements UserRepository {
         String sql = """
                 SELECT id, empresa_id, nombre, email, password_hash, rol, activo
                 FROM usuario
-                WHERE empresa_id = ? AND activo = 1
+                WHERE empresa_id = ?
                 ORDER BY nombre ASC
                 """;
 

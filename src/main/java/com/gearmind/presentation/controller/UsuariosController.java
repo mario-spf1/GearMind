@@ -3,7 +3,11 @@ package com.gearmind.presentation.controller;
 import com.gearmind.application.common.SessionManager;
 import com.gearmind.application.user.DeactivateUserUseCase;
 import com.gearmind.application.user.ListUsersUseCase;
+import com.gearmind.application.user.SaveUserRequest;
+import com.gearmind.application.user.SaveUserUseCase;
+import com.gearmind.domain.security.PasswordHasher;
 import com.gearmind.domain.user.User;
+import com.gearmind.infrastructure.auth.BCryptPasswordHasher;
 import com.gearmind.infrastructure.auth.MySqlUserRepository;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
@@ -17,7 +21,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
@@ -40,13 +43,16 @@ public class UsuariosController {
 
     private final ListUsersUseCase listUsersUseCase;
     private final DeactivateUserUseCase deactivateUserUseCase;
+    private final SaveUserUseCase saveUserUseCase;
 
     private final ObservableList<User> masterData = FXCollections.observableArrayList();
 
     public UsuariosController() {
-        MySqlUserRepository repo = new MySqlUserRepository();
+        var repo = new MySqlUserRepository();
         this.listUsersUseCase = new ListUsersUseCase(repo);
         this.deactivateUserUseCase = new DeactivateUserUseCase(repo);
+        PasswordHasher hasher = new BCryptPasswordHasher();
+        this.saveUserUseCase = new SaveUserUseCase(repo, hasher);
     }
 
     @FXML
@@ -63,13 +69,13 @@ public class UsuariosController {
         );
 
         setupAccionesColumn();
+        setupRowDoubleClick();
 
         cmbPageSize.setItems(FXCollections.observableArrayList(5, 10, 25, 50));
         cmbPageSize.getSelectionModel().select(Integer.valueOf(10));
         cmbPageSize.valueProperty().addListener((obs, o, n) -> refreshTable());
         txtBuscar.textProperty().addListener((obs, o, n) -> refreshTable());
 
-        setupRowDoubleClick();
         loadUsuariosFromDb();
     }
 
@@ -78,12 +84,12 @@ public class UsuariosController {
         colAcciones.setCellFactory(col -> new TableCell<>() {
 
             private final Button btnEditar = new Button("Editar");
-            private final Button btnDesactivar = new Button("Desactivar");
-            private final HBox box = new HBox(5, btnEditar, btnDesactivar);
+            private final Button btnToggle = new Button(); // Activar/Desactivar
+            private final HBox box = new HBox(5, btnEditar, btnToggle);
 
             {
-                btnEditar.getStyleClass().add("tfx-btn-primary");
-                btnDesactivar.getStyleClass().add("tfx-btn-ghost");
+                btnEditar.getStyleClass().addAll("button", "tfx-btn-primary");
+                btnToggle.getStyleClass().addAll("button", "tfx-btn-ghost");
 
                 btnEditar.setOnAction(e -> {
                     User u = getItem();
@@ -92,10 +98,10 @@ public class UsuariosController {
                     }
                 });
 
-                btnDesactivar.setOnAction(e -> {
+                btnToggle.setOnAction(e -> {
                     User u = getItem();
                     if (u != null) {
-                        deactivateUser(u);
+                        toggleUserActive(u);
                     }
                 });
             }
@@ -106,6 +112,7 @@ public class UsuariosController {
                 if (empty || user == null) {
                     setGraphic(null);
                 } else {
+                    btnToggle.setText(user.isActivo() ? "Desactivar" : "Activar");
                     setGraphic(box);
                 }
             }
@@ -113,6 +120,22 @@ public class UsuariosController {
         colAcciones.setSortable(false);
     }
 
+    private void setupRowDoubleClick() {
+        tblUsuarios.setRowFactory(tv -> {
+            TableRow<User> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    User u = row.getItem();
+                    openUsuarioForm(u);
+                }
+            });
+            return row;
+        });
+    }
+
+    /**
+     * Carga de BD → masterData → refreshTable (igual que en clientes).
+     */
     private void loadUsuariosFromDb() {
         long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
         List<User> usuarios = listUsersUseCase.listByEmpresa(empresaId);
@@ -120,6 +143,9 @@ public class UsuariosController {
         refreshTable();
     }
 
+    /**
+     * Aplica filtro + "paginación" sobre masterData y actualiza la tabla.
+     */
     private void refreshTable() {
         String filtro = txtBuscar.getText() == null
                 ? ""
@@ -135,12 +161,10 @@ public class UsuariosController {
                 .collect(Collectors.toList());
 
         int total = filtered.size();
-        List<User> page = filtered.stream()
-                .limit(limit)
-                .collect(Collectors.toList());
+        List<User> visible = filtered.subList(0, Math.min(limit, total));
 
-        tblUsuarios.setItems(FXCollections.observableArrayList(page));
-        lblResumen.setText("Mostrando " + page.size() + " de " + total + " usuarios");
+        tblUsuarios.setItems(FXCollections.observableArrayList(visible));
+        lblResumen.setText("Mostrando " + visible.size() + " de " + total + " usuarios");
     }
 
     private boolean matchesFilter(User u, String filtro) {
@@ -161,19 +185,53 @@ public class UsuariosController {
         return s == null ? "" : s.toLowerCase(Locale.ROOT);
     }
 
-    private void setupRowDoubleClick() {
-        tblUsuarios.setRowFactory(tv -> {
-            TableRow<User> row = new TableRow<>();
-            row.setOnMouseClicked(event -> {
-                if (event.getClickCount() == 2 && !row.isEmpty()) {
-                    User u = row.getItem();
-                    openUsuarioForm(u);
-                }
-            });
-            return row;
+    /**
+     * Si está activo → desactiva.
+     * Si está inactivo → activa.
+     */
+    private void toggleUserActive(User user) {
+        if (user.isActivo()) {
+            deactivateUser(user);
+        } else {
+            activateUser(user);
+        }
+    }
+
+    private void deactivateUser(User user) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Desactivar usuario");
+        alert.setHeaderText("¿Desactivar usuario?");
+        alert.setContentText("El usuario \"" + user.getNombre() + "\" dejará de poder acceder a la aplicación.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+                deactivateUserUseCase.deactivate(user.getId(), empresaId);
+                loadUsuariosFromDb();
+            }
         });
     }
 
+    private void activateUser(User user) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Activar usuario");
+        alert.setHeaderText("¿Activar usuario?");
+        alert.setContentText("El usuario \"" + user.getNombre() + "\" volverá a poder acceder a la aplicación.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+
+                SaveUserRequest request = new SaveUserRequest(user.getId(), empresaId, user.getNombre(), user.getEmail(), "", user.getRol(), true);
+                saveUserUseCase.save(request);
+                loadUsuariosFromDb();
+            }
+        });
+    }
+
+    /**
+     * Abre el form de usuario (nuevo o edición). Si se guarda → recarga BD.
+     */
     private void openUsuarioForm(User user) {
         try {
             FXMLLoader loader = new FXMLLoader(
@@ -203,22 +261,6 @@ public class UsuariosController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private void deactivateUser(User user) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Desactivar usuario");
-        alert.setHeaderText("¿Desactivar usuario?");
-        alert.setContentText("El usuario \"" + user.getNombre()
-                + "\" dejará de poder acceder a la aplicación.");
-
-        alert.showAndWait().ifPresent(btn -> {
-            if (btn == ButtonType.OK) {
-                long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
-                deactivateUserUseCase.deactivate(user.getId(), empresaId);
-                loadUsuariosFromDb();
-            }
-        });
     }
 
     @FXML

@@ -50,7 +50,7 @@ public class UsuarioFormController {
         lblTitulo.setText("Editar usuario");
         txtNombre.setText(user.getNombre());
         txtEmail.setText(user.getEmail());
-        txtPassword.clear(); // no mostramos el hash ni rellenamos
+        txtPassword.clear();
         cmbRol.getItems().setAll(UserRole.values());
         cmbRol.getSelectionModel().select(user.getRol());
         chkActivo.setSelected(user.isActivo());
@@ -70,7 +70,7 @@ public class UsuarioFormController {
                     empresaId,
                     txtNombre.getText(),
                     txtEmail.getText(),
-                    txtPassword.getText(), // puede ir vacío en edición
+                    txtPassword.getText(),
                     cmbRol.getValue(),
                     chkActivo.isSelected()
             );

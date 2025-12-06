@@ -23,16 +23,9 @@ public class MySqlCustomerRepository implements CustomerRepository {
         List<Customer> result = new ArrayList<>();
 
         String sql = """
-                SELECT id,
-                       empresa_id,
-                       nombre,
-                       email,
-                       telefono,
-                       notas,
-                       activo
+                SELECT id, empresa_id, nombre, email, telefono, notas, activo
                 FROM cliente
                 WHERE empresa_id = ?
-                  AND activo = 1
                 ORDER BY nombre ASC
                 """;
 
@@ -46,9 +39,8 @@ public class MySqlCustomerRepository implements CustomerRepository {
                     result.add(mapRow(rs));
                 }
             }
-
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error listando clientes", e);
         }
 
         return result;
@@ -167,6 +159,26 @@ public class MySqlCustomerRepository implements CustomerRepository {
             e.printStackTrace();
         }
     }
+    
+    @Override
+    public void activate(long customerId, long empresaId) {
+        String sql = """
+                UPDATE cliente
+                SET activo = 1, updated_at = NOW()
+                WHERE id = ? AND empresa_id = ?
+                """;
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, customerId);
+            ps.setLong(2, empresaId);
+
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error activando cliente " + customerId, e);
+        }
+    }
+
 
     private Customer mapRow(ResultSet rs) throws SQLException {
         return new Customer(

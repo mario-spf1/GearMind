@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.gearmind.presentation.controller.SuperAdminHomeController">
+
+    <center>
+        <VBox spacing="18" alignment="CENTER" styleClass="tfx-page">
+            <children>
+
+                <VBox spacing="6">
+                    <Label text="Panel Super Admin" styleClass="tfx-title-xxl"/>
+                    <Label text="Gestión global de empresas y usuarios"
+                           styleClass="tfx-subtitle"/>
+                </VBox>
+
+                <HBox spacing="12">
+                    <VBox spacing="8" styleClass="tfx-card">
+                        <Label text="Empresas" styleClass="tfx-title-xl"/>
+                        <Label text="Altas, edición y administración de empresas"
+                               styleClass="tfx-muted"/>
+                        <Button text="Gestionar empresas"
+                                fx:id="btnEmpresas"
+                                styleClass="button tfx-btn-primary"/>
+                    </VBox>
+
+                    <VBox spacing="8" styleClass="tfx-card">
+                        <Label text="Usuarios de empresas" styleClass="tfx-title-xl"/>
+                        <Label text="Usuarios vinculados a cada empresa"
+                               styleClass="tfx-muted"/>
+                        <Button text="Gestionar usuarios"
+                                fx:id="btnUsuarios"
+                                styleClass="button tfx-btn-primary"/>
+                    </VBox>
+                </HBox>
+
+                <Button text="Volver al inicio"
+                        fx:id="btnVolver"
+                        styleClass="button tfx-btn-ghost"/>
+
+            </children>
+        </VBox>
+    </center>
+
+</BorderPane>

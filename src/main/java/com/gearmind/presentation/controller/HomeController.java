@@ -31,6 +31,9 @@ public class HomeController {
     private VBox cardInformes;
 
     @FXML
+    private VBox cardSuperAdmin;
+
+    @FXML
     public void initialize() {
         User user = SessionManager.getInstance().getCurrentUser();
 
@@ -39,29 +42,39 @@ public class HomeController {
             lblSubtitle.setText("Bienvenido, " + user.getNombre() + " · Empresa " + empresaId + " · Rol " + user.getRol());
 
             boolean isAdmin = user.getRol() == UserRole.ADMIN;
-            configureAdminCards(isAdmin);
+            boolean isSuperAdmin = user.getRol() == UserRole.SUPER_ADMIN;
+            configureAdminCards(isAdmin || isSuperAdmin);
+            configureSuperAdminCard(isSuperAdmin);
         } else {
             lblSubtitle.setText("Gestión de talleres · GearMind");
             configureAdminCards(false);
+            configureSuperAdminCard(false);
         }
     }
 
-    private void configureAdminCards(boolean isAdmin) {
+    private void configureAdminCards(boolean visible) {
         if (cardUsuarios != null) {
-            cardUsuarios.setVisible(isAdmin);
-            cardUsuarios.setManaged(isAdmin);
+            cardUsuarios.setVisible(visible);
+            cardUsuarios.setManaged(visible);
         }
         if (cardInventario != null) {
-            cardInventario.setVisible(isAdmin);
-            cardInventario.setManaged(isAdmin);
+            cardInventario.setVisible(visible);
+            cardInventario.setManaged(visible);
         }
         if (cardConfiguracion != null) {
-            cardConfiguracion.setVisible(isAdmin);
-            cardConfiguracion.setManaged(isAdmin);
+            cardConfiguracion.setVisible(visible);
+            cardConfiguracion.setManaged(visible);
         }
         if (cardInformes != null) {
-            cardInformes.setVisible(isAdmin);
-            cardInformes.setManaged(isAdmin);
+            cardInformes.setVisible(visible);
+            cardInformes.setManaged(visible);
+        }
+    }
+
+    private void configureSuperAdminCard(boolean visible) {
+        if (cardSuperAdmin != null) {
+            cardSuperAdmin.setVisible(visible);
+            cardSuperAdmin.setManaged(visible);
         }
     }
 
@@ -158,6 +171,11 @@ public class HomeController {
     }
 
     @FXML
+    private void onGoToSuperAdmin() {
+        loadView("/view/SuperAdminHomeView.fxml", "GearMind — Super Admin");
+    }
+
+    @FXML
     private void onLogout() {
         try {
             SessionManager.getInstance().clearSession();
@@ -175,7 +193,25 @@ public class HomeController {
             stage.setTitle("GearMind — Acceso");
             stage.setScene(scene);
 
-        } catch (IOException e) { 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadView(String fxmlPath, String title) {
+        try {
+            Stage stage = (Stage) lblSubtitle.getScene().getWindow();
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+
+            Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+
+            stage.setTitle(title);
+            stage.setScene(scene);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
