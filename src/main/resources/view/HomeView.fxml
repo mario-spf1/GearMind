@@ -20,7 +20,6 @@
     </HBox>
   </top>
 
-  <!-- Center: hero / tarjetas -->
   <center>
     <VBox spacing="18" BorderPane.alignment="CENTER" styleClass="tfx-page">
       <children>
@@ -118,15 +117,15 @@
               <Button text="Ir a Informes" onAction="#onGoToInformes"/>
             </VBox>
             
-            <VBox fx:id="cardSuperAdmin"
-                  GridPane.columnIndex="0" GridPane.rowIndex="4"
-                  GridPane.columnSpan="3"
-                  spacing="8" styleClass="tfx-card">
-                <Label text="Super Admin" styleClass="tfx-title-xl"/>
-                <Label text="Gestión global de empresas y usuarios" styleClass="tfx-muted"/>
-                <Button text="Ir a Super Admin" onAction="#onGoToSuperAdmin"/>
-            </VBox>
-            
+            <VBox fx:id="cardEmpresas"
+                GridPane.columnIndex="0" GridPane.rowIndex="4"
+                GridPane.columnSpan="3"
+                spacing="8" styleClass="tfx-card">
+            <Label text="Empresas" styleClass="tfx-title-xl"/>
+            <Label text="Gestión global de empresas (solo super admin)" styleClass="tfx-muted"/>
+            <Button text="Gestionar empresas" onAction="#onGoToEmpresas"/>
+          </VBox>
+
           </children>
         </GridPane>
 

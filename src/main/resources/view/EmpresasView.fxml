@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.gearmind.presentation.controller.EmpresasController">
+
+    <top>
+        <HBox spacing="12" styleClass="tfx-toolbar">
+            <children>
+                <Label text="Empresas" styleClass="tfx-toolbar-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <Label text="Mostrar"/>
+                <ComboBox fx:id="cmbPageSize" prefWidth="80"/>
+
+                <Label text="Buscar"/>
+                <TextField fx:id="txtBuscar" promptText="Buscar empresa…"/>
+
+                <Button text="Refrescar" onAction="#onRefrescar"/>
+                <Button text="Nueva empresa" fx:id="btnNueva" styleClass="tfx-btn-primary"/>
+                <Button text="Volver" onAction="#onBack" styleClass="tfx-btn-ghost"/>
+            </children>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="12" styleClass="tfx-page">
+            <children>
+                <TableView fx:id="tblEmpresas">
+                    <columns>
+                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="150"/>
+                        <TableColumn fx:id="colCif" text="CIF" prefWidth="100"/>
+                        <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="100"/>
+                        <TableColumn fx:id="colEmail" text="Email" prefWidth="150"/>
+                        <TableColumn fx:id="colCiudad" text="Ciudad" prefWidth="120"/>
+                        <TableColumn fx:id="colProvincia" text="Provincia" prefWidth="120"/>
+                        <TableColumn fx:id="colCp" text="CP" prefWidth="60"/>
+                        <TableColumn fx:id="colEstado" text="Estado" prefWidth="90"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="200"/>
+                    </columns>
+                </TableView>
+
+                <HBox>
+                    <children>
+                        <Label fx:id="lblResumen"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </center>
+
+</BorderPane>

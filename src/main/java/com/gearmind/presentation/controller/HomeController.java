@@ -31,7 +31,7 @@ public class HomeController {
     private VBox cardInformes;
 
     @FXML
-    private VBox cardSuperAdmin;
+    private VBox cardEmpresas;
 
     @FXML
     public void initialize() {
@@ -44,11 +44,11 @@ public class HomeController {
             boolean isAdmin = user.getRol() == UserRole.ADMIN;
             boolean isSuperAdmin = user.getRol() == UserRole.SUPER_ADMIN;
             configureAdminCards(isAdmin || isSuperAdmin);
-            configureSuperAdminCard(isSuperAdmin);
+            configureEmpresasCard(isSuperAdmin);
         } else {
             lblSubtitle.setText("Gestión de talleres · GearMind");
             configureAdminCards(false);
-            configureSuperAdminCard(false);
+            configureEmpresasCard(false);
         }
     }
 
@@ -71,10 +71,10 @@ public class HomeController {
         }
     }
 
-    private void configureSuperAdminCard(boolean visible) {
-        if (cardSuperAdmin != null) {
-            cardSuperAdmin.setVisible(visible);
-            cardSuperAdmin.setManaged(visible);
+    private void configureEmpresasCard(boolean visible) {
+        if (cardEmpresas != null) {
+            cardEmpresas.setVisible(visible);
+            cardEmpresas.setManaged(visible);
         }
     }
 
@@ -171,8 +171,8 @@ public class HomeController {
     }
 
     @FXML
-    private void onGoToSuperAdmin() {
-        loadView("/view/SuperAdminHomeView.fxml", "GearMind — Super Admin");
+    private void onGoToEmpresas() {
+        loadView("/view/EmpresasView.fxml", "GearMind — Gestión de empresas");
     }
 
     @FXML
