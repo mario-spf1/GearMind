@@ -5,21 +5,97 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.gearmind.presentation.controller.DashboardController"
-      spacing="12"
+      spacing="14"
       styleClass="tfx-page">
 
     <children>
 
-        <Label text="Dashboard"
-               styleClass="tfx-title-xl"/>
-
-        <VBox styleClass="tfx-card" spacing="8">
+        <VBox spacing="4">
             <children>
-                <Label text="Bienvenido a GearMind"
-                       styleClass="tfx-subtitle"/>
-                <Label text="Aquí podrás ver un resumen de la actividad del taller."/>
+                <Label text="Panel de control" styleClass="tfx-title-xl"/>
+
+                <Label fx:id="lblEmpresaTitulo" text="Resumen de GearMind" styleClass="tfx-subtitle"/>
             </children>
         </VBox>
+
+        <HBox spacing="12">
+            <children>
+                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="Clientes" styleClass="tfx-kpi-title"/>
+                        <Label fx:id="lblTotalClientes" text="0" styleClass="tfx-kpi-number"/>
+                        <Label text="Clientes registrados en la empresa" styleClass="tfx-muted"/>
+                    </children>
+                </VBox>
+
+                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="Vehículos" styleClass="tfx-kpi-title"/>
+                        <Label fx:id="lblTotalVehiculos" text="—" styleClass="tfx-kpi-number"/>
+                        <Label text="Módulo pendiente de implementar" styleClass="tfx-muted"/>
+                    </children>
+                </VBox>
+
+                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="Reparaciones abiertas" styleClass="tfx-kpi-title"/>
+                        <Label fx:id="lblReparacionesAbiertas" text="—" styleClass="tfx-kpi-number"/>
+                        <Label text="Se mostrará cuando exista el módulo" styleClass="tfx-muted"/>
+                    </children>
+                </VBox>
+
+                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="Tareas pendientes" styleClass="tfx-kpi-title"/>
+                        <Label fx:id="lblTareasPendientes" text="—" styleClass="tfx-kpi-number"/>
+                        <Label text="Pendiente de integrar con tareas" styleClass="tfx-muted"/>
+                    </children>
+                </VBox>
+
+            </children>
+        </HBox>
+
+        <HBox spacing="12">
+            <VBox spacing="8" styleClass="tfx-card" VBox.vgrow="ALWAYS">
+                <children>
+                    <Label text="Últimos clientes añadidos"/>
+                    <TableView fx:id="tblUltimosClientes" prefHeight="260">
+                        <columns>
+                            <TableColumn fx:id="colCliNombre" text="Nombre" prefWidth="180"/>
+                            <TableColumn fx:id="colCliTelefono" text="Teléfono" prefWidth="120"/>
+                            <TableColumn fx:id="colCliEmail" text="Email" prefWidth="220"/>
+                        </columns>
+                    </TableView>
+                    <Label fx:id="lblUltimosClientesInfo" text="" styleClass="tfx-muted"/>
+                </children>
+            </VBox>
+
+            <VBox spacing="8" styleClass="tfx-card" prefWidth="280">
+                <children>
+                    <Label text="Próximas citas y avisos"/>
+                    <Label text="Esta sección mostrará:" styleClass="tfx-muted"/>
+                    <Label text="• Próximas citas de taller" styleClass="tfx-muted"/>
+                    <Label text="• Reparaciones con fecha límite cercana" styleClass="tfx-muted"/>
+                    <Label text="• Recordatorios importantes" styleClass="tfx-muted"/>
+                    <Separator/>
+                    <Label text="Módulo aún no implementado" styleClass="tfx-warn"/>
+                </children>
+            </VBox>
+
+        </HBox>
+
+        <HBox>
+            <children>
+                <VBox spacing="6" styleClass="tfx-card" VBox.vgrow="ALWAYS">
+                    <children>
+                        <Label text="Resumen de sesión actual"/>
+                        <Label fx:id="lblUsuarioInfo" text="Usuario actual" styleClass="tfx-muted"/>
+                        <Label fx:id="lblRolInfo" text="Rol" styleClass="tfx-muted"/>
+                        <Label fx:id="lblEmpresaInfo" text="Empresa" styleClass="tfx-muted"/>
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
 
     </children>
 </VBox>

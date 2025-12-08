@@ -154,3 +154,28 @@
     -fx-padding: 10 12;
     -fx-spacing: 6;
 }
+
+.tfx-card-kpi {
+    -fx-background-color: #181b22;
+    -fx-background-radius: 14;
+    -fx-padding: 16 20;
+    -fx-spacing: 6;
+    -fx-border-color: rgba(255,255,255,0.06);
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 18, 0.2, 0, 4);
+    -fx-min-width: 160;
+}
+
+.tfx-kpi-title {
+    -fx-text-fill: -tfx-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-padding: 0 0 2 0;
+}
+
+.tfx-kpi-number {
+    -fx-font-size: 26px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -tfx-primary;
+}
