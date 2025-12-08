@@ -4,7 +4,6 @@ import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRepository;
 import com.gearmind.domain.user.UserRole;
 import com.gearmind.infrastructure.database.DataSourceFactory;
-
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
@@ -134,13 +133,7 @@ public class MySqlUserRepository implements UserRepository {
     }
 
     @Override
-    public User update(long id,
-            long empresaId,
-            String nombre,
-            String email,
-            String passwordHash,
-            UserRole rol,
-            boolean activo) {
+    public User update(long id, long empresaId, String nombre, String email, String passwordHash, UserRole rol, boolean activo) {
 
         String sql = """
                 UPDATE usuario

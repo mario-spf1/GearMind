@@ -1,218 +1,182 @@
 package com.gearmind.presentation.controller;
 
-import com.gearmind.application.common.SessionManager;
+import com.gearmind.application.common.AuthContext;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRole;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-
 import java.io.IOException;
+import java.util.List;
 
 public class HomeController {
 
     @FXML
-    private Label lblSubtitle;
-
+    private BorderPane root;
     @FXML
-    private VBox cardUsuarios;
-
+    private VBox sidebar;
     @FXML
-    private VBox cardInventario;
-
+    private StackPane contentPane;
     @FXML
-    private VBox cardConfiguracion;
-
+    private Label lblUsuarioActual;
     @FXML
-    private VBox cardInformes;
-
+    private Label lblAppTitle;
     @FXML
-    private VBox cardEmpresas;
+    private Button btnNavDashboard;
+    @FXML
+    private Button btnNavClientes;
+    @FXML
+    private Button btnNavUsuarios;
+    @FXML
+    private Button btnNavEmpresas;
+    
+    private Node savedSidebar;
 
     @FXML
     public void initialize() {
-        User user = SessionManager.getInstance().getCurrentUser();
+        savedSidebar = sidebar;
+        setupFromAuthContext();
+        loadView("/view/DashboardView.fxml");
+        setActiveNavButton(btnNavDashboard);
+    }
 
-        if (user != null) {
-            long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
-            lblSubtitle.setText("Bienvenido, " + user.getNombre() + " · Empresa " + empresaId + " · Rol " + user.getRol());
+    private void setupFromAuthContext() {
+        if (!AuthContext.isLoggedIn()) {
+            if (lblUsuarioActual != null) {
+                lblUsuarioActual.setText("Invitado");
+            }
+            return;
+        }
 
-            boolean isAdmin = user.getRol() == UserRole.ADMIN;
-            boolean isSuperAdmin = user.getRol() == UserRole.SUPER_ADMIN;
-            configureAdminCards(isAdmin || isSuperAdmin);
-            configureEmpresasCard(isSuperAdmin);
+        User user = AuthContext.getCurrentUser();
+        UserRole role = AuthContext.getRole();
+
+        if (lblUsuarioActual != null && user != null) {
+            String rolTexto = switch (role) {
+                case SUPER_ADMIN ->
+                    "Super admin";
+                case ADMIN ->
+                    "Admin";
+                case EMPLEADO ->
+                    "Empleado";
+            };
+            lblUsuarioActual.setText(user.getNombre() + " (" + rolTexto + ")");
+        }
+
+        if (lblAppTitle != null) {
+            String empresaNombre = AuthContext.getEmpresaNombre();
+            if (empresaNombre != null && !empresaNombre.isBlank()) {
+                lblAppTitle.setText("GearMind · " + empresaNombre);
+            } else {
+                lblAppTitle.setText("GearMind");
+            }
+        }
+
+        applyRoleToSidebar(role);
+    }
+
+    private void applyRoleToSidebar(UserRole role) {
+        setAllSidebarButtonsVisible(true);
+
+        if (role == UserRole.SUPER_ADMIN) {
+            return;
+        }
+
+        if (role == UserRole.ADMIN) {
+            hideButton(btnNavEmpresas);
+            return;
+        }
+
+        if (role == UserRole.EMPLEADO) {
+            hideButton(btnNavEmpresas);
+            hideButton(btnNavUsuarios);
+        }
+    }
+
+    private void setAllSidebarButtonsVisible(boolean visible) {
+        for (Button b : List.of(btnNavDashboard, btnNavClientes, btnNavUsuarios, btnNavEmpresas)) {
+            if (b != null) {
+                b.setVisible(visible);
+                b.setManaged(visible);
+            }
+        }
+    }
+
+    private void hideButton(Button b) {
+        if (b != null) {
+            b.setVisible(false);
+            b.setManaged(false);
+        }
+    }
+
+    private void loadView(String fxmlPath) {
+        try {
+            var url = getClass().getResource(fxmlPath);
+            if (url == null) {
+                throw new IllegalStateException("No se ha encontrado la vista: " + fxmlPath);
+            }
+            Parent view = FXMLLoader.load(url);
+            contentPane.getChildren().setAll(view);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setActiveNavButton(Button activeButton) {
+        List<Button> buttons = List.of(btnNavDashboard, btnNavClientes, btnNavUsuarios, btnNavEmpresas);
+
+        for (Button b : buttons) {
+            if (b != null) {
+                b.getStyleClass().remove("tfx-nav-active");
+            }
+        }
+
+        if (activeButton != null && !activeButton.getStyleClass().contains("tfx-nav-active")) {
+            activeButton.getStyleClass().add("tfx-nav-active");
+        }
+    }
+
+    @FXML
+    private void onToggleSidebar() {
+        if (root.getLeft() == null) {
+            root.setLeft(savedSidebar);
         } else {
-            lblSubtitle.setText("Gestión de talleres · GearMind");
-            configureAdminCards(false);
-            configureEmpresasCard(false);
-        }
-    }
-
-    private void configureAdminCards(boolean visible) {
-        if (cardUsuarios != null) {
-            cardUsuarios.setVisible(visible);
-            cardUsuarios.setManaged(visible);
-        }
-        if (cardInventario != null) {
-            cardInventario.setVisible(visible);
-            cardInventario.setManaged(visible);
-        }
-        if (cardConfiguracion != null) {
-            cardConfiguracion.setVisible(visible);
-            cardConfiguracion.setManaged(visible);
-        }
-        if (cardInformes != null) {
-            cardInformes.setVisible(visible);
-            cardInformes.setManaged(visible);
-        }
-    }
-
-    private void configureEmpresasCard(boolean visible) {
-        if (cardEmpresas != null) {
-            cardEmpresas.setVisible(visible);
-            cardEmpresas.setManaged(visible);
+            root.setLeft(null);
         }
     }
 
     @FXML
-    public void onOpen() {
-        System.out.println("Abrir (placeholder)");
+    private void onGoPerfilUsuario() {
+        System.out.println("Ir a mi perfil (placeholder)");
     }
 
     @FXML
-    public void onNewProject() {
-        System.out.println("Nuevo (placeholder)");
+    private void onGoDashboard() {
+        loadView("/view/DashboardView.fxml");
+        setActiveNavButton(btnNavDashboard);
     }
 
     @FXML
-    private void onGoToClientes() {
-        try {
-            Stage stage = (Stage) lblSubtitle.getScene().getWindow();
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ClientesView.fxml"));
-            Parent root = loader.load();
-
-            Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
-
-            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
-
-            stage.setTitle("GearMind — Clientes");
-            stage.setScene(scene);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void onGoClientes() {
+        loadView("/view/ClientesView.fxml");
+        setActiveNavButton(btnNavClientes);
     }
 
     @FXML
-    private void onGoToCitas() {
-        System.out.println("Ir a Citas (módulo)");
+    private void onGoUsuarios() {
+        loadView("/view/UsuariosView.fxml");
+        setActiveNavButton(btnNavUsuarios);
     }
 
     @FXML
-    private void onGoToReparaciones() {
-        System.out.println("Ir a Reparaciones (módulo)");
-    }
-
-    @FXML
-    private void onGoToPresupuestos() {
-        System.out.println("Ir a Presupuestos (módulo)");
-    }
-
-    @FXML
-    private void onGoToFacturacion() {
-        System.out.println("Ir a Facturación (módulo)");
-    }
-
-    @FXML
-    private void onGoToComunicaciones() {
-        System.out.println("Ir a Comunicaciones (módulo)");
-    }
-
-    @FXML
-    private void onGoToUsuarios() {
-        try {
-            Stage stage = (Stage) lblSubtitle.getScene().getWindow();
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/UsuariosView.fxml"));
-            Parent root = loader.load();
-
-            Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
-
-            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
-
-            stage.setTitle("GearMind — Usuarios & Roles");
-            stage.setScene(scene);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void onGoToInventario() {
-        System.out.println("Ir a Inventario (módulo ADMIN)");
-    }
-
-    @FXML
-    private void onGoToConfiguracion() {
-        System.out.println("Ir a Configuración (módulo ADMIN)");
-    }
-
-    @FXML
-    private void onGoToInformes() {
-        System.out.println("Ir a Informes & KPIs (módulo ADMIN)");
-    }
-
-    @FXML
-    private void onGoToEmpresas() {
-        loadView("/view/EmpresasView.fxml", "GearMind — Gestión de empresas");
-    }
-
-    @FXML
-    private void onLogout() {
-        try {
-            SessionManager.getInstance().clearSession();
-
-            Stage stage = (Stage) lblSubtitle.getScene().getWindow();
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/LoginView.fxml"));
-            Parent root = loader.load();
-
-            Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
-
-            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
-
-            stage.setTitle("GearMind — Acceso");
-            stage.setScene(scene);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void loadView(String fxmlPath, String title) {
-        try {
-            Stage stage = (Stage) lblSubtitle.getScene().getWindow();
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Parent root = loader.load();
-
-            Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
-            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
-
-            stage.setTitle(title);
-            stage.setScene(scene);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void onGoEmpresas() {
+        loadView("/view/EmpresasView.fxml");
+        setActiveNavButton(btnNavEmpresas);
     }
 }

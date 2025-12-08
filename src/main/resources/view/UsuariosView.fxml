@@ -1,74 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.gearmind.presentation.controller.UsuariosController">
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.UsuariosController"
+      spacing="12"
+      styleClass="tfx-page">
 
-    <top>
+    <children>
         <HBox spacing="12" styleClass="tfx-toolbar">
             <children>
                 <Label text="Usuarios" styleClass="tfx-toolbar-title"/>
 
                 <Region HBox.hgrow="ALWAYS"/>
 
-                <TextField fx:id="txtBuscar"
-                           promptText="Buscar por nombre, email, rol o estado"
-                           styleClass="tfx-search"/>
+                <TextField fx:id="txtBuscar" promptText="Buscar por nombre, email, rol o estado" styleClass="tfx-search"/>
 
                 <Label text="Por página:" styleClass="tfx-muted"/>
                 <ComboBox fx:id="cmbPageSize" prefWidth="80"/>
 
-                <Button text="Nuevo usuario"
-                        onAction="#onNuevoUsuario"
-                        styleClass="tfx-btn-primary"/>
+                <Button text="Refrescar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
 
-                <Button text="Refrescar"
-                        onAction="#onRefrescar"/>
-
-                <Button text="Volver"
-                        onAction="#onVolverHome"/>
+                <Button text="Nuevo usuario" onAction="#onNuevoUsuario" styleClass="tfx-btn-primary"/>
             </children>
         </HBox>
-    </top>
 
-    <center>
-        <VBox spacing="8" styleClass="tfx-page">
+        <VBox spacing="8" styleClass="tfx-card">
             <children>
 
                 <TableView fx:id="tblUsuarios" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colNombre"
-                                     text="Nombre"
-                                     prefWidth="220"/>
-                        <TableColumn fx:id="colEmail"
-                                     text="Email"
-                                     prefWidth="260"/>
-                        <TableColumn fx:id="colRol"
-                                     text="Rol"
-                                     prefWidth="100"/>
-                        <TableColumn fx:id="colEstado"
-                                     text="Estado"
-                                     prefWidth="100"/>
-                        <TableColumn fx:id="colAcciones"
-                                     text="Acciones"
-                                     prefWidth="180"/>
+                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="220"/>
+                        <TableColumn fx:id="colEmail" text="Email" prefWidth="260"/>
+                        <TableColumn fx:id="colRol" text="Rol" prefWidth="100"/>
+                        <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="180"/>
                     </columns>
                 </TableView>
 
                 <HBox spacing="8">
                     <children>
-                        <Label fx:id="lblResumen"
-                               text="Mostrando 0 de 0 usuarios"
-                               styleClass="tfx-muted"/>
+                        <Label fx:id="lblResumen" text="Mostrando 0 de 0 usuarios" styleClass="tfx-muted"/>
                         <Region HBox.hgrow="ALWAYS"/>
                     </children>
                 </HBox>
-
             </children>
         </VBox>
-    </center>
-
-</BorderPane>
+    </children>
+</VBox>

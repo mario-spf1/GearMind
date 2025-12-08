@@ -13,6 +13,8 @@ public interface EmpresaRepository {
      * Inserta o actualiza una empresa.
      * Si empresa.isNew() => inserta y devuelve con id generado.
      * Si no => actualiza.
+     * @param empresa
+     * @return 
      */
     Empresa save(Empresa empresa);
 

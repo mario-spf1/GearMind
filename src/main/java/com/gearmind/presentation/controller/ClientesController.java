@@ -83,9 +83,7 @@ public class ClientesController {
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
 
-        colNotas.setCellValueFactory(c ->
-                new SimpleStringProperty(c.getValue().getNotas())
-        );
+        colNotas.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNotas()));
         colNotas.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -101,15 +99,18 @@ public class ClientesController {
             }
         });
 
-        colEstado.setCellValueFactory(c ->new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo"));
+        colEstado.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo"));
         colAcciones.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
         colAcciones.setCellFactory(col -> new TableCell<>() {
 
             private final Button btnEditar = new Button("Editar");
             private final Button btnToggle = new Button();
-            private final HBox box = new HBox(5, btnEditar, btnToggle);
+            private final HBox box = new HBox(6, btnEditar, btnToggle);
 
             {
+                btnEditar.getStyleClass().add("tfx-btn-ghost");
+                btnToggle.getStyleClass().add("tfx-btn-ghost");
+
                 btnEditar.setOnAction(e -> {
                     Customer c = getItem();
                     if (c != null) {
@@ -136,8 +137,8 @@ public class ClientesController {
                 }
             }
         });
-        colAcciones.setSortable(false);
 
+        colAcciones.setSortable(false);
         cmbPageSize.setItems(FXCollections.observableArrayList(5, 10, 25, 50));
         cmbPageSize.getSelectionModel().select(Integer.valueOf(10));
         cmbPageSize.valueProperty().addListener((obs, o, n) -> refreshTable());
@@ -162,14 +163,14 @@ public class ClientesController {
 
         int total = filtered.size();
         List<Customer> visible = filtered.subList(0, Math.min(limit, total));
-
         tblClientes.setItems(FXCollections.observableArrayList(visible));
-
         lblResumen.setText("Mostrando " + visible.size() + " de " + total + " clientes");
     }
 
     private boolean matchesFilter(Customer c, String filtro) {
-        if (filtro.isEmpty()) return true;
+        if (filtro.isEmpty()) {
+            return true;
+        }
         String nombre = safe(c.getNombre());
         String email = safe(c.getEmail());
         String telefono = safe(c.getTelefono());
@@ -196,8 +197,7 @@ public class ClientesController {
     }
 
     /**
-     * Si está activo → desactiva.
-     * Si está inactivo → activa.
+     * Si está activo → desactiva. Si está inactivo → activa.
      */
     private void toggleCustomerActive(Customer customer) {
         if (customer.isActivo()) {
@@ -249,9 +249,7 @@ public class ClientesController {
 
     private void openClienteForm(Customer customer) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/ClienteFormView.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ClienteFormView.fxml"));
             Parent root = loader.load();
 
             ClienteFormController controller = loader.getController();
@@ -265,44 +263,17 @@ public class ClientesController {
             dialog.initOwner(tblClientes.getScene().getWindow());
             dialog.initModality(Modality.WINDOW_MODAL);
             dialog.setTitle(customer == null ? "Nuevo cliente" : "Editar cliente");
-            dialog.setScene(new Scene(root));
+
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+            dialog.setScene(scene);
             dialog.setResizable(false);
             dialog.showAndWait();
 
             if (controller.isSaved()) {
                 loadClientesFromDb();
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void onVolverHome() {
-        try {
-            Stage stage = (Stage) tblClientes.getScene().getWindow();
-
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/HomeView.fxml")
-            );
-            Parent root = loader.load();
-
-            Scene scene = new Scene(
-                    root,
-                    stage.getScene().getWidth(),
-                    stage.getScene().getHeight()
-            );
-
-            scene.getStylesheets().add(
-                    getClass().getResource("/styles/theme.css").toExternalForm()
-            );
-            scene.getStylesheets().add(
-                    getClass().getResource("/styles/components.css").toExternalForm()
-            );
-
-            stage.setTitle("GearMind — Inicio");
-            stage.setScene(scene);
 
         } catch (IOException e) {
             e.printStackTrace();

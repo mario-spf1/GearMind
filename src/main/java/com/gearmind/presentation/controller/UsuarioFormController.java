@@ -14,12 +14,18 @@ import javafx.stage.Stage;
 
 public class UsuarioFormController {
 
-    @FXML private Label lblTitulo;
-    @FXML private TextField txtNombre;
-    @FXML private TextField txtEmail;
-    @FXML private PasswordField txtPassword;
-    @FXML private ComboBox<UserRole> cmbRol;
-    @FXML private CheckBox chkActivo;
+    @FXML
+    private Label lblTitulo;
+    @FXML
+    private TextField txtNombre;
+    @FXML
+    private TextField txtEmail;
+    @FXML
+    private PasswordField txtPassword;
+    @FXML
+    private ComboBox<UserRole> cmbRol;
+    @FXML
+    private CheckBox chkActivo;
 
     private final SaveUserUseCase saveUserUseCase;
 
@@ -28,10 +34,7 @@ public class UsuarioFormController {
 
     public UsuarioFormController() {
         PasswordHasher hasher = new BCryptPasswordHasher();
-        this.saveUserUseCase = new SaveUserUseCase(
-                new MySqlUserRepository(),
-                hasher
-        );
+        this.saveUserUseCase = new SaveUserUseCase(new MySqlUserRepository(), hasher);
     }
 
     public void initForNew() {
@@ -64,20 +67,12 @@ public class UsuarioFormController {
     private void onGuardar() {
         try {
             long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
-
-            SaveUserRequest request = new SaveUserRequest(
-                    editingId,
-                    empresaId,
-                    txtNombre.getText(),
-                    txtEmail.getText(),
-                    txtPassword.getText(),
-                    cmbRol.getValue(),
-                    chkActivo.isSelected()
-            );
-
+            String nombre = txtNombre.getText() != null ? txtNombre.getText().trim() : "";
+            String email = txtEmail.getText() != null ? txtEmail.getText().trim() : "";
+            String password = txtPassword.getText() != null ? txtPassword.getText().trim() : "";
+            SaveUserRequest request = new SaveUserRequest(editingId, empresaId, nombre, email, password, cmbRol.getValue(), chkActivo.isSelected());
             User result = saveUserUseCase.save(request);
             System.out.println("Usuario guardado: " + result.getId() + " - " + result.getEmail());
-
             saved = true;
             closeWindow();
 

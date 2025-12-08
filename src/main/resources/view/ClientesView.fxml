@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.gearmind.presentation.controller.ClientesController">
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.ClientesController"
+      spacing="12"
+      styleClass="tfx-page">
 
-    <top>
+    <children>
+
         <HBox spacing="12" styleClass="tfx-toolbar">
             <children>
                 <Label text="Clientes" styleClass="tfx-toolbar-title"/>
@@ -19,17 +21,13 @@
 
                 <TextField fx:id="txtBuscar" promptText="Buscar cliente..." styleClass="tfx-search"/>
 
-                <Button text="Refrescar" onAction="#onRefrescar"/>
+                <Button text="Refrescar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
 
                 <Button fx:id="btnNuevoCliente" text="Nuevo cliente" styleClass="tfx-btn-primary" onAction="#onNuevoCliente"/>
-
-                <Button text="Inicio" styleClass="tfx-btn-ghost" onAction="#onVolverHome"/>
             </children>
         </HBox>
-    </top>
 
-    <center>
-        <VBox spacing="8" styleClass="tfx-page">
+        <VBox spacing="8" styleClass="tfx-card">
             <children>
                 <TableView fx:id="tblClientes" prefHeight="400">
                     <columns>
@@ -50,5 +48,6 @@
                 </HBox>
             </children>
         </VBox>
-    </center>
-</BorderPane>
+
+    </children>
+</VBox>

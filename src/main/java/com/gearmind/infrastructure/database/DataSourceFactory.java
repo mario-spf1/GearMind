@@ -3,7 +3,6 @@ package com.gearmind.infrastructure.database;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.cdimascio.dotenv.Dotenv;
-
 import javax.sql.DataSource;
 
 public final class DataSourceFactory {
@@ -16,14 +15,12 @@ public final class DataSourceFactory {
     public static synchronized DataSource getDataSource() {
         if (dataSource == null) {
             Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-
             String url = dotenv.get("DB_URL");
 
             if (url == null || url.isBlank()) {
                 String host = dotenv.get("DB_HOST", "localhost");
                 String port = dotenv.get("DB_PORT", "3306");
                 String dbName = dotenv.get("DB_NAME", "gearmind");
-
                 url = "jdbc:mysql://" + host + ":" + port + "/" + dbName + "?serverTimezone=UTC&characterEncoding=UTF-8";
             }
 

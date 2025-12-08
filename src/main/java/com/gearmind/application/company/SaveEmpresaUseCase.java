@@ -27,12 +27,8 @@ public class SaveEmpresaUseCase {
         }
 
         long id = request.id() != null ? request.id() : 0L;
-
-        Empresa empresa = new Empresa(
-                id, nombre, cif, telefono, email,
-                direccion, ciudad, provincia, cp, activa
-        );
-
+        Empresa empresa = new Empresa(id, nombre, cif, telefono, email, direccion, ciudad, provincia, cp, activa);
+        
         return repository.save(empresa);
     }
 

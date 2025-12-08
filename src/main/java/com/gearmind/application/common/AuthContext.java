@@ -52,6 +52,10 @@ public final class AuthContext {
         return SessionManager.getInstance().getCurrentEmpresaId();
     }
 
+    public static String getEmpresaNombre() {
+        return SessionManager.getInstance().getCurrentEmpresaNombre();
+    }
+
     public static User getCurrentUser() {
         return getUserOrThrow();
     }

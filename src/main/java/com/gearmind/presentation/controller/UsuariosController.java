@@ -30,16 +30,25 @@ import java.util.stream.Collectors;
 
 public class UsuariosController {
 
-    @FXML private TableView<User> tblUsuarios;
-    @FXML private TableColumn<User, String> colNombre;
-    @FXML private TableColumn<User, String> colEmail;
-    @FXML private TableColumn<User, String> colRol;
-    @FXML private TableColumn<User, String> colEstado;
-    @FXML private TableColumn<User, User> colAcciones;
+    @FXML
+    private TableView<User> tblUsuarios;
+    @FXML
+    private TableColumn<User, String> colNombre;
+    @FXML
+    private TableColumn<User, String> colEmail;
+    @FXML
+    private TableColumn<User, String> colRol;
+    @FXML
+    private TableColumn<User, String> colEstado;
+    @FXML
+    private TableColumn<User, User> colAcciones;
 
-    @FXML private TextField txtBuscar;
-    @FXML private ComboBox<Integer> cmbPageSize;
-    @FXML private Label lblResumen;
+    @FXML
+    private TextField txtBuscar;
+    @FXML
+    private ComboBox<Integer> cmbPageSize;
+    @FXML
+    private Label lblResumen;
 
     private final ListUsersUseCase listUsersUseCase;
     private final DeactivateUserUseCase deactivateUserUseCase;
@@ -58,24 +67,16 @@ public class UsuariosController {
     @FXML
     private void initialize() {
         tblUsuarios.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
-        colRol.setCellValueFactory(c ->
-                new ReadOnlyObjectWrapper<>(c.getValue().getRol().name())
-        );
-        colEstado.setCellValueFactory(c ->
-                new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo")
-        );
-
+        colRol.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getRol().name()));
+        colEstado.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo"));
         setupAccionesColumn();
         setupRowDoubleClick();
-
         cmbPageSize.setItems(FXCollections.observableArrayList(5, 10, 25, 50));
         cmbPageSize.getSelectionModel().select(Integer.valueOf(10));
         cmbPageSize.valueProperty().addListener((obs, o, n) -> refreshTable());
         txtBuscar.textProperty().addListener((obs, o, n) -> refreshTable());
-
         loadUsuariosFromDb();
     }
 
@@ -84,20 +85,18 @@ public class UsuariosController {
         colAcciones.setCellFactory(col -> new TableCell<>() {
 
             private final Button btnEditar = new Button("Editar");
-            private final Button btnToggle = new Button(); // Activar/Desactivar
-            private final HBox box = new HBox(5, btnEditar, btnToggle);
+            private final Button btnToggle = new Button();
+            private final HBox box = new HBox(6, btnEditar, btnToggle);
 
             {
-                btnEditar.getStyleClass().addAll("button", "tfx-btn-primary");
-                btnToggle.getStyleClass().addAll("button", "tfx-btn-ghost");
-
+                btnEditar.getStyleClass().add("tfx-btn-ghost");
+                btnToggle.getStyleClass().add("tfx-btn-ghost");
                 btnEditar.setOnAction(e -> {
                     User u = getItem();
                     if (u != null) {
                         openUsuarioForm(u);
                     }
                 });
-
                 btnToggle.setOnAction(e -> {
                     User u = getItem();
                     if (u != null) {
@@ -147,22 +146,11 @@ public class UsuariosController {
      * Aplica filtro + "paginación" sobre masterData y actualiza la tabla.
      */
     private void refreshTable() {
-        String filtro = txtBuscar.getText() == null
-                ? ""
-                : txtBuscar.getText().trim().toLowerCase(Locale.ROOT);
-
-        int limit = Optional.ofNullable(cmbPageSize.getValue())
-                .orElse(Integer.MAX_VALUE);
-
-        List<User> filtered = masterData.stream()
-                .filter(u -> matchesFilter(u, filtro))
-                .sorted(Comparator.comparing(User::getNombre,
-                        String.CASE_INSENSITIVE_ORDER))
-                .collect(Collectors.toList());
-
+        String filtro = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim().toLowerCase(Locale.ROOT);
+        int limit = Optional.ofNullable(cmbPageSize.getValue()).orElse(Integer.MAX_VALUE);
+        List<User> filtered = masterData.stream().filter(u -> matchesFilter(u, filtro)).sorted(Comparator.comparing(User::getNombre, String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList());
         int total = filtered.size();
         List<User> visible = filtered.subList(0, Math.min(limit, total));
-
         tblUsuarios.setItems(FXCollections.observableArrayList(visible));
         lblResumen.setText("Mostrando " + visible.size() + " de " + total + " usuarios");
     }
@@ -175,10 +163,7 @@ public class UsuariosController {
         String email = safe(u.getEmail());
         String rol = u.getRol() != null ? u.getRol().name().toLowerCase(Locale.ROOT) : "";
         String estado = u.isActivo() ? "activo" : "inactivo";
-        return nombre.contains(filtro)
-                || email.contains(filtro)
-                || rol.contains(filtro)
-                || estado.contains(filtro);
+        return nombre.contains(filtro) || email.contains(filtro) || rol.contains(filtro) || estado.contains(filtro);
     }
 
     private String safe(String s) {
@@ -186,8 +171,7 @@ public class UsuariosController {
     }
 
     /**
-     * Si está activo → desactiva.
-     * Si está inactivo → activa.
+     * Si está activo → desactiva. Si está inactivo → activa.
      */
     private void toggleUserActive(User user) {
         if (user.isActivo()) {
@@ -202,7 +186,6 @@ public class UsuariosController {
         alert.setTitle("Desactivar usuario");
         alert.setHeaderText("¿Desactivar usuario?");
         alert.setContentText("El usuario \"" + user.getNombre() + "\" dejará de poder acceder a la aplicación.");
-
         alert.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
                 long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
@@ -217,7 +200,6 @@ public class UsuariosController {
         alert.setTitle("Activar usuario");
         alert.setHeaderText("¿Activar usuario?");
         alert.setContentText("El usuario \"" + user.getNombre() + "\" volverá a poder acceder a la aplicación.");
-
         alert.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
                 long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
@@ -234,11 +216,8 @@ public class UsuariosController {
      */
     private void openUsuarioForm(User user) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/UsuarioFormView.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/UsuarioFormView.fxml"));
             Parent root = loader.load();
-
             UsuarioFormController controller = loader.getController();
             if (user == null) {
                 controller.initForNew();
@@ -250,7 +229,10 @@ public class UsuariosController {
             dialog.initOwner(tblUsuarios.getScene().getWindow());
             dialog.initModality(Modality.WINDOW_MODAL);
             dialog.setTitle(user == null ? "Nuevo usuario" : "Editar usuario");
-            dialog.setScene(new Scene(root));
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+            dialog.setScene(scene);
             dialog.setResizable(false);
             dialog.showAndWait();
 
@@ -271,36 +253,5 @@ public class UsuariosController {
     @FXML
     private void onRefrescar() {
         loadUsuariosFromDb();
-    }
-
-    @FXML
-    private void onVolverHome() {
-        try {
-            Stage stage = (Stage) tblUsuarios.getScene().getWindow();
-
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/view/HomeView.fxml")
-            );
-            Parent root = loader.load();
-
-            Scene scene = new Scene(
-                    root,
-                    stage.getScene().getWidth(),
-                    stage.getScene().getHeight()
-            );
-
-            scene.getStylesheets().add(
-                    getClass().getResource("/styles/theme.css").toExternalForm()
-            );
-            scene.getStylesheets().add(
-                    getClass().getResource("/styles/components.css").toExternalForm()
-            );
-
-            stage.setTitle("GearMind — Inicio");
-            stage.setScene(scene);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

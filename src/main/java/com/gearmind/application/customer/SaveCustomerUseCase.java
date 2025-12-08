@@ -2,14 +2,11 @@ package com.gearmind.application.customer;
 
 import com.gearmind.domain.customer.Customer;
 import com.gearmind.domain.customer.CustomerRepository;
-
 import java.util.regex.Pattern;
 
 public class SaveCustomerUseCase {
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
-
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     private final CustomerRepository repository;
 
     public SaveCustomerUseCase(CustomerRepository repository) {
@@ -20,23 +17,10 @@ public class SaveCustomerUseCase {
         validate(request);
 
         if (request.id() == null) {
-            return repository.create(
-                    request.empresaId(),
-                    request.nombre().trim(),
-                    normalize(request.email()),
-                    normalize(request.telefono()),
-                    normalize(request.notas())
-            );
+            return repository.create(request.empresaId(), request.nombre().trim(), normalize(request.email()), normalize(request.telefono()), normalize(request.notas()));
         }
 
-        return repository.update(
-                request.id(),
-                request.empresaId(),
-                request.nombre().trim(),
-                normalize(request.email()),
-                normalize(request.telefono()),
-                normalize(request.notas())
-        );
+        return repository.update(request.id(), request.empresaId(), request.nombre().trim(), normalize(request.email()), normalize(request.telefono()), normalize(request.notas()));
     }
 
     private String normalize(String s) {

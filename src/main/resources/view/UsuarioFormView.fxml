@@ -1,65 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.gearmind.presentation.controller.UsuarioFormController"
-      spacing="16"
-      prefWidth="480" prefHeight="360"
-      styleClass="tfx-page">
+        xmlns:fx="http://javafx.com/fxml"
+        fx:controller="com.gearmind.presentation.controller.UsuarioFormController"
+        spacing="16"
+        prefWidth="480" prefHeight="360"
+        styleClass="tfx-page">
 
     <children>
 
-        <Label fx:id="lblTitulo"
-               text="Nuevo usuario"
-               styleClass="tfx-title-xl"/>
+        <Label fx:id="lblTitulo" text="Nuevo usuario" styleClass="tfx-title-xl"/>
 
-        <GridPane hgap="10" vgap="12">
-            <columnConstraints>
-                <ColumnConstraints percentWidth="30"/>
-                <ColumnConstraints percentWidth="70"/>
-            </columnConstraints>
-
+        <VBox styleClass="tfx-card" spacing="12">
             <children>
-                <Label text="Nombre:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtNombre"
-                           promptText="Nombre completo"
-                           GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                <GridPane hgap="10" vgap="12">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="30"/>
+                        <ColumnConstraints percentWidth="70"/>
+                    </columnConstraints>
 
-                <Label text="Email:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtEmail"
-                           promptText="correo@ejemplo.com"
-                           GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    <children>
+                        <Label text="Nombre:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtNombre" promptText="Nombre completo" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-                <Label text="Contraseña:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                <PasswordField fx:id="txtPassword"
-                               promptText="Dejar en blanco para no cambiar"
-                               GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Label text="Email:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtEmail" promptText="correo@ejemplo.com" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-                <Label text="Rol:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                <ComboBox fx:id="cmbRol"
-                          prefWidth="200"
-                          GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <Label text="Contraseña:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <PasswordField fx:id="txtPassword" promptText="Dejar en blanco para no cambiar" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-                <Label text="Estado:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                <CheckBox fx:id="chkActivo"
-                          text="Usuario activo"
-                          selected="true"
-                          GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <Label text="Rol:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cmbRol" prefWidth="200" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                        <Label text="Estado:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <CheckBox fx:id="chkActivo" text="Usuario activo" selected="true" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                    </children>
+                </GridPane>
             </children>
-        </GridPane>
+        </VBox>
 
         <HBox spacing="10">
             <children>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button text="Cancelar"
-                        onAction="#onCancelar"
-                        styleClass="button tfx-btn-ghost"/>
-                <Button text="Guardar"
-                        onAction="#onGuardar"
-                        styleClass="button tfx-btn-primary"/>
+                <Button text="Cancelar" onAction="#onCancelar" styleClass="tfx-btn-ghost"/>
+                <Button text="Guardar" onAction="#onGuardar" styleClass="tfx-btn-primary"/>
             </children>
         </HBox>
 

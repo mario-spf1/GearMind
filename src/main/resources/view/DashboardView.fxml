@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.DashboardController"
+      spacing="12"
+      styleClass="tfx-page">
+
+    <children>
+
+        <Label text="Dashboard"
+               styleClass="tfx-title-xl"/>
+
+        <VBox styleClass="tfx-card" spacing="8">
+            <children>
+                <Label text="Bienvenido a GearMind"
+                       styleClass="tfx-subtitle"/>
+                <Label text="Aquí podrás ver un resumen de la actividad del taller."/>
+            </children>
+        </VBox>
+
+    </children>
+</VBox>

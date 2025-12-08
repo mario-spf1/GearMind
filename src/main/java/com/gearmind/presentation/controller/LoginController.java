@@ -9,13 +9,13 @@ import com.gearmind.application.common.SessionManager;
 import com.gearmind.domain.user.User;
 import com.gearmind.infrastructure.auth.BCryptPasswordHasher;
 import com.gearmind.infrastructure.auth.MySqlUserRepository;
+import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-
 import java.io.IOException;
 import java.net.URL;
 
@@ -36,7 +36,7 @@ public class LoginController {
     private final LoginUseCase loginUseCase;
 
     public LoginController() {
-        this.loginUseCase = new LoginUseCase(new MySqlUserRepository(), new BCryptPasswordHasher());
+        this.loginUseCase = new LoginUseCase(new MySqlUserRepository(), new BCryptPasswordHasher(), new MySqlEmpresaRepository());
     }
 
     @FXML
@@ -60,13 +60,12 @@ public class LoginController {
         }
 
         try {
+            loginButton.setDisable(true);
             LoginRequest request = new LoginRequest(emailOrUser, password);
             LoginResponse response = loginUseCase.login(request);
-
             User loggedUser = response.user();
-
-            SessionManager.getInstance().startSession(loggedUser);
-
+            String empresaNombre = response.empresaNombre();
+            SessionManager.getInstance().startSession(loggedUser, empresaNombre);
             goToHome();
 
         } catch (InvalidCredentialsException e) {
@@ -79,6 +78,9 @@ public class LoginController {
         } catch (Exception e) {
             e.printStackTrace();
             showError("Se ha producido un error inesperado al iniciar sesión.");
+        } finally {
+            loginButton.setDisable(false);
+            passwordField.clear();
         }
     }
 
@@ -90,16 +92,15 @@ public class LoginController {
 
         FXMLLoader loader = new FXMLLoader(fxml);
         Parent root = loader.load();
-
         Stage stage = (Stage) loginButton.getScene().getWindow();
-
-        Scene scene = new Scene(root, stage.getScene().getWidth(), stage.getScene().getHeight());
-
+        double width = stage.getScene() != null ? stage.getScene().getWidth() : 1024;
+        double height = stage.getScene() != null ? stage.getScene().getHeight() : 720;
+        Scene scene = new Scene(root, width, height);
         scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
         scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
-
         stage.setTitle("GearMind — Inicio");
         stage.setScene(scene);
+        stage.show();
     }
 
     private void showError(String message) {

@@ -51,7 +51,9 @@ public class EmpresaFormController {
 
     private final SaveEmpresaUseCase saveEmpresaUseCase;
 
-    /** Empresa que se está editando; null si es nueva. */
+    /**
+     * Empresa que se está editando; null si es nueva.
+     */
     private Empresa empresa;
 
     public EmpresaFormController() {
@@ -73,8 +75,8 @@ public class EmpresaFormController {
     }
 
     /**
-     * Carga una empresa en el formulario para editarla.
-     * Si se pasa null, se deja en modo "nueva".
+     * Carga una empresa en el formulario para editarla. Si se pasa null, se
+     * deja en modo "nueva".
      */
     public void setEmpresa(Empresa empresa) {
         this.empresa = empresa;
@@ -135,22 +137,8 @@ public class EmpresaFormController {
             boolean activa = chkActiva.isSelected();
 
             Long id = (empresa != null) ? empresa.getId() : null;
-
-            SaveEmpresaRequest request = new SaveEmpresaRequest(
-                    id,
-                    nombre,
-                    cif,
-                    telefono,
-                    email,
-                    direccion,
-                    ciudad,
-                    provincia,
-                    cp,
-                    activa
-            );
-
+            SaveEmpresaRequest request = new SaveEmpresaRequest(id, nombre, cif, telefono, email, direccion, ciudad, provincia, cp, activa);
             saveEmpresaUseCase.execute(request);
-
             cerrarVentana();
 
         } catch (IllegalArgumentException ex) {

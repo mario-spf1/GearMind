@@ -61,8 +61,12 @@ public class ClienteFormController {
         try {
             long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
 
-            SaveCustomerRequest request = new SaveCustomerRequest(editingId, empresaId, txtNombre.getText(), txtEmail.getText(), txtTelefono.getText(), txtNotas.getText());
+            String nombre = txtNombre.getText() != null ? txtNombre.getText().trim() : "";
+            String email = txtEmail.getText() != null ? txtEmail.getText().trim() : "";
+            String telefono = txtTelefono.getText() != null ? txtTelefono.getText().trim() : "";
+            String notas = txtNotas.getText() != null ? txtNotas.getText().trim() : "";
 
+            SaveCustomerRequest request = new SaveCustomerRequest(editingId, empresaId, nombre, email, telefono, notas);
             Customer result = saveCustomerUseCase.save(request);
             System.out.println("Cliente guardado: " + result.getId() + " - " + result.getNombre());
 

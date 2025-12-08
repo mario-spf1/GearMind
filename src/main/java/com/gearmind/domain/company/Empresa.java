@@ -13,16 +13,7 @@ public class Empresa {
     private final String cp;
     private final boolean activa;
 
-    public Empresa(long id,
-                   String nombre,
-                   String cif,
-                   String telefono,
-                   String email,
-                   String direccion,
-                   String ciudad,
-                   String provincia,
-                   String cp,
-                   boolean activa) {
+    public Empresa(long id, String nombre, String cif, String telefono, String email, String direccion, String ciudad,String provincia, String cp, boolean activa) {
         this.id = id;
         this.nombre = nombre;
         this.cif = cif;

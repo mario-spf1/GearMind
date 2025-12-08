@@ -1,79 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.gearmind.presentation.controller.EmpresaFormController">
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gearmind.presentation.controller.EmpresaFormController" spacing="16" styleClass="tfx-page" prefWidth="520">
+    <children>
 
-    <top>
-        <HBox spacing="12" styleClass="tfx-toolbar">
-            <children>
-                <Label fx:id="lblTitle" text="Empresa" styleClass="tfx-toolbar-title"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Button text="Cancelar" fx:id="btnCancelar" onAction="#onCancelar" styleClass="tfx-btn-ghost"/>
-                <Button text="Guardar" fx:id="btnGuardar" onAction="#onGuardar" styleClass="tfx-btn-primary"/>
-            </children>
-        </HBox>
-    </top>
+        <Label fx:id="lblTitle" text="Empresa" styleClass="tfx-title-xl"/>
 
-    <center>
-        <VBox spacing="16" styleClass="tfx-page">
+        <VBox styleClass="tfx-card" spacing="12">
             <children>
 
-                <Label fx:id="lblError" text="" visible="false" managed="false" styleClass="tfx-error-text"/>
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="30"/>
+                        <ColumnConstraints percentWidth="70"/>
+                    </columnConstraints>
 
-                <VBox spacing="12" styleClass="tfx-card">
                     <children>
+                        <Label text="Nombre:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtNombre" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-                        <GridPane hgap="12" vgap="10">
-                            <columnConstraints>
-                                <ColumnConstraints percentWidth="25"/>
-                                <ColumnConstraints percentWidth="75"/>
-                            </columnConstraints>
+                        <Label text="CIF:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtCif" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-                            <children>
-                                <Label text="Nombre*" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                                <TextField fx:id="txtNombre" promptText="Nombre comercial" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <Label text="Teléfono:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtTelefono" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-                                <Label text="CIF / NIF" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                                <TextField fx:id="txtCif" promptText="B12345678" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label text="Email:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtEmail" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-                                <Label text="Teléfono" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                                <TextField fx:id="txtTelefono" promptText="+34 600 000 000" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Label text="Dirección:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtDireccion" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
-                                <Label text="Email" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                                <TextField fx:id="txtEmail" promptText="info@taller.es" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <Label text="Ciudad:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtCiudad" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
 
-                                <Label text="Dirección" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                                <TextField fx:id="txtDireccion" promptText="Calle, número, piso…" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <Label text="Provincia:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtProvincia" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
 
-                                <Label text="Ciudad" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                                <TextField fx:id="txtCiudad" promptText="Madrid" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                        <Label text="CP:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtCp" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
 
-                                <Label text="Provincia" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-                                <TextField fx:id="txtProvincia" promptText="Madrid" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
-
-                                <Label text="Código Postal" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
-                                <TextField fx:id="txtCp" promptText="28001" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
-
-                                <Label text="Estado" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
-                                <HBox spacing="8" GridPane.rowIndex="8" GridPane.columnIndex="1">
-                                    <children>
-                                        <CheckBox fx:id="chkActiva" text="Empresa activa" selected="true"/>
-                                    </children>
-                                </HBox>
-
-                            </children>
-                        </GridPane>
-
+                        <Label text="Estado:" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+                        <CheckBox fx:id="chkActiva" text="Empresa activa" selected="true" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
                     </children>
-                </VBox>
+                </GridPane>
 
+                <Label fx:id="lblError" text="" styleClass="tfx-error" visible="false" managed="false"/>
             </children>
         </VBox>
-    </center>
 
-</BorderPane>
+        <HBox spacing="10">
+            <children>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnCancelar" text="Cancelar" onAction="#onCancelar" styleClass="tfx-btn-ghost"/>
+                <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="tfx-btn-primary"/>
+            </children>
+        </HBox>
+
+    </children>
+</VBox>

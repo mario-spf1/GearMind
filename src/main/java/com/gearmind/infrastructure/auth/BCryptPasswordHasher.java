@@ -25,6 +25,7 @@ public class BCryptPasswordHasher implements PasswordHasher {
      * @param rawPassword
      * @return
      */
+    @Override
     public String hash(String rawPassword) {
         if (rawPassword == null || rawPassword.isBlank()) {
             throw new IllegalArgumentException("La contraseña no puede estar vacía");
