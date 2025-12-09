@@ -6,6 +6,7 @@ import com.gearmind.application.customer.DeactivateCustomerUseCase;
 import com.gearmind.application.customer.ListCustomersUseCase;
 import com.gearmind.domain.customer.Customer;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
+import com.gearmind.presentation.table.SmartTable;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -24,40 +25,41 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class ClientesController {
 
     @FXML
     private TableView<Customer> tblClientes;
-
     @FXML
     private TableColumn<Customer, String> colNombre;
-
     @FXML
     private TableColumn<Customer, String> colTelefono;
-
     @FXML
     private TableColumn<Customer, String> colEmail;
-
     @FXML
     private TableColumn<Customer, String> colNotas;
-
     @FXML
     private TableColumn<Customer, String> colEstado;
-
     @FXML
     private TableColumn<Customer, Customer> colAcciones;
 
     @FXML
     private TextField txtBuscar;
-
-    @FXML
-    private Button btnNuevoCliente;
-
     @FXML
     private ComboBox<Integer> cmbPageSize;
+    @FXML
+    private Button btnNuevoCliente;
+    @FXML
+    private Label lblHeaderInfo;
+
+    @FXML
+    private TextField filterNombreField;
+    @FXML
+    private TextField filterTelefonoField;
+    @FXML
+    private TextField filterEmailField;
+    @FXML
+    private TextField filterEstadoField;
 
     @FXML
     private Label lblResumen;
@@ -65,8 +67,8 @@ public class ClientesController {
     private final ListCustomersUseCase listCustomersUseCase;
     private final DeactivateCustomerUseCase deactivateCustomerUseCase;
     private final ActivateCustomerUseCase activateCustomerUseCase;
-
     private final ObservableList<Customer> masterData = FXCollections.observableArrayList();
+    private SmartTable<Customer> smartTable;
 
     public ClientesController() {
         MySqlCustomerRepository repo = new MySqlCustomerRepository();
@@ -100,17 +102,40 @@ public class ClientesController {
         });
 
         colEstado.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo"));
+        colEstado.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-danger");
+
+                if (empty || item == null) {
+                    setText(null);
+                    setTooltip(null);
+                } else {
+                    setText(item);
+                    getStyleClass().add("tfx-badge");
+                    if ("Activo".equalsIgnoreCase(item)) {
+                        getStyleClass().add("tfx-badge-success");
+                    } else {
+                        getStyleClass().add("tfx-badge-danger");
+                    }
+                }
+            }
+        });
+
         colAcciones.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
         colAcciones.setCellFactory(col -> new TableCell<>() {
 
             private final Button btnEditar = new Button("Editar");
             private final Button btnToggle = new Button();
-            private final HBox box = new HBox(6, btnEditar, btnToggle);
+            private final HBox box = new HBox(8, btnEditar, btnToggle);
 
             {
-                btnEditar.getStyleClass().add("tfx-btn-ghost");
-                btnToggle.getStyleClass().add("tfx-btn-ghost");
+                btnEditar.getStyleClass().add("tfx-icon-btn");
+                btnToggle.getStyleClass().add("tfx-icon-btn");
 
+                btnEditar.setTooltip(new Tooltip("Editar cliente"));
+                btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
                 btnEditar.setOnAction(e -> {
                     Customer c = getItem();
                     if (c != null) {
@@ -132,17 +157,43 @@ public class ClientesController {
                 if (empty || customer == null) {
                     setGraphic(null);
                 } else {
-                    btnToggle.setText(customer.isActivo() ? "Desactivar" : "Activar");
+                    btnToggle.getStyleClass().removeAll("tfx-icon-btn-danger", "tfx-icon-btn-success");
+
+                    if (customer.isActivo()) {
+                        btnToggle.setText("Desactivar");
+                        btnToggle.getStyleClass().add("tfx-icon-btn-danger");
+                        btnToggle.setTooltip(new Tooltip("Desactivar cliente"));
+                    } else {
+                        btnToggle.setText("Activar");
+                        btnToggle.getStyleClass().add("tfx-icon-btn-success");
+                        btnToggle.setTooltip(new Tooltip("Activar cliente"));
+                    }
+
                     setGraphic(box);
                 }
             }
         });
-
         colAcciones.setSortable(false);
-        cmbPageSize.setItems(FXCollections.observableArrayList(5, 10, 25, 50));
-        cmbPageSize.getSelectionModel().select(Integer.valueOf(10));
-        cmbPageSize.valueProperty().addListener((obs, o, n) -> refreshTable());
-        txtBuscar.textProperty().addListener((obs, o, n) -> refreshTable());
+
+        if (cmbPageSize != null) {
+            cmbPageSize.setItems(FXCollections.observableArrayList(5, 10, 25, 50));
+            cmbPageSize.getSelectionModel().select(Integer.valueOf(10));
+        }
+
+        smartTable = new SmartTable<>(tblClientes, masterData, txtBuscar, cmbPageSize, lblResumen, "clientes", this::matchesGlobalFilter);
+        tblClientes.setFixedCellSize(28);
+        smartTable.setAfterRefreshCallback(() -> {
+            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
+            double headerHeight = 28;
+            double tableHeight = headerHeight + rows * tblClientes.getFixedCellSize() + 2;
+            tblClientes.setPrefHeight(tableHeight);
+        });
+
+        smartTable.addColumnFilter(filterNombreField,(c, text) -> safe(c.getNombre()).contains(text));
+        smartTable.addColumnFilter(filterTelefonoField,(c, text) -> safe(c.getTelefono()).contains(text));
+        smartTable.addColumnFilter(filterEmailField, (c, text) -> safe(c.getEmail()).contains(text));
+        smartTable.addColumnFilter(filterEstadoField, (c, text) -> (c.isActivo() ? "activo" : "inactivo").toLowerCase(Locale.ROOT).contains(text));
+
         setupRowDoubleClick();
         loadClientesFromDb();
     }
@@ -150,33 +201,32 @@ public class ClientesController {
     private void loadClientesFromDb() {
         long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
         List<Customer> clientes = listCustomersUseCase.listByEmpresa(empresaId);
+
+        clientes.sort(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER));
+
         masterData.setAll(clientes);
-        refreshTable();
+        smartTable.refresh();
+
+        if (lblHeaderInfo != null) {
+            lblHeaderInfo.setText(masterData.size() + " clientes registrados");
+        }
     }
 
-    private void refreshTable() {
-        String filtro = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim().toLowerCase(Locale.ROOT);
-
-        int limit = Optional.ofNullable(cmbPageSize.getValue()).orElse(Integer.MAX_VALUE);
-
-        List<Customer> filtered = masterData.stream().filter(c -> matchesFilter(c, filtro)).sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList());
-
-        int total = filtered.size();
-        List<Customer> visible = filtered.subList(0, Math.min(limit, total));
-        tblClientes.setItems(FXCollections.observableArrayList(visible));
-        lblResumen.setText("Mostrando " + visible.size() + " de " + total + " clientes");
-    }
-
-    private boolean matchesFilter(Customer c, String filtro) {
-        if (filtro.isEmpty()) {
+    /**
+     * Filtro global (campo Buscar cliente...)
+     */
+    private boolean matchesGlobalFilter(Customer c, String filtro) {
+        if (filtro == null || filtro.isBlank()) {
             return true;
         }
+        String f = filtro.toLowerCase(Locale.ROOT);
         String nombre = safe(c.getNombre());
         String email = safe(c.getEmail());
         String telefono = safe(c.getTelefono());
         String notas = safe(c.getNotas());
         String estado = c.isActivo() ? "activo" : "inactivo";
-        return nombre.contains(filtro) || email.contains(filtro) || telefono.contains(filtro) || notas.contains(filtro) || estado.contains(filtro);
+
+        return nombre.contains(f) || email.contains(f) || telefono.contains(f) || notas.contains(f) || estado.contains(f);
     }
 
     private String safe(String s) {
@@ -263,11 +313,7 @@ public class ClientesController {
             dialog.initOwner(tblClientes.getScene().getWindow());
             dialog.initModality(Modality.WINDOW_MODAL);
             dialog.setTitle(customer == null ? "Nuevo cliente" : "Editar cliente");
-
-            Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
-            dialog.setScene(scene);
+            dialog.setScene(new Scene(root));
             dialog.setResizable(false);
             dialog.showAndWait();
 

@@ -10,39 +10,53 @@
 
     <children>
 
-        <HBox spacing="12" styleClass="tfx-toolbar">
+        <HBox spacing="8">
             <children>
-                <Label text="Clientes" styleClass="tfx-toolbar-title"/>
-                <Region HBox.hgrow="ALWAYS"/>
 
-                <Label text="Mostrar"/>
-                <ComboBox fx:id="cmbPageSize" prefWidth="70"/>
-                <Label text="clientes"/>
+                <VBox spacing="2">
+                    <children>
+                        <Label text="Clientes" styleClass="tfx-title-xl"/>
+                        <Label fx:id="lblHeaderInfo" text="Gestión de clientes" styleClass="tfx-subtitle"/>
+                    </children>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
 
                 <TextField fx:id="txtBuscar" promptText="Buscar cliente..." styleClass="tfx-search"/>
 
-                <Button text="Refrescar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
-
+                <Label text="Mostrar"/>
+                <ComboBox fx:id="cmbPageSize" prefWidth="70"/>
+                <Label text="por página"/>
+                <Button text="Recargar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
                 <Button fx:id="btnNuevoCliente" text="Nuevo cliente" styleClass="tfx-btn-primary" onAction="#onNuevoCliente"/>
             </children>
         </HBox>
 
-        <VBox spacing="8" styleClass="tfx-card">
+        <VBox spacing="6" styleClass="tfx-card">
             <children>
-                <TableView fx:id="tblClientes" prefHeight="400">
+                <TableView fx:id="tblClientes">
                     <columns>
                         <TableColumn fx:id="colNombre" text="Nombre"/>
                         <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="120"/>
                         <TableColumn fx:id="colEmail" text="Email"/>
                         <TableColumn fx:id="colNotas" text="Notas"/>
-                        <TableColumn fx:id="colEstado" text="Estado"/>
+                        <TableColumn fx:id="colEstado" text="Estado" prefWidth="110"/>
                         <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
                     </columns>
                 </TableView>
 
+                <HBox spacing="8" styleClass="tfx-filter-row">
+                    <children>
+                        <TextField fx:id="filterNombreField" promptText="Filtrar nombre..." styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="filterTelefonoField" promptText="Filtrar teléfono..." styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="filterEmailField" promptText="Filtrar email..." styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="filterEstadoField" promptText="activo / inactivo" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                    </children>
+                </HBox>
+
                 <HBox>
                     <children>
-                        <Label fx:id="lblResumen"/>
+                        <Label fx:id="lblResumen" styleClass="tfx-muted"/>
                         <Region HBox.hgrow="ALWAYS"/>
                     </children>
                 </HBox>
