@@ -122,17 +122,8 @@ public class EmpresasController {
         }
 
         // SmartTable como en Clientes/Usuarios
-        smartTable = new SmartTable<>(
-                tblEmpresas,
-                masterData,
-                txtBuscar,
-                cmbPageSize,
-                lblResumen,
-                "empresas",
-                this::matchesGlobalFilter
-        );
+        smartTable = new SmartTable<>(tblEmpresas, masterData, txtBuscar, cmbPageSize, lblResumen, "empresas", this::matchesGlobalFilter);
 
-        // Altura dinámica de la tabla
         tblEmpresas.setFixedCellSize(28);
         smartTable.setAfterRefreshCallback(() -> {
             int rows = Math.max(smartTable.getLastVisibleCount(), 1);
@@ -141,14 +132,11 @@ public class EmpresasController {
             tblEmpresas.setPrefHeight(tableHeight);
         });
 
-        // Filtros por columna
         smartTable.addColumnFilter(filterNombreField, (e, text) -> safe(e.getNombre()).contains(text));
         smartTable.addColumnFilter(filterCifField, (e, text) -> safe(e.getCif()).contains(text));
         smartTable.addColumnFilter(filterCiudadField, (e, text) -> safe(e.getCiudad()).contains(text));
         smartTable.addColumnFilter(filterProvinciaField, (e, text) -> safe(e.getProvincia()).contains(text));
-        smartTable.addColumnFilter(filterEstadoField, (e, text) ->
-                (e.isActiva() ? "activa" : "inactiva").toLowerCase(Locale.ROOT).contains(text));
-
+        smartTable.addColumnFilter(filterEstadoField, (e, text) -> (e.isActiva() ? "activa" : "inactiva").toLowerCase(Locale.ROOT).contains(text));
         cargarEmpresas();
     }
 
@@ -163,17 +151,14 @@ public class EmpresasController {
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
                 btnToggle.getStyleClass().add("tfx-icon-btn");
-
                 btnEditar.setTooltip(new Tooltip("Editar empresa"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
-
                 btnEditar.setOnAction(e -> {
                     Empresa emp = getItem();
                     if (emp != null) {
                         onEditar(emp);
                     }
                 });
-
                 btnToggle.setOnAction(e -> {
                     Empresa emp = getItem();
                     if (emp != null) {
@@ -226,7 +211,6 @@ public class EmpresasController {
         smartTable.refresh();
     }
 
-    // Filtro global (cuadro "Buscar por nombre, CIF, ciudad...")
     private boolean matchesGlobalFilter(Empresa e, String filtro) {
         if (filtro == null || filtro.isBlank()) {
             return true;
@@ -241,14 +225,7 @@ public class EmpresasController {
         String cp = safe(e.getCp());
         String estado = e.isActiva() ? "activa" : "inactiva";
 
-        return nombre.contains(f)
-                || cif.contains(f)
-                || telefono.contains(f)
-                || email.contains(f)
-                || ciudad.contains(f)
-                || provincia.contains(f)
-                || cp.contains(f)
-                || estado.contains(f);
+        return nombre.contains(f) || cif.contains(f) || telefono.contains(f) || email.contains(f) || ciudad.contains(f) || provincia.contains(f) || cp.contains(f) || estado.contains(f);
     }
 
     private String safe(String value) {
@@ -278,18 +255,7 @@ public class EmpresasController {
 
         boolean nuevoEstado = !empresa.isActiva();
 
-        SaveEmpresaRequest req = new SaveEmpresaRequest(
-                empresa.getId(),
-                empresa.getNombre(),
-                empresa.getCif(),
-                empresa.getTelefono(),
-                empresa.getEmail(),
-                empresa.getDireccion(),
-                empresa.getCiudad(),
-                empresa.getProvincia(),
-                empresa.getCp(),
-                nuevoEstado
-        );
+        SaveEmpresaRequest req = new SaveEmpresaRequest(empresa.getId(), empresa.getNombre(), empresa.getCif(), empresa.getTelefono(), empresa.getEmail(), empresa.getDireccion(), empresa.getCiudad(), empresa.getProvincia(), empresa.getCp(), nuevoEstado);
         saveEmpresaUseCase.execute(req);
         cargarEmpresas();
     }
@@ -298,22 +264,18 @@ public class EmpresasController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/EmpresaFormView.fxml"));
             Parent root = loader.load();
-
             EmpresaFormController controller = loader.getController();
             controller.setEmpresa(empresa);
-
             Stage stage = new Stage();
             stage.setTitle(empresa == null ? "Nueva empresa" : "Editar empresa");
             stage.initOwner(tblEmpresas.getScene().getWindow());
             stage.initModality(Modality.WINDOW_MODAL);
             stage.setResizable(false);
-
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
             scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
             stage.setScene(scene);
             stage.showAndWait();
-
             cargarEmpresas();
 
         } catch (IOException e) {

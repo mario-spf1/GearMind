@@ -14,22 +14,11 @@
             <children>
                 <Label text="Empresas" styleClass="tfx-toolbar-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
-
-                <TextField fx:id="txtBuscar"
-                           promptText="Buscar por nombre, CIF, ciudad..."
-                           styleClass="tfx-search"/>
-
+                <TextField fx:id="txtBuscar" promptText="Buscar por nombre, CIF, ciudad..." styleClass="tfx-search"/>
                 <Label text="Por página:" styleClass="tfx-muted"/>
                 <ComboBox fx:id="cmbPageSize" prefWidth="80"/>
-
-                <Button text="Refrescar"
-                        onAction="#onRefrescar"
-                        styleClass="tfx-btn-ghost"/>
-
-                <Button fx:id="btnNueva"
-                        text="Nueva empresa"
-                        onAction="#onNuevaEmpresa"
-                        styleClass="tfx-btn-primary"/>
+                <Button text="Refrescar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
+                <Button fx:id="btnNueva" text="Nueva empresa" onAction="#onNuevaEmpresa" styleClass="tfx-btn-primary"/>
             </children>
         </HBox>
 
@@ -50,33 +39,13 @@
                     </columns>
                 </TableView>
 
-                <!-- Fila de filtros por columna -->
                 <HBox spacing="8" styleClass="tfx-filter-row">
                     <children>
-                        <TextField fx:id="filterNombreField"
-                                   promptText="Filtrar nombre..."
-                                   styleClass="tfx-filter-field"
-                                   HBox.hgrow="ALWAYS"/>
-
-                        <TextField fx:id="filterCifField"
-                                   promptText="Filtrar CIF..."
-                                   styleClass="tfx-filter-field"
-                                   HBox.hgrow="ALWAYS"/>
-
-                        <TextField fx:id="filterCiudadField"
-                                   promptText="Filtrar ciudad..."
-                                   styleClass="tfx-filter-field"
-                                   HBox.hgrow="ALWAYS"/>
-
-                        <TextField fx:id="filterProvinciaField"
-                                   promptText="Filtrar provincia..."
-                                   styleClass="tfx-filter-field"
-                                   HBox.hgrow="ALWAYS"/>
-
-                        <TextField fx:id="filterEstadoField"
-                                   promptText="Filtrar activa / inactiva"
-                                   styleClass="tfx-filter-field"
-                                   HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="filterNombreField" promptText="Filtrar nombre..." styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="filterCifField" promptText="Filtrar CIF..." styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="filterCiudadField" promptText="Filtrar ciudad..." styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="filterProvinciaField" promptText="Filtrar provincia..." styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="filterEstadoField" promptText="Filtrar activa / inactiva" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
                     </children>
                 </HBox>
 
