@@ -12,51 +12,73 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
+import java.util.Arrays;
+
 public class UsuarioFormController {
 
     @FXML
-    private Label lblTitulo;
-    @FXML
     private TextField txtNombre;
+
     @FXML
     private TextField txtEmail;
+
     @FXML
-    private PasswordField txtPassword;
+    private PasswordField pwdPassword;
+
     @FXML
     private ComboBox<UserRole> cmbRol;
+
     @FXML
     private CheckBox chkActivo;
 
+    @FXML
+    private Button btnGuardar;
+
+    @FXML
+    private Button btnCancelar;
+
     private final SaveUserUseCase saveUserUseCase;
 
-    private Long editingId = null;
+    private User editingUser;
     private boolean saved = false;
 
     public UsuarioFormController() {
+        var repo = new MySqlUserRepository();
         PasswordHasher hasher = new BCryptPasswordHasher();
-        this.saveUserUseCase = new SaveUserUseCase(new MySqlUserRepository(), hasher);
+        this.saveUserUseCase = new SaveUserUseCase(repo, hasher);
     }
 
-    public void initForNew() {
-        editingId = null;
-        lblTitulo.setText("Nuevo usuario");
-        txtNombre.clear();
-        txtEmail.clear();
-        txtPassword.clear();
-        cmbRol.getItems().setAll(UserRole.values());
-        cmbRol.getSelectionModel().select(UserRole.EMPLEADO);
+    @FXML
+    private void initialize() {
+        // Rellenar combo de roles
+        cmbRol.getItems().setAll(Arrays.asList(UserRole.values()));
+
+        // Por defecto activo
         chkActivo.setSelected(true);
     }
 
-    public void initForEdit(User user) {
-        editingId = user.getId();
-        lblTitulo.setText("Editar usuario");
-        txtNombre.setText(user.getNombre());
-        txtEmail.setText(user.getEmail());
-        txtPassword.clear();
-        cmbRol.getItems().setAll(UserRole.values());
-        cmbRol.getSelectionModel().select(user.getRol());
-        chkActivo.setSelected(user.isActivo());
+    /**
+     * Se llama desde el UsuariosController para pasar el usuario a editar.
+     * Si es null, el formulario se usa para crear uno nuevo.
+     */
+    public void setUser(User user) {
+        this.editingUser = user;
+
+        if (user == null) {
+            // Nuevo usuario
+            txtNombre.clear();
+            txtEmail.clear();
+            pwdPassword.clear();
+            cmbRol.getSelectionModel().clearSelection();
+            chkActivo.setSelected(true);
+        } else {
+            // Edición
+            txtNombre.setText(user.getNombre());
+            txtEmail.setText(user.getEmail());
+            cmbRol.getSelectionModel().select(user.getRol());
+            chkActivo.setSelected(user.isActivo());
+            pwdPassword.clear(); // nunca mostramos la contraseña
+        }
     }
 
     public boolean isSaved() {
@@ -65,41 +87,66 @@ public class UsuarioFormController {
 
     @FXML
     private void onGuardar() {
-        try {
-            long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
-            String nombre = txtNombre.getText() != null ? txtNombre.getText().trim() : "";
-            String email = txtEmail.getText() != null ? txtEmail.getText().trim() : "";
-            String password = txtPassword.getText() != null ? txtPassword.getText().trim() : "";
-            SaveUserRequest request = new SaveUserRequest(editingId, empresaId, nombre, email, password, cmbRol.getValue(), chkActivo.isSelected());
-            User result = saveUserUseCase.save(request);
-            System.out.println("Usuario guardado: " + result.getId() + " - " + result.getEmail());
-            saved = true;
-            closeWindow();
+        String nombre = txtNombre.getText() != null ? txtNombre.getText().trim() : "";
+        String email = txtEmail.getText() != null ? txtEmail.getText().trim() : "";
+        String rawPassword = pwdPassword.getText() != null ? pwdPassword.getText().trim() : "";
+        UserRole rol = cmbRol.getSelectionModel().getSelectedItem();
+        boolean activo = chkActivo.isSelected();
 
-        } catch (IllegalArgumentException ex) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Datos inválidos");
-            alert.setHeaderText(null);
-            alert.setContentText(ex.getMessage());
-            alert.showAndWait();
+        if (nombre.isBlank()) {
+            showError("El nombre es obligatorio.");
+            return;
+        }
+        if (email.isBlank()) {
+            showError("El email es obligatorio.");
+            return;
+        }
+        if (rol == null) {
+            showError("Debes seleccionar un rol.");
+            return;
+        }
+
+        long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+        Long userId = editingUser != null ? editingUser.getId() : null;
+
+        // NOTA: podemos dejar la contraseña en blanco en edición para no cambiarla;
+        // el SaveUserUseCase debería ignorar password en blanco.
+        SaveUserRequest request = new SaveUserRequest(
+                userId,
+                empresaId,
+                nombre,
+                email,
+                rawPassword,
+                rol,
+                activo
+        );
+
+        try {
+            saveUserUseCase.save(request);
+            this.saved = true;
+            closeWindow();
         } catch (Exception ex) {
             ex.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText("No se pudo guardar el usuario");
-            alert.setContentText(ex.getMessage());
-            alert.showAndWait();
+            showError("No se ha podido guardar el usuario: " + ex.getMessage());
         }
     }
 
     @FXML
     private void onCancelar() {
-        saved = false;
+        this.saved = false;
         closeWindow();
     }
 
     private void closeWindow() {
-        Stage stage = (Stage) txtNombre.getScene().getWindow();
+        Stage stage = (Stage) btnGuardar.getScene().getWindow();
         stage.close();
+    }
+
+    private void showError(String msg) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText("Validación");
+        alert.setContentText(msg);
+        alert.showAndWait();
     }
 }

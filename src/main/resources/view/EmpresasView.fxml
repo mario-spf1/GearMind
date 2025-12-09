@@ -2,44 +2,93 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gearmind.presentation.controller.EmpresasController" spacing="12" styleClass="tfx-page">
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.EmpresasController"
+      spacing="12"
+      styleClass="tfx-page">
+
     <children>
 
         <HBox spacing="12" styleClass="tfx-toolbar">
             <children>
                 <Label text="Empresas" styleClass="tfx-toolbar-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <TextField fx:id="txtBuscar" promptText="Buscar por nombre, CIF, ciudad..." styleClass="tfx-search"/>
+
+                <TextField fx:id="txtBuscar"
+                           promptText="Buscar por nombre, CIF, ciudad..."
+                           styleClass="tfx-search"/>
+
                 <Label text="Por página:" styleClass="tfx-muted"/>
                 <ComboBox fx:id="cmbPageSize" prefWidth="80"/>
-                <Button text="Refrescar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
-                <Button fx:id="btnNueva" text="Nueva empresa" onAction="#onNuevaEmpresa" styleClass="tfx-btn-primary"/>
+
+                <Button text="Refrescar"
+                        onAction="#onRefrescar"
+                        styleClass="tfx-btn-ghost"/>
+
+                <Button fx:id="btnNueva"
+                        text="Nueva empresa"
+                        onAction="#onNuevaEmpresa"
+                        styleClass="tfx-btn-primary"/>
             </children>
         </HBox>
 
-        <VBox spacing="8" styleClass="tfx-card">
+        <VBox spacing="6" styleClass="tfx-card">
             <children>
-                <TableView fx:id="tblEmpresas" VBox.vgrow="ALWAYS">
+
+                <TableView fx:id="tblEmpresas">
                     <columns>
-                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="180"/>
+                        <TableColumn fx:id="colNombre" text="Nombre"/>
                         <TableColumn fx:id="colCif" text="CIF" prefWidth="120"/>
-                        <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="130"/>
-                        <TableColumn fx:id="colEmail" text="Email" prefWidth="220"/>
+                        <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="120"/>
+                        <TableColumn fx:id="colEmail" text="Email"/>
                         <TableColumn fx:id="colCiudad" text="Ciudad" prefWidth="140"/>
                         <TableColumn fx:id="colProvincia" text="Provincia" prefWidth="140"/>
-                        <TableColumn fx:id="colCp" text="CP" prefWidth="70"/>
+                        <TableColumn fx:id="colCp" text="CP" prefWidth="80"/>
                         <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
-                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="190"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="200"/>
                     </columns>
                 </TableView>
+
+                <!-- Fila de filtros por columna -->
+                <HBox spacing="8" styleClass="tfx-filter-row">
+                    <children>
+                        <TextField fx:id="filterNombreField"
+                                   promptText="Filtrar nombre..."
+                                   styleClass="tfx-filter-field"
+                                   HBox.hgrow="ALWAYS"/>
+
+                        <TextField fx:id="filterCifField"
+                                   promptText="Filtrar CIF..."
+                                   styleClass="tfx-filter-field"
+                                   HBox.hgrow="ALWAYS"/>
+
+                        <TextField fx:id="filterCiudadField"
+                                   promptText="Filtrar ciudad..."
+                                   styleClass="tfx-filter-field"
+                                   HBox.hgrow="ALWAYS"/>
+
+                        <TextField fx:id="filterProvinciaField"
+                                   promptText="Filtrar provincia..."
+                                   styleClass="tfx-filter-field"
+                                   HBox.hgrow="ALWAYS"/>
+
+                        <TextField fx:id="filterEstadoField"
+                                   promptText="Filtrar activa / inactiva"
+                                   styleClass="tfx-filter-field"
+                                   HBox.hgrow="ALWAYS"/>
+                    </children>
+                </HBox>
+
                 <HBox spacing="8">
                     <children>
-                        <Label fx:id="lblResumen" text="Mostrando 0 de 0 empresas" styleClass="tfx-muted"/>
+                        <Label fx:id="lblResumen" styleClass="tfx-muted"/>
                         <Region HBox.hgrow="ALWAYS"/>
                     </children>
                 </HBox>
+
             </children>
         </VBox>
-        
+
     </children>
 </VBox>

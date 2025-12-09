@@ -15,7 +15,9 @@
 
                 <Region HBox.hgrow="ALWAYS"/>
 
-                <TextField fx:id="txtBuscar" promptText="Buscar por nombre, email, rol o estado" styleClass="tfx-search"/>
+                <TextField fx:id="txtBuscar"
+                           promptText="Buscar por nombre, email, rol o estado"
+                           styleClass="tfx-search"/>
 
                 <Label text="Por página:" styleClass="tfx-muted"/>
                 <ComboBox fx:id="cmbPageSize" prefWidth="80"/>
@@ -26,22 +28,43 @@
             </children>
         </HBox>
 
-        <VBox spacing="8" styleClass="tfx-card">
+        <VBox spacing="6" styleClass="tfx-card">
             <children>
-
-                <TableView fx:id="tblUsuarios" VBox.vgrow="ALWAYS">
+                <TableView fx:id="tblUsuarios">
                     <columns>
-                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="220"/>
-                        <TableColumn fx:id="colEmail" text="Email" prefWidth="260"/>
-                        <TableColumn fx:id="colRol" text="Rol" prefWidth="100"/>
+                        <TableColumn fx:id="colNombre" text="Nombre"/>
+                        <TableColumn fx:id="colEmail" text="Email"/>
+                        <TableColumn fx:id="colRol" text="Rol" prefWidth="120"/>
                         <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
-                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="180"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="200"/>
                     </columns>
                 </TableView>
 
+                <!-- Filtros por columna -->
+                <HBox spacing="8" styleClass="tfx-filter-row">
+                    <children>
+                        <TextField fx:id="filterNombreField"
+                                   promptText="Filtrar nombre..."
+                                   styleClass="tfx-filter-field"
+                                   HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="filterEmailField"
+                                   promptText="Filtrar email..."
+                                   styleClass="tfx-filter-field"
+                                   HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="filterRolField"
+                                   promptText="Filtrar rol..."
+                                   styleClass="tfx-filter-field"
+                                   HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="filterEstadoField"
+                                   promptText="Filtrar activo / inactivo"
+                                   styleClass="tfx-filter-field"
+                                   HBox.hgrow="ALWAYS"/>
+                    </children>
+                </HBox>
+
                 <HBox spacing="8">
                     <children>
-                        <Label fx:id="lblResumen" text="Mostrando 0 de 0 usuarios" styleClass="tfx-muted"/>
+                        <Label fx:id="lblResumen" styleClass="tfx-muted"/>
                         <Region HBox.hgrow="ALWAYS"/>
                     </children>
                 </HBox>
