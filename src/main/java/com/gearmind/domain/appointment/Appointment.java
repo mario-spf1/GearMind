@@ -6,6 +6,7 @@ public class Appointment {
 
     private Long id;
     private Long empresaId;
+    private Long employeeId;
     private Long customerId;
     private Long vehicleId;
     private LocalDateTime dateTime;
@@ -18,9 +19,10 @@ public class Appointment {
     public Appointment() {
     }
 
-    public Appointment(Long id, Long empresaId, Long customerId, Long vehicleId, LocalDateTime dateTime, AppointmentStatus status, AppointmentOrigin origin, String notes, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Appointment(Long id, Long empresaId, Long employeeId, Long customerId, Long vehicleId, LocalDateTime dateTime, AppointmentStatus status, AppointmentOrigin origin, String notes, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.empresaId = empresaId;
+        this.employeeId = employeeId;
         this.customerId = customerId;
         this.vehicleId = vehicleId;
         this.dateTime = dateTime;
@@ -45,6 +47,14 @@ public class Appointment {
 
     public void setEmpresaId(Long empresaId) {
         this.empresaId = empresaId;
+    }
+
+    public Long getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
     }
 
     public Long getCustomerId() {

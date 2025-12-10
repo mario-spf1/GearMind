@@ -26,8 +26,11 @@ public class SaveAppointmentUseCase {
             throw new OverlappingAppointmentException("Ya existe otra cita en esa fecha y hora para ese vehículo.");
         }
 
+        AppointmentOrigin origin = defaultOrigin(request.getOrigin());
+        AppointmentStatus status = defaultStatus(request.getStatus(), origin);
+
         if (appointmentId == null) {
-            Appointment appointment = new Appointment(null, request.getEmpresaId(), request.getCustomerId(), request.getVehicleId(), request.getDateTime(), AppointmentStatus.PENDING, defaultOrigin(request.getOrigin()), request.getNotes(), now, null);
+            Appointment appointment = new Appointment(null, request.getEmpresaId(), request.getEmployeeId(), request.getCustomerId(), request.getVehicleId(), request.getDateTime(), status, origin, request.getNotes(), now, null);
             appointmentRepository.save(appointment);
         } else {
             Optional<Appointment> optionalAppointment = appointmentRepository.findById(appointmentId);
@@ -39,6 +42,14 @@ public class SaveAppointmentUseCase {
 
             if (request.getOrigin() != null) {
                 appointment.setOrigin(request.getOrigin());
+            }
+
+            if (request.getStatus() != null) {
+                appointment.setStatus(request.getStatus());
+            }
+
+            if (request.getEmployeeId() != null) {
+                appointment.setEmployeeId(request.getEmployeeId());
             }
 
             appointment.setUpdatedAt(now);
@@ -60,5 +71,16 @@ public class SaveAppointmentUseCase {
 
     private AppointmentOrigin defaultOrigin(AppointmentOrigin origin) {
         return origin != null ? origin : AppointmentOrigin.INTERNAL;
+    }
+
+    private AppointmentStatus defaultStatus(AppointmentStatus statusFromRequest, AppointmentOrigin origin) {
+        if (statusFromRequest != null) {
+            return statusFromRequest;
+        }
+
+        if (origin == AppointmentOrigin.TELEGRAM) {
+            return AppointmentStatus.REQUESTED;
+        }
+        return AppointmentStatus.CONFIRMED;
     }
 }

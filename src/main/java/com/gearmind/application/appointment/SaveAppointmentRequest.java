@@ -1,18 +1,20 @@
 package com.gearmind.application.appointment;
 
 import com.gearmind.domain.appointment.AppointmentOrigin;
-
+import com.gearmind.domain.appointment.AppointmentStatus;
 import java.time.LocalDateTime;
 
 public class SaveAppointmentRequest {
 
     private Long id;
     private Long empresaId;
+    private Long employeeId;
     private Long customerId;
     private Long vehicleId;
     private LocalDateTime dateTime;
     private String notes;
     private AppointmentOrigin origin;
+    private AppointmentStatus status;
 
     public SaveAppointmentRequest() {
     }
@@ -31,6 +33,14 @@ public class SaveAppointmentRequest {
 
     public void setEmpresaId(Long empresaId) {
         this.empresaId = empresaId;
+    }
+
+    public Long getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(Long employeeId) {
+        this.employeeId = employeeId;
     }
 
     public Long getCustomerId() {
@@ -71,5 +81,13 @@ public class SaveAppointmentRequest {
 
     public void setOrigin(AppointmentOrigin origin) {
         this.origin = origin;
+    }
+
+    public AppointmentStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AppointmentStatus status) {
+        this.status = status;
     }
 }

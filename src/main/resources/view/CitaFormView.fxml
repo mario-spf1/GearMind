@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.gearmind.presentation.controller.CitaFormController"
+            prefWidth="420" prefHeight="360"
+            styleClass="tfx-root">
+
+    <center>
+        <VBox spacing="10" styleClass="tfx-card">
+            <padding>
+                <Insets top="16" right="16" bottom="16" left="16"/>
+            </padding>
+
+            <children>
+
+                <Label fx:id="lblTitulo" text="Nueva cita" styleClass="tfx-title"/>
+
+                <GridPane hgap="8" vgap="6">
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT" minWidth="80"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
+
+                    <children>
+                        <Label text="Fecha:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <DatePicker fx:id="dpFecha" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <Label text="Hora (HH:MM):" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtHora" promptText="13:30" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label text="Cliente ID:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtClienteId" promptText="ID de cliente" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Label text="Vehículo ID:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtVehiculoId" promptText="ID de vehículo (opcional)" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <Label text="Origen:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <Label fx:id="lblOrigen" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <Label text="Notas:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                        <TextArea fx:id="txtNotas" prefRowCount="4" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                    </children>
+                </GridPane>
+
+                <Region VBox.vgrow="ALWAYS"/>
+
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <children>
+                        <Button text="Cancelar" onAction="#onCancelar" styleClass="button-secondary"/>
+                        <Button text="Guardar" onAction="#onGuardar" styleClass="button"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </center>
+</BorderPane>

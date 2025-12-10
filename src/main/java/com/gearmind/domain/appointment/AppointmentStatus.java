@@ -1,7 +1,7 @@
 package com.gearmind.domain.appointment;
 
 public enum AppointmentStatus {
-    PENDING,
+    REQUESTED,
     CONFIRMED,
     CANCELLED,
     COMPLETED

@@ -247,3 +247,20 @@
     -fx-font-weight: 800;
     -fx-text-fill: -tfx-primary;
 }
+
+.date-picker, .date-picker .text-field,.date-picker .arrow-button {
+    -fx-background-radius: 8;
+    -fx-background-color: #15171d;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #2b2f3a;
+    -fx-border-radius: 8;
+}
+
+.date-picker .arrow-button .arrow {
+    -fx-background-color: #ffffff;
+}
+
+.date-picker-popup, .date-picker-popup > * {
+    -fx-background-color: #15171d;
+    -fx-text-fill: #ffffff;
+}
