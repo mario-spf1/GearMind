@@ -46,7 +46,6 @@ public class EmpresasController {
     private TableColumn<Empresa, String> colEstado;
     @FXML
     private TableColumn<Empresa, Empresa> colAcciones;
-
     @FXML
     private Button btnNueva;
     @FXML
@@ -55,16 +54,20 @@ public class EmpresasController {
     private ComboBox<Integer> cmbPageSize;
     @FXML
     private Label lblResumen;
-
-    // Filtros por columna (fila inferior)
     @FXML
     private TextField filterNombreField;
     @FXML
     private TextField filterCifField;
     @FXML
+    private TextField filterTelefonoField;
+    @FXML
+    private TextField filterEmailField;
+    @FXML
     private TextField filterCiudadField;
     @FXML
     private TextField filterProvinciaField;
+    @FXML
+    private TextField filterCpField;
     @FXML
     private TextField filterEstadoField;
 
@@ -92,8 +95,8 @@ public class EmpresasController {
         colCp.setCellValueFactory(new PropertyValueFactory<>("cp"));
 
         // Estado con badge como en Clientes/Usuarios
-        colEstado.setCellValueFactory(cd ->
-                new SimpleStringProperty(cd.getValue().isActiva() ? "Activa" : "Inactiva"));
+        colEstado.setCellValueFactory(cd
+                -> new SimpleStringProperty(cd.getValue().isActiva() ? "Activa" : "Inactiva"));
         colEstado.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -134,8 +137,11 @@ public class EmpresasController {
 
         smartTable.addColumnFilter(filterNombreField, (e, text) -> safe(e.getNombre()).contains(text));
         smartTable.addColumnFilter(filterCifField, (e, text) -> safe(e.getCif()).contains(text));
+        smartTable.addColumnFilter(filterTelefonoField, (e, text) -> safe(e.getTelefono()).contains(text));
+        smartTable.addColumnFilter(filterEmailField, (e, text) -> safe(e.getEmail()).contains(text));
         smartTable.addColumnFilter(filterCiudadField, (e, text) -> safe(e.getCiudad()).contains(text));
         smartTable.addColumnFilter(filterProvinciaField, (e, text) -> safe(e.getProvincia()).contains(text));
+        smartTable.addColumnFilter(filterCpField, (e, text) -> safe(e.getCp()).contains(text));
         smartTable.addColumnFilter(filterEstadoField, (e, text) -> (e.isActiva() ? "activa" : "inactiva").toLowerCase(Locale.ROOT).contains(text));
         cargarEmpresas();
     }
@@ -153,12 +159,14 @@ public class EmpresasController {
                 btnToggle.getStyleClass().add("tfx-icon-btn");
                 btnEditar.setTooltip(new Tooltip("Editar empresa"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
+
                 btnEditar.setOnAction(e -> {
                     Empresa emp = getItem();
                     if (emp != null) {
                         onEditar(emp);
                     }
                 });
+
                 btnToggle.setOnAction(e -> {
                     Empresa emp = getItem();
                     if (emp != null) {
@@ -281,5 +289,37 @@ public class EmpresasController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    private void onLimpiarFiltros() {
+        if (txtBuscar != null) {
+            txtBuscar.clear();
+        }
+        if (filterNombreField != null) {
+            filterNombreField.clear();
+        }
+        if (filterCifField != null) {
+            filterCifField.clear();
+        }
+        if (filterTelefonoField != null) {
+            filterTelefonoField.clear();
+        }
+        if (filterEmailField != null) {
+            filterEmailField.clear();
+        }
+        if (filterCiudadField != null) {
+            filterCiudadField.clear();
+        }
+        if (filterProvinciaField != null) {
+            filterProvinciaField.clear();
+        }
+        if (filterCpField != null) {
+            filterCpField.clear();
+        }
+        if (filterEstadoField != null) {
+            filterEstadoField.clear();
+        }
+        smartTable.refresh();
     }
 }

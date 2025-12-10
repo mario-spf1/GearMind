@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -9,15 +10,12 @@
       styleClass="tfx-page">
 
     <children>
+
         <HBox spacing="12" styleClass="tfx-toolbar">
             <children>
                 <Label text="Usuarios" styleClass="tfx-toolbar-title"/>
 
                 <Region HBox.hgrow="ALWAYS"/>
-
-                <TextField fx:id="txtBuscar"
-                           promptText="Buscar por nombre, email, rol o estado"
-                           styleClass="tfx-search"/>
 
                 <Label text="Por página:" styleClass="tfx-muted"/>
                 <ComboBox fx:id="cmbPageSize" prefWidth="80"/>
@@ -27,6 +25,41 @@
                 <Button text="Nuevo usuario" onAction="#onNuevoUsuario" styleClass="tfx-btn-primary"/>
             </children>
         </HBox>
+
+        <VBox spacing="8" styleClass="tfx-card">
+            <padding>
+                <Insets top="8" right="8" bottom="8" left="8"/>
+            </padding>
+
+            <children>
+                <Label text="Filtros" styleClass="tfx-muted"/>
+
+                <GridPane hgap="8" vgap="6">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="25"/>
+                        <ColumnConstraints percentWidth="25"/>
+                        <ColumnConstraints percentWidth="25"/>
+                        <ColumnConstraints percentWidth="25"/>
+                    </columnConstraints>
+
+                    <children>
+                        <TextField fx:id="filterNombreField" promptText="Nombre" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="filterEmailField" promptText="Email" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <TextField fx:id="filterRolField" promptText="Rol" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                        <TextField fx:id="filterEstadoField" promptText="Activo / inactivo" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+                    </children>
+                </GridPane>
+
+                <TextField fx:id="txtBuscar" visible="false" managed="false"/>
+
+                <HBox spacing="8">
+                    <children>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Limpiar filtros" onAction="#onLimpiarFiltros" styleClass="tfx-btn-ghost"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
 
         <VBox spacing="6" styleClass="tfx-card">
             <children>
@@ -39,28 +72,6 @@
                         <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="200"/>
                     </columns>
                 </TableView>
-
-                <!-- Filtros por columna -->
-                <HBox spacing="8" styleClass="tfx-filter-row">
-                    <children>
-                        <TextField fx:id="filterNombreField"
-                                   promptText="Filtrar nombre..."
-                                   styleClass="tfx-filter-field"
-                                   HBox.hgrow="ALWAYS"/>
-                        <TextField fx:id="filterEmailField"
-                                   promptText="Filtrar email..."
-                                   styleClass="tfx-filter-field"
-                                   HBox.hgrow="ALWAYS"/>
-                        <TextField fx:id="filterRolField"
-                                   promptText="Filtrar rol..."
-                                   styleClass="tfx-filter-field"
-                                   HBox.hgrow="ALWAYS"/>
-                        <TextField fx:id="filterEstadoField"
-                                   promptText="Filtrar activo / inactivo"
-                                   styleClass="tfx-filter-field"
-                                   HBox.hgrow="ALWAYS"/>
-                    </children>
-                </HBox>
 
                 <HBox spacing="8">
                     <children>

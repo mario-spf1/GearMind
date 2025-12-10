@@ -189,8 +189,8 @@ public class ClientesController {
             tblClientes.setPrefHeight(tableHeight);
         });
 
-        smartTable.addColumnFilter(filterNombreField,(c, text) -> safe(c.getNombre()).contains(text));
-        smartTable.addColumnFilter(filterTelefonoField,(c, text) -> safe(c.getTelefono()).contains(text));
+        smartTable.addColumnFilter(filterNombreField, (c, text) -> safe(c.getNombre()).contains(text));
+        smartTable.addColumnFilter(filterTelefonoField, (c, text) -> safe(c.getTelefono()).contains(text));
         smartTable.addColumnFilter(filterEmailField, (c, text) -> safe(c.getEmail()).contains(text));
         smartTable.addColumnFilter(filterEstadoField, (c, text) -> (c.isActivo() ? "activo" : "inactivo").toLowerCase(Locale.ROOT).contains(text));
 
@@ -324,5 +324,26 @@ public class ClientesController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    private void onLimpiarFiltros() {
+        if (txtBuscar != null) {
+            txtBuscar.clear();
+        }
+        if (filterNombreField != null) {
+            filterNombreField.clear();
+        }
+        if (filterTelefonoField != null) {
+            filterTelefonoField.clear();
+        }
+        if (filterEmailField != null) {
+            filterEmailField.clear();
+        }
+        if (filterEstadoField != null) {
+            filterEstadoField.clear();
+        }
+
+        smartTable.refresh();
     }
 }

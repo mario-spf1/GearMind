@@ -50,7 +50,6 @@ public class UsuariosController {
     @FXML
     private Label lblResumen;
 
-    // Filtros por columna (footer, igual que clientes)
     @FXML
     private TextField filterNombreField;
     @FXML
@@ -85,8 +84,8 @@ public class UsuariosController {
                 c.getValue().getRol() != null ? c.getValue().getRol().name() : ""
         ));
 
-        colEstado.setCellValueFactory(c ->
-                new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo"));
+        colEstado.setCellValueFactory(c
+                -> new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo"));
         colEstado.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -116,18 +115,8 @@ public class UsuariosController {
             cmbPageSize.getSelectionModel().select(Integer.valueOf(10));
         }
 
-        // SmartTable: igual que Clientes
-        smartTable = new SmartTable<>(
-                tblUsuarios,
-                masterData,
-                txtBuscar,
-                cmbPageSize,
-                lblResumen,
-                "usuarios",
-                this::matchesGlobalFilter
-        );
+        smartTable = new SmartTable<>(tblUsuarios, masterData, txtBuscar, cmbPageSize, lblResumen, "usuarios", this::matchesGlobalFilter);
 
-        // Altura dinámica de la tabla (opcional, igual que clientes)
         tblUsuarios.setFixedCellSize(28);
         smartTable.setAfterRefreshCallback(() -> {
             int rows = Math.max(smartTable.getLastVisibleCount(), 1);
@@ -136,15 +125,13 @@ public class UsuariosController {
             tblUsuarios.setPrefHeight(tableHeight);
         });
 
-        // Filtros por columna (footer)
         smartTable.addColumnFilter(filterNombreField, (u, text) -> safe(u.getNombre()).contains(text));
         smartTable.addColumnFilter(filterEmailField, (u, text) -> safe(u.getEmail()).contains(text));
         smartTable.addColumnFilter(filterRolField, (u, text) -> {
             String rol = u.getRol() != null ? u.getRol().name().toLowerCase(Locale.ROOT) : "";
             return rol.contains(text);
         });
-        smartTable.addColumnFilter(filterEstadoField, (u, text) ->
-                (u.isActivo() ? "activo" : "inactivo").toLowerCase(Locale.ROOT).contains(text));
+        smartTable.addColumnFilter(filterEstadoField, (u, text) -> (u.isActivo() ? "activo" : "inactivo").toLowerCase(Locale.ROOT).contains(text));
 
         loadUsuariosFromDb();
     }
@@ -275,15 +262,7 @@ public class UsuariosController {
             if (btn == ButtonType.OK) {
                 long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
 
-                SaveUserRequest request = new SaveUserRequest(
-                        user.getId(),
-                        empresaId,
-                        user.getNombre(),
-                        user.getEmail(),
-                        "",           // la contraseña no se toca aquí
-                        user.getRol(),
-                        true
-                );
+                SaveUserRequest request = new SaveUserRequest(user.getId(), empresaId, user.getNombre(), user.getEmail(), "", user.getRol(), true);
                 saveUserUseCase.save(request);
                 loadUsuariosFromDb();
             }
@@ -296,7 +275,7 @@ public class UsuariosController {
             Parent root = loader.load();
 
             UsuarioFormController controller = loader.getController();
-            controller.setUser(user);   // <- aquí usamos setUser que ahora te doy
+            controller.setUser(user);
 
             Stage dialog = new Stage();
             dialog.initOwner(tblUsuarios.getScene().getWindow());
@@ -323,5 +302,26 @@ public class UsuariosController {
     @FXML
     private void onRefrescar() {
         loadUsuariosFromDb();
+    }
+
+    @FXML
+    private void onLimpiarFiltros() {
+        if (txtBuscar != null) {
+            txtBuscar.clear();
+        }
+        if (filterNombreField != null) {
+            filterNombreField.clear();
+        }
+        if (filterEmailField != null) {
+            filterEmailField.clear();
+        }
+        if (filterRolField != null) {
+            filterRolField.clear();
+        }
+        if (filterEstadoField != null) {
+            filterEstadoField.clear();
+        }
+
+        smartTable.refresh();
     }
 }

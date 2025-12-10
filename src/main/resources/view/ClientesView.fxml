@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -10,7 +11,7 @@
 
     <children>
 
-        <HBox spacing="8">
+        <HBox spacing="8" styleClass="tfx-toolbar">
             <children>
 
                 <VBox spacing="2">
@@ -22,15 +23,48 @@
 
                 <Region HBox.hgrow="ALWAYS"/>
 
-                <TextField fx:id="txtBuscar" promptText="Buscar cliente..." styleClass="tfx-search"/>
-
-                <Label text="Mostrar"/>
+                <Label text="Mostrar" styleClass="tfx-muted"/>
                 <ComboBox fx:id="cmbPageSize" prefWidth="70"/>
-                <Label text="por página"/>
+                <Label text="por página" styleClass="tfx-muted"/>
                 <Button text="Recargar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
                 <Button fx:id="btnNuevoCliente" text="Nuevo cliente" styleClass="tfx-btn-primary" onAction="#onNuevoCliente"/>
             </children>
         </HBox>
+
+        <VBox spacing="8" styleClass="tfx-card">
+            <padding>
+                <Insets top="8" right="8" bottom="8" left="8"/>
+            </padding>
+
+            <children>
+                <Label text="Filtros" styleClass="tfx-muted"/>
+
+                <GridPane hgap="8" vgap="6">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="25"/>
+                        <ColumnConstraints percentWidth="25"/>
+                        <ColumnConstraints percentWidth="25"/>
+                        <ColumnConstraints percentWidth="25"/>
+                    </columnConstraints>
+
+                    <children>
+                        <TextField fx:id="filterNombreField" promptText="Nombre" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="filterTelefonoField" promptText="Teléfono" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <TextField fx:id="filterEmailField" promptText="Email" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                        <TextField fx:id="filterEstadoField" promptText="Activo / inactivo" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+                    </children>
+                </GridPane>
+
+                <TextField fx:id="txtBuscar" visible="false" managed="false"/>
+
+                <HBox spacing="8">
+                    <children>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Limpiar filtros" onAction="#onLimpiarFiltros" styleClass="tfx-btn-ghost"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
 
         <VBox spacing="6" styleClass="tfx-card">
             <children>
@@ -44,15 +78,6 @@
                         <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
                     </columns>
                 </TableView>
-
-                <HBox spacing="8" styleClass="tfx-filter-row">
-                    <children>
-                        <TextField fx:id="filterNombreField" promptText="Filtrar nombre..." styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
-                        <TextField fx:id="filterTelefonoField" promptText="Filtrar teléfono..." styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
-                        <TextField fx:id="filterEmailField" promptText="Filtrar email..." styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
-                        <TextField fx:id="filterEstadoField" promptText="activo / inactivo" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
-                    </children>
-                </HBox>
 
                 <HBox>
                     <children>
