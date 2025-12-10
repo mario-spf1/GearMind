@@ -30,12 +30,14 @@ public class HomeController {
     @FXML
     private Button btnNavDashboard;
     @FXML
+    private Button btnNavCitas;
+    @FXML
     private Button btnNavClientes;
     @FXML
     private Button btnNavUsuarios;
     @FXML
     private Button btnNavEmpresas;
-    
+
     private Node savedSidebar;
 
     @FXML
@@ -59,12 +61,9 @@ public class HomeController {
 
         if (lblUsuarioActual != null && user != null) {
             String rolTexto = switch (role) {
-                case SUPER_ADMIN ->
-                    "Super admin";
-                case ADMIN ->
-                    "Admin";
-                case EMPLEADO ->
-                    "Empleado";
+                case SUPER_ADMIN -> "Super admin";
+                case ADMIN -> "Admin";
+                case EMPLEADO -> "Empleado";
             };
             lblUsuarioActual.setText(user.getNombre() + " (" + rolTexto + ")");
         }
@@ -100,7 +99,7 @@ public class HomeController {
     }
 
     private void setAllSidebarButtonsVisible(boolean visible) {
-        for (Button b : List.of(btnNavDashboard, btnNavClientes, btnNavUsuarios, btnNavEmpresas)) {
+        for (Button b : List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavUsuarios, btnNavEmpresas)) {
             if (b != null) {
                 b.setVisible(visible);
                 b.setManaged(visible);
@@ -129,7 +128,7 @@ public class HomeController {
     }
 
     private void setActiveNavButton(Button activeButton) {
-        List<Button> buttons = List.of(btnNavDashboard, btnNavClientes, btnNavUsuarios, btnNavEmpresas);
+        List<Button> buttons = List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavUsuarios, btnNavEmpresas);
 
         for (Button b : buttons) {
             if (b != null) {
@@ -160,6 +159,12 @@ public class HomeController {
     private void onGoDashboard() {
         loadView("/view/DashboardView.fxml");
         setActiveNavButton(btnNavDashboard);
+    }
+
+    @FXML
+    private void onGoCitas() {
+        loadView("/view/CitasView.fxml");
+        setActiveNavButton(btnNavCitas);
     }
 
     @FXML

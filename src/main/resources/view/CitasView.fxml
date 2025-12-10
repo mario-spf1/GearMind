@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.gearmind.presentation.controller.CitasController"
+            prefWidth="1000.0" prefHeight="650.0"
+            styleClass="tfx-root">
+
+    <!-- Barra superior: título + botones -->
+    <top>
+        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="tfx-toolbar">
+            <children>
+                <Label text="Citas" styleClass="tfx-title"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+
+                <Button fx:id="btnNuevaCita"
+                        text="Nueva cita"
+                        onAction="#onNuevaCita"
+                        styleClass="button"/>
+
+                <Button fx:id="btnRefrescar"
+                        text="Refrescar"
+                        onAction="#onRefrescar"
+                        styleClass="button-secondary"/>
+            </children>
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+        </HBox>
+    </top>
+
+    <center>
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+
+            <!-- TAB AGENDA -->
+            <tabs>
+                <Tab text="Agenda">
+                    <content>
+                        <BorderPane>
+                            <top>
+                                <HBox spacing="10" alignment="CENTER_LEFT"
+                                      styleClass="tfx-subtoolbar">
+                                    <children>
+                                        <Label text="Fecha:"/>
+                                        <DatePicker fx:id="dpAgendaFecha"/>
+
+                                        <Button text="Hoy" onAction="#onAgendaHoy"/>
+
+                                        <Pane HBox.hgrow="ALWAYS"/>
+
+                                        <Label text="Estado:"/>
+                                        <ComboBox fx:id="cbAgendaEstado" prefWidth="160.0"/>
+
+                                    </children>
+                                    <padding>
+                                        <Insets top="8" right="10" bottom="8" left="10"/>
+                                    </padding>
+                                </HBox>
+                            </top>
+
+                            <center>
+                                <!-- ListView para mostrar tarjetas de las citas del día -->
+                                <ListView fx:id="lstAgenda" />
+                            </center>
+                        </BorderPane>
+                    </content>
+                </Tab>
+
+                <!-- TAB TABLA -->
+                <Tab text="Tabla">
+                    <content>
+                        <BorderPane>
+                            <!-- Filtros debajo de la tabla tipo DataTable -->
+                            <center>
+                                <VBox spacing="8">
+                                    <TableView fx:id="tblCitas" prefHeight="500.0">
+                                        <columns>
+                                            <TableColumn fx:id="colFechaHora" text="Fecha / Hora" prefWidth="160"/>
+                                            <TableColumn fx:id="colCliente" text="Cliente" prefWidth="200"/>
+                                            <TableColumn fx:id="colVehiculo" text="Vehículo" prefWidth="160"/>
+                                            <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
+                                            <TableColumn fx:id="colOrigen" text="Origen" prefWidth="120"/>
+                                            <TableColumn fx:id="colNotas" text="Notas" prefWidth="250"/>
+                                            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
+                                        </columns>
+                                    </TableView>
+
+                                    <!-- Barra de filtros debajo de la tabla -->
+                                    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="tfx-subtoolbar">
+                                        <children>
+                                            <Label text="Buscar:"/>
+                                            <TextField fx:id="txtFiltroTexto"
+                                                       promptText="Cliente, vehículo, notas..."
+                                                       HBox.hgrow="ALWAYS"/>
+
+                                            <Label text="Estado:"/>
+                                            <ComboBox fx:id="cbFiltroEstado" prefWidth="140.0"/>
+
+                                            <Label text="Desde:"/>
+                                            <DatePicker fx:id="dpFiltroDesde"/>
+
+                                            <Label text="Hasta:"/>
+                                            <DatePicker fx:id="dpFiltroHasta"/>
+
+                                            <Button text="Aplicar" onAction="#onAplicarFiltros"/>
+                                            <Button text="Limpiar" onAction="#onLimpiarFiltros"/>
+                                        </children>
+                                        <padding>
+                                            <Insets top="8" right="10" bottom="8" left="10"/>
+                                        </padding>
+                                    </HBox>
+                                </VBox>
+                            </center>
+                        </BorderPane>
+                    </content>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </center>
+
+</BorderPane>
