@@ -35,6 +35,7 @@ public class SaveAppointmentUseCase {
         } else {
             Optional<Appointment> optionalAppointment = appointmentRepository.findById(appointmentId);
             Appointment appointment = optionalAppointment.orElseThrow(() -> new IllegalArgumentException("Cita no encontrada con id: " + appointmentId));
+            appointment.setEmpresaId(request.getEmpresaId());
             appointment.setCustomerId(request.getCustomerId());
             appointment.setVehicleId(request.getVehicleId());
             appointment.setDateTime(request.getDateTime());

@@ -5,7 +5,6 @@ import com.gearmind.application.appointment.SaveAppointmentUseCase;
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.domain.appointment.Appointment;
 import com.gearmind.domain.appointment.AppointmentOrigin;
-import com.gearmind.domain.appointment.AppointmentStatus;
 import com.gearmind.domain.user.User;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -21,151 +20,178 @@ public class CitaFormController {
     @FXML
     private Label lblTitulo;
     @FXML
-    private DatePicker dpFecha;
-    @FXML
-    private TextField txtHora;
-    @FXML
     private TextField txtClienteId;
     @FXML
     private TextField txtVehiculoId;
     @FXML
-    private TextArea txtNotas;
+    private TextField txtEmpleadoId;
     @FXML
-    private Label lblOrigen;
+    private DatePicker dpFecha;
+    @FXML
+    private TextField txtHora;
+    @FXML
+    private TextArea txtNotas;
 
-    private SaveAppointmentUseCase saveAppointmentUseCase;
     private Long empresaId;
-    private Appointment editingAppointment;
+    private SaveAppointmentUseCase saveAppointmentUseCase;
+    private Appointment existingAppointment;
     private boolean saved = false;
 
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
-    public void init(Long empresaId, SaveAppointmentUseCase useCase, Appointment appointment) {
+    public void init(Long empresaId, SaveAppointmentUseCase saveAppointmentUseCase, Appointment existingAppointment) {
         this.empresaId = empresaId;
-        this.saveAppointmentUseCase = useCase;
-        this.editingAppointment = appointment;
+        this.saveAppointmentUseCase = saveAppointmentUseCase;
+        this.existingAppointment = existingAppointment;
 
-        if (appointment != null) {
+        if (existingAppointment != null) {
             lblTitulo.setText("Editar cita");
-            if (appointment.getDateTime() != null) {
-                LocalDateTime dt = appointment.getDateTime();
+
+            if (existingAppointment.getCustomerId() != null) {
+                txtClienteId.setText(String.valueOf(existingAppointment.getCustomerId()));
+            }
+            if (existingAppointment.getVehicleId() != null) {
+                txtVehiculoId.setText(String.valueOf(existingAppointment.getVehicleId()));
+            }
+
+            if (existingAppointment.getDateTime() != null) {
+                LocalDateTime dt = existingAppointment.getDateTime();
                 dpFecha.setValue(dt.toLocalDate());
                 txtHora.setText(dt.toLocalTime().format(timeFormatter));
             }
-            if (appointment.getCustomerId() != null) {
-                txtClienteId.setText(String.valueOf(appointment.getCustomerId()));
+
+            if (existingAppointment.getNotes() != null) {
+                txtNotas.setText(existingAppointment.getNotes());
             }
-            if (appointment.getVehicleId() != null) {
-                txtVehiculoId.setText(String.valueOf(appointment.getVehicleId()));
+
+            if (existingAppointment.getEmployeeId() != null) {
+                txtEmpleadoId.setText(String.valueOf(existingAppointment.getEmployeeId()));
+            } else {
+                fillCurrentUserInEmpleadoField();
             }
-            txtNotas.setText(appointment.getNotes() != null ? appointment.getNotes() : "");
+
         } else {
             lblTitulo.setText("Nueva cita");
             dpFecha.setValue(LocalDate.now());
+            fillCurrentUserInEmpleadoField();
         }
+    }
 
-        AppointmentOrigin origin = appointment != null && appointment.getOrigin() != null ? appointment.getOrigin() : AppointmentOrigin.INTERNAL;
-        lblOrigen.setText(origin == AppointmentOrigin.INTERNAL ? "Interno" : "Telegram");
+    private void fillCurrentUserInEmpleadoField() {
+        if (AuthContext.isLoggedIn()) {
+            User current = AuthContext.getCurrentUser();
+            if (current != null) {
+                txtEmpleadoId.setText(String.valueOf(current.getId()));
+            }
+        }
+    }
+
+    @FXML
+    private void onCancelar() {
+        close();
     }
 
     @FXML
     private void onGuardar() {
         try {
-            LocalDate fecha = dpFecha.getValue();
-            if (fecha == null) {
-                showError("Debes seleccionar una fecha.");
-                return;
-            }
-
-            String horaStr = txtHora.getText();
-            if (horaStr == null || horaStr.isBlank()) {
-                showError("Debes introducir una hora (formato HH:MM).");
-                return;
-            }
-
-            LocalTime hora;
-            try {
-                hora = LocalTime.parse(horaStr.trim(), timeFormatter);
-            } catch (DateTimeParseException e) {
-                showError("Hora no válida. Usa el formato HH:MM, por ejemplo 09:30.");
-                return;
-            }
-
-            LocalDateTime dateTime = LocalDateTime.of(fecha, hora);
-
-            Long clienteId;
-            try {
-                clienteId = Long.parseLong(txtClienteId.getText().trim());
-            } catch (NumberFormatException e) {
-                showError("Cliente ID debe ser un número.");
-                return;
-            }
-
-            Long vehiculoId = null;
-            String vehiculoText = txtVehiculoId.getText();
-            if (vehiculoText != null && !vehiculoText.isBlank()) {
-                try {
-                    vehiculoId = Long.parseLong(vehiculoText.trim());
-                } catch (NumberFormatException e) {
-                    showError("Vehículo ID debe ser un número (o dejar vacío).");
-                    return;
-                }
-            }
-
-            String notas = txtNotas.getText();
-            AppointmentOrigin origin = editingAppointment != null && editingAppointment.getOrigin() != null ? editingAppointment.getOrigin() : AppointmentOrigin.INTERNAL;
-            AppointmentStatus status;
-
-            if (editingAppointment != null && editingAppointment.getStatus() != null) {
-                status = editingAppointment.getStatus();
-            } else {
-                status = AppointmentStatus.CONFIRMED;
-            }
-
-            Long employeeId = null;
-
-            if (AuthContext.isLoggedIn()) {
-                User u = AuthContext.getCurrentUser();
-                if (u != null) {
-                    employeeId = u.getId();
-                }
-            }
-
-            SaveAppointmentRequest req = new SaveAppointmentRequest();
-
-            if (editingAppointment != null) {
-                req.setId(editingAppointment.getId());
-            }
-
-            req.setEmpresaId(empresaId);
-            req.setEmployeeId(employeeId);
-            req.setCustomerId(clienteId);
-            req.setVehicleId(vehiculoId);
-            req.setDateTime(dateTime);
-            req.setStatus(status);
-            req.setOrigin(origin);
-            req.setNotes(notas);
-            saveAppointmentUseCase.execute(req);
+            SaveAppointmentRequest request = buildRequest();
+            saveAppointmentUseCase.execute(request);
             saved = true;
-            closeStage();
+            close();
+        } catch (IllegalArgumentException | DateTimeParseException e) {
+            showError(e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             showError("Error al guardar la cita: " + e.getMessage());
         }
     }
 
-    @FXML
-    private void onCancelar() {
-        closeStage();
+    private SaveAppointmentRequest buildRequest() {
+        if (empresaId == null) {
+            throw new IllegalArgumentException("No se ha establecido la empresa para la cita.");
+        }
+
+        String clienteStr = txtClienteId.getText();
+        if (clienteStr == null || clienteStr.isBlank()) {
+            throw new IllegalArgumentException("El ID de cliente es obligatorio.");
+        }
+
+        Long clienteId;
+        try {
+            clienteId = Long.parseLong(clienteStr.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("El ID de cliente debe ser numérico.");
+        }
+
+        Long vehiculoId = null;
+        String vehiculoStr = txtVehiculoId.getText();
+        if (vehiculoStr != null && !vehiculoStr.isBlank()) {
+            try {
+                vehiculoId = Long.parseLong(vehiculoStr.trim());
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("El ID de vehículo debe ser numérico.");
+            }
+        }
+
+        LocalDate fecha = dpFecha.getValue();
+        if (fecha == null) {
+            throw new IllegalArgumentException("La fecha es obligatoria.");
+        }
+
+        String horaStr = txtHora.getText();
+        if (horaStr == null || horaStr.isBlank()) {
+            throw new IllegalArgumentException("La hora es obligatoria (formato HH:mm).");
+        }
+
+        LocalTime hora;
+        try {
+            hora = LocalTime.parse(horaStr.trim(), timeFormatter);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("La hora debe tener formato HH:mm.");
+        }
+
+        LocalDateTime dateTime = LocalDateTime.of(fecha, hora);
+
+        SaveAppointmentRequest request = new SaveAppointmentRequest();
+
+        if (existingAppointment != null) {
+            request.setId(existingAppointment.getId());
+        }
+
+        request.setEmpresaId(empresaId);
+        request.setCustomerId(clienteId);
+        request.setVehicleId(vehiculoId);
+        request.setDateTime(dateTime);
+        request.setNotes(txtNotas.getText());
+
+        if (existingAppointment != null && existingAppointment.getOrigin() != null) {
+            request.setOrigin(existingAppointment.getOrigin());
+        } else {
+            request.setOrigin(AppointmentOrigin.INTERNAL);
+        }
+
+        Long employeeId = null;
+
+        if (existingAppointment != null && existingAppointment.getEmployeeId() != null) {
+            employeeId = existingAppointment.getEmployeeId();
+        } else if (AuthContext.isLoggedIn()) {
+            User current = AuthContext.getCurrentUser();
+            if (current != null) {
+                employeeId = current.getId();
+            }
+        }
+
+        request.setEmployeeId(employeeId);
+        return request;
+    }
+
+    private void close() {
+        Stage stage = (Stage) lblTitulo.getScene().getWindow();
+        stage.close();
     }
 
     public boolean isSaved() {
         return saved;
-    }
-
-    private void closeStage() {
-        Stage stage = (Stage) dpFecha.getScene().getWindow();
-        stage.close();
     }
 
     private void showError(String message) {
