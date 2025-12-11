@@ -22,8 +22,8 @@
 
                 <GridPane hgap="8" vgap="8">
                     <columnConstraints>
-                        <ColumnConstraints prefWidth="110"/>
-                        <ColumnConstraints hgrow="ALWAYS"/>
+                        <ColumnConstraints minWidth="100.0" prefWidth="120.0" halignment="RIGHT"/>
+                        <ColumnConstraints minWidth="200.0" hgrow="ALWAYS"/>
                     </columnConstraints>
 
                     <children>
@@ -31,13 +31,13 @@
                         <DatePicker fx:id="dpFecha" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
                         <Label text="Hora (HH:mm):" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                         <TextField fx:id="txtHora" promptText="HH:mm" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                        <Label text="Cliente ID:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtClienteId" promptText="ID de cliente" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Label text="Cliente:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cbCliente" promptText="Buscar cliente..." editable="true" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
                         <Label text="Vehículo ID:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                         <TextField fx:id="txtVehiculoId" promptText="ID de vehículo (opcional)" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-                        <Label text="Empleado ID:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtEmpleadoId" promptText="ID de empleado" editable="false" focusTraversable="false" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-                        <Label text="Notas:" GridPane.rowIndex="5"GridPane.columnIndex="0" GridPane.valignment="TOP"/>
+                        <Label text="Empleado:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cbEmpleado" promptText="Buscar empleado..." editable="true" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <Label text="Notas:" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.valignment="TOP"/>
                         <TextArea fx:id="txtNotas" prefRowCount="4" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
                     </children>
                 </GridPane>

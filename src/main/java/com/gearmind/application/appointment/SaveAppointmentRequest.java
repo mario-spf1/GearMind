@@ -2,6 +2,7 @@ package com.gearmind.application.appointment;
 
 import com.gearmind.domain.appointment.AppointmentOrigin;
 import com.gearmind.domain.appointment.AppointmentStatus;
+import com.gearmind.domain.user.UserRole;
 import java.time.LocalDateTime;
 
 public class SaveAppointmentRequest {
@@ -15,6 +16,8 @@ public class SaveAppointmentRequest {
     private String notes;
     private AppointmentOrigin origin;
     private AppointmentStatus status;
+    private Long currentUserId;
+    private UserRole currentUserRole;
 
     public SaveAppointmentRequest() {
     }
@@ -89,5 +92,21 @@ public class SaveAppointmentRequest {
 
     public void setStatus(AppointmentStatus status) {
         this.status = status;
+    }
+
+    public Long getCurrentUserId() {
+        return currentUserId;
+    }
+
+    public void setCurrentUserId(Long currentUserId) {
+        this.currentUserId = currentUserId;
+    }
+
+    public UserRole getCurrentUserRole() {
+        return currentUserRole;
+    }
+
+    public void setCurrentUserRole(UserRole currentUserRole) {
+        this.currentUserRole = currentUserRole;
     }
 }
