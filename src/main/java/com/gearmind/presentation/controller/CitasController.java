@@ -3,10 +3,13 @@ package com.gearmind.presentation.controller;
 import com.gearmind.application.appointment.ChangeAppointmentStatusUseCase;
 import com.gearmind.application.appointment.ListAppointmentsUseCase;
 import com.gearmind.application.appointment.SaveAppointmentUseCase;
+import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
 import com.gearmind.domain.appointment.Appointment;
 import com.gearmind.domain.appointment.AppointmentOrigin;
 import com.gearmind.domain.appointment.AppointmentStatus;
+import com.gearmind.domain.user.User;
+import com.gearmind.domain.user.UserRole;
 import com.gearmind.infrastructure.appointment.MySqlAppointmentRepository;
 import com.gearmind.presentation.table.SmartTable;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -24,7 +27,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -58,6 +60,10 @@ public class CitasController {
     @FXML
     private TableColumn<Appointment, String> colVehiculo;
     @FXML
+    private TableColumn<Appointment, String> colEmpleado;
+    @FXML
+    private TableColumn<Appointment, String> colEmpresa;
+    @FXML
     private TableColumn<Appointment, String> colEstado;
     @FXML
     private TableColumn<Appointment, String> colOrigen;
@@ -70,6 +76,10 @@ public class CitasController {
     private TextField filterClienteField;
     @FXML
     private TextField filterVehiculoField;
+    @FXML
+    private TextField filterEmpleadoField;
+    @FXML
+    private TextField filterEmpresaField;
     @FXML
     private TextField filterNotasField;
     @FXML
@@ -115,14 +125,17 @@ public class CitasController {
             tblCitas.setPrefHeight(tableHeight);
         });
 
-        smartTable.addColumnFilter(filterClienteField, (cita, text) -> safe(String.valueOf(cita.getCustomerId())).contains(text));
-        smartTable.addColumnFilter(filterVehiculoField, (cita, text) -> safe(String.valueOf(cita.getVehicleId())).contains(text));
+        smartTable.addColumnFilter(filterClienteField, (cita, text) -> appointmentValueOrBlank(cita.getCustomerId()).contains(text));
+        smartTable.addColumnFilter(filterVehiculoField, (cita, text) -> appointmentValueOrBlank(cita.getVehicleId()).contains(text));
+        smartTable.addColumnFilter(filterEmpleadoField, (cita, text) -> appointmentValueOrBlank(cita.getEmployeeId()).contains(text));
+        smartTable.addColumnFilter(filterEmpresaField, (cita, text) -> appointmentValueOrBlank(cita.getEmpresaId()).contains(text));
         smartTable.addColumnFilter(filterNotasField, (cita, text) -> safe(cita.getNotes()).contains(text));
         smartTable.addColumnFilter(filterEstadoField, (cita, text) -> safe(mapStatusToLabel(cita.getStatus())).contains(text));
         smartTable.addColumnFilter(filterOrigenField, (cita, text) -> safe(mapOriginToLabel(cita.getOrigin())).contains(text));
 
         configureEstadoYOrigenCombos();
         dpAgendaFecha.setValue(LocalDate.now());
+        applyRoleVisibility();
         reloadFromDb();
     }
 
@@ -183,6 +196,10 @@ public class CitasController {
         colCliente.setCellValueFactory(cellData -> new SimpleStringProperty(appointmentValueOrBlank(cellData.getValue().getCustomerId())));
 
         colVehiculo.setCellValueFactory(cellData -> new SimpleStringProperty(appointmentValueOrBlank(cellData.getValue().getVehicleId())));
+
+        colEmpleado.setCellValueFactory(cellData -> new SimpleStringProperty(appointmentValueOrBlank(cellData.getValue().getEmployeeId())));
+
+        colEmpresa.setCellValueFactory(cellData -> new SimpleStringProperty(appointmentValueOrBlank(cellData.getValue().getEmpresaId())));
 
         colEstado.setCellValueFactory(cellData -> {
             AppointmentStatus status = cellData.getValue().getStatus();
@@ -280,6 +297,29 @@ public class CitasController {
         cbAgendaEstado.getSelectionModel().selectFirst();
     }
 
+    private void applyRoleVisibility() {
+        if (!AuthContext.isLoggedIn()) {
+            colEmpresa.setVisible(false);
+            filterEmpresaField.setVisible(false);
+            filterEmpresaField.setManaged(false);
+            return;
+        }
+
+        UserRole role = AuthContext.getRole();
+
+        if (role != UserRole.SUPER_ADMIN) {
+
+            if (colEmpresa != null) {
+                colEmpresa.setVisible(false);
+            }
+
+            if (filterEmpresaField != null) {
+                filterEmpresaField.setVisible(false);
+                filterEmpresaField.setManaged(false);
+            }
+        }
+    }
+
     @FXML
     private void onNuevaCita() {
         openCitaForm(null);
@@ -299,7 +339,27 @@ public class CitasController {
     private void reloadFromDb() {
         long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
         List<Appointment> citas = listAppointmentsUseCase.execute(empresaId);
-        masterData.setAll(citas);
+
+        if (AuthContext.isLoggedIn()) {
+            UserRole role = AuthContext.getRole();
+            User user = AuthContext.getCurrentUser();
+
+            if (role == UserRole.EMPLEADO && user != null) {
+                Long userId = user.getId();
+                List<Appointment> propias = new ArrayList<>();
+                for (Appointment a : citas) {
+                    if (a.getEmployeeId() != null && a.getEmployeeId().equals(userId)) {
+                        propias.add(a);
+                    }
+                }
+                masterData.setAll(propias);
+            } else {
+                masterData.setAll(citas);
+            }
+        } else {
+            masterData.setAll(citas);
+        }
+
         smartTable.refresh();
         loadAgenda();
     }
@@ -331,11 +391,11 @@ public class CitasController {
 
         List<AgendaSlot> items = new ArrayList<>();
         for (int hour = 0; hour < 24; hour++) {
-            LocalTime slotTime = LocalTime.of(hour, 0);
+            java.time.LocalTime slotTime = java.time.LocalTime.of(hour, 0);
             List<Appointment> citasHora = new ArrayList<>();
 
             for (Appointment c : citasDia) {
-                LocalTime t = c.getDateTime().toLocalTime();
+                java.time.LocalTime t = c.getDateTime().toLocalTime();
                 if (t.getHour() == hour) {
                     citasHora.add(c);
                 }
@@ -344,7 +404,7 @@ public class CitasController {
         }
 
         lstAgenda.getItems().setAll(items);
-        double cellSize = lstAgenda.getFixedCellSize() > 0 ? lstAgenda.getFixedCellSize() : 32;
+        double cellSize = lstAgenda.getFixedCellSize() > 0 ? lstAgenda.getFixedCellSize() : 40;
         lstAgenda.setPrefHeight(items.size() * cellSize + 2);
     }
 
@@ -416,12 +476,12 @@ public class CitasController {
     }
 
     private boolean matchesGlobalFilter(Appointment c, String text) {
-        String t = safe(text);
-        if (t.isEmpty()) {
+        if (text == null || text.isBlank()) {
             return true;
         }
+        String t = safe(text);
 
-        String haystack = (appointmentValueOrBlank(c.getCustomerId()) + " " + appointmentValueOrBlank(c.getVehicleId()) + " " + safe(c.getNotes()) + " " + safe(mapStatusToLabel(c.getStatus())) + " " + safe(mapOriginToLabel(c.getOrigin()))).toLowerCase(Locale.ROOT);
+        String haystack = (appointmentValueOrBlank(c.getCustomerId()) + " " + appointmentValueOrBlank(c.getVehicleId()) + " " + appointmentValueOrBlank(c.getEmployeeId()) + " " + appointmentValueOrBlank(c.getEmpresaId()) + " " + safe(c.getNotes()) + " " + safe(mapStatusToLabel(c.getStatus())) + " " + safe(mapOriginToLabel(c.getOrigin())));
 
         return haystack.contains(t);
     }
@@ -434,7 +494,7 @@ public class CitasController {
         alert.showAndWait();
     }
 
-    private record AgendaSlot(LocalTime time, List<Appointment> appointments) {
+    private record AgendaSlot(java.time.LocalTime time, List<Appointment> appointments) {
 
     }
 }

@@ -51,7 +51,7 @@
                             </top>
 
                             <center>
-                                <ListView fx:id="lstAgenda" fixedCellSize="32.0">
+                                <ListView fx:id="lstAgenda" fixedCellSize="40.0">
                                     <padding>
                                         <Insets top="4" right="10" bottom="10" left="10"/>
                                     </padding>
@@ -96,17 +96,29 @@
                                                 </VBox>
                                                 <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="2">
                                                     <children>
+                                                        <Label text="Empleado" styleClass="tfx-muted"/>
+                                                        <TextField fx:id="filterEmpleadoField" promptText="Empleado" styleClass="tfx-filter-field"/>
+                                                    </children>
+                                                </VBox>
+                                                <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="3">
+                                                    <children>
+                                                        <Label text="Empresa" styleClass="tfx-muted"/>
+                                                        <TextField fx:id="filterEmpresaField" promptText="Empresa" styleClass="tfx-filter-field"/>
+                                                    </children>
+                                                </VBox>
+                                                <VBox spacing="2" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                                                    <children>
                                                         <Label text="Estado" styleClass="tfx-muted"/>
                                                         <ComboBox fx:id="cbFiltroEstado" promptText="Estado"/>
                                                     </children>
                                                 </VBox>
-                                                <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="3">
+                                                <VBox spacing="2" GridPane.rowIndex="1" GridPane.columnIndex="1">
                                                     <children>
                                                         <Label text="Origen" styleClass="tfx-muted"/>
                                                         <ComboBox fx:id="cbFiltroOrigen" promptText="Origen"/>
                                                     </children>
                                                 </VBox>
-                                                <VBox spacing="2" GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.columnSpan="4">
+                                                <VBox spacing="2" GridPane.rowIndex="1" GridPane.columnIndex="2" GridPane.columnSpan="2">
                                                     <children>
                                                         <Label text="Notas" styleClass="tfx-muted"/>
                                                         <TextField fx:id="filterNotasField" promptText="Notas" styleClass="tfx-filter-field"/>
@@ -133,6 +145,8 @@
                                                 <TableColumn fx:id="colFechaHora" text="Fecha / Hora"/>
                                                 <TableColumn fx:id="colCliente" text="Cliente"/>
                                                 <TableColumn fx:id="colVehiculo" text="Vehículo"/>
+                                                <TableColumn fx:id="colEmpleado" text="Empleado"/>
+                                                <TableColumn fx:id="colEmpresa" text="Empresa"/>
                                                 <TableColumn fx:id="colEstado" text="Estado"/>
                                                 <TableColumn fx:id="colOrigen" text="Origen"/>
                                                 <TableColumn fx:id="colNotas" text="Notas"/>
