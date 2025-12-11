@@ -11,62 +11,42 @@
     <top>
         <HBox spacing="12" styleClass="tfx-toolbar">
             <children>
-                <!-- Botón para colapsar/expandir sidebar -->
-                <Button text="☰"
-                        onAction="#onToggleSidebar"
-                        styleClass="tfx-btn-ghost"/>
-
-                <!-- Nombre / logo app -->
-                <Label fx:id="lblAppTitle"
-                       text="GearMind · TallerFX"
-                       styleClass="tfx-toolbar-title"/>
-
+                <Button text="☰" onAction="#onToggleSidebar" styleClass="tfx-btn-ghost"/>
+                <Label fx:id="lblAppTitle" text="GearMind · TallerFX" styleClass="tfx-toolbar-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
-
-                <!-- Panel de usuario -->
-                <HBox spacing="8"
-                      alignment="CENTER_RIGHT"
-                      styleClass="tfx-userbox">
-                    <Label fx:id="lblUsuarioActual"
-                           text="Mario (Super admin)"
-                           styleClass="tfx-muted"/>
-                    <Button text="Mi cuenta"
-                            onAction="#onGoPerfilUsuario"
-                            styleClass="tfx-btn-ghost"/>
+                <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="tfx-userbox">
+                    <Label fx:id="lblUsuarioActual" text="Mario (Super admin)" styleClass="tfx-muted"/>
+                    <Button text="Mi cuenta" onAction="#onGoPerfilUsuario" styleClass="tfx-btn-ghost"/>
                 </HBox>
             </children>
         </HBox>
     </top>
 
         <left>
-        <VBox fx:id="sidebar"
-              spacing="8"
-              styleClass="tfx-sidebar">
+        <VBox spacing="8" styleClass="tfx-sidebar">
             <children>
                 <Label text="Navegación" styleClass="tfx-muted"/>
-
+                
                 <Button fx:id="btnNavDashboard" text="Dashboard" onAction="#onGoDashboard"/>
                 <Button fx:id="btnNavClientes" text="Clientes" onAction="#onGoClientes"/>
-                <Button fx:id="btnNavUsuarios" text="Usuarios" onAction="#onGoUsuarios"/>
+                <Button fx:id="btnNavVehiculos" text="Vehículos" onAction="#onGoVehiculos"/>
                 <Button fx:id="btnNavCitas" text="Citas" onAction="#onGoCitas"/>
+                <Button fx:id="btnNavUsuarios" text="Usuarios" onAction="#onGoUsuarios"/>
                 <Button fx:id="btnNavEmpresas" text="Empresas" onAction="#onGoEmpresas"/>
-            </children>
-        </VBox>
+              </children>
+          </VBox>
     </left>
 
 
     <center>
-        <StackPane fx:id="contentPane"
-                   style="-fx-padding: 12;">
+        <StackPane fx:id="contentPane" style="-fx-padding: 12;">
         </StackPane>
     </center>
 
     <bottom>
-        <HBox alignment="CENTER_RIGHT"
-              styleClass="tfx-footer">
+        <HBox alignment="CENTER_RIGHT" styleClass="tfx-footer">
             <children>
-                <Label text="© 2025 GearMind · Gestión de talleres"
-                       styleClass="tfx-muted"/>
+                <Label text="© 2025 GearMind · Gestión de talleres" styleClass="tfx-muted"/>
             </children>
         </HBox>
     </bottom>

@@ -34,6 +34,8 @@ public class HomeController {
     @FXML
     private Button btnNavClientes;
     @FXML
+    private Button btnNavVehiculos;
+    @FXML
     private Button btnNavUsuarios;
     @FXML
     private Button btnNavEmpresas;
@@ -61,9 +63,12 @@ public class HomeController {
 
         if (lblUsuarioActual != null && user != null) {
             String rolTexto = switch (role) {
-                case SUPER_ADMIN -> "Super admin";
-                case ADMIN -> "Admin";
-                case EMPLEADO -> "Empleado";
+                case SUPER_ADMIN ->
+                    "Super admin";
+                case ADMIN ->
+                    "Admin";
+                case EMPLEADO ->
+                    "Empleado";
             };
             lblUsuarioActual.setText(user.getNombre() + " (" + rolTexto + ")");
         }
@@ -99,7 +104,7 @@ public class HomeController {
     }
 
     private void setAllSidebarButtonsVisible(boolean visible) {
-        for (Button b : List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavUsuarios, btnNavEmpresas)) {
+        for (Button b : List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavVehiculos, btnNavUsuarios, btnNavEmpresas)) {
             if (b != null) {
                 b.setVisible(visible);
                 b.setManaged(visible);
@@ -171,6 +176,12 @@ public class HomeController {
     private void onGoClientes() {
         loadView("/view/ClientesView.fxml");
         setActiveNavButton(btnNavClientes);
+    }
+
+    @FXML
+    private void onGoVehiculos() {
+        loadView("/view/VehiculosView.fxml");
+        setActiveNavButton(btnNavVehiculos);
     }
 
     @FXML

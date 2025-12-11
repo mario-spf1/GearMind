@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.gearmind.presentation.controller.VehiculosController"
+            styleClass="tfx-root">
+
+    <center>
+        <VBox spacing="16" styleClass="tfx-page">
+            <padding>
+                <Insets top="16.0" right="16.0" bottom="16.0" left="16.0"/>
+            </padding>
+
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Vehículos" styleClass="tfx-title-xl"/>
+                <Label fx:id="lblTotalVehiculos" styleClass="tfx-muted" text=""/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnRefrescar" text="Recargar" onAction="#onRefrescar" styleClass="button tfx-btn-ghost"/>
+                <Button fx:id="btnNuevo" text="Nuevo vehículo" onAction="#onNuevo" styleClass="button tfx-btn-primary"/>
+            </HBox>
+
+            <VBox spacing="12" styleClass="tfx-card">
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <TextField fx:id="txtBuscar" promptText="Buscar por matrícula, marca, modelo o cliente" HBox.hgrow="ALWAYS" styleClass="text-field"/>
+                    <Label text="Mostrar" styleClass="tfx-muted"/>
+                    <ComboBox fx:id="cmbPageSize" prefWidth="80"/>
+                    <Label text="por página" styleClass="tfx-muted"/>
+                </HBox>
+
+                <VBox spacing="4">
+                    <TableView fx:id="tblVehiculos">
+                        <columns>
+                            <TableColumn fx:id="colMatricula" text="Matrícula" prefWidth="120"/>
+                            <TableColumn fx:id="colMarca" text="Marca" prefWidth="120"/>
+                            <TableColumn fx:id="colModelo" text="Modelo" prefWidth="160"/>
+                            <TableColumn fx:id="colYear" text="Año" prefWidth="80"/>
+                            <TableColumn fx:id="colCliente" text="Cliente" prefWidth="200"/>
+                            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
+                        </columns>
+                    </TableView>
+
+                    <Label fx:id="lblResumen" styleClass="tfx-muted"/>
+                </VBox>
+            </VBox>
+
+        </VBox>
+    </center>
+
+</BorderPane>

@@ -30,7 +30,7 @@ public class SmartTable<T> {
     private final Label summaryLabel;
     private final String entityLabelPlural;
 
-    private final BiPredicate<T, String> globalMatcher;
+    private final BiPredicate<T, String> globalMatcher; // puede ser null
 
     private final List<ColumnFilter<T>> columnFilters = new ArrayList<>();
 
@@ -46,7 +46,7 @@ public class SmartTable<T> {
         this.globalSearchField = globalSearchField;
         this.pageSizeCombo = pageSizeCombo;
         this.summaryLabel = summaryLabel;
-        this.entityLabelPlural = entityLabelPlural;
+        this.entityLabelPlural = (entityLabelPlural == null || entityLabelPlural.isBlank()) ? "elementos" : entityLabelPlural;
         this.globalMatcher = globalMatcher;
 
         if (this.globalSearchField != null) {
@@ -80,31 +80,39 @@ public class SmartTable<T> {
     }
 
     /**
-     * Debe llamarse tras modificar masterData (ej. al cargar de BD).
+     * Reaplica todos los filtros y repone los datos en la tabla.
      */
     public void refresh() {
-        // Texto de búsqueda global
-        String globalText = "";
-        if (globalSearchField != null && globalSearchField.getText() != null) {
-            globalText = globalSearchField.getText().trim().toLowerCase(Locale.ROOT);
-        }
-        final String search = globalText;
-
-        int limit = Integer.MAX_VALUE;
-        if (pageSizeCombo != null && pageSizeCombo.getValue() != null) {
-            limit = pageSizeCombo.getValue();
+        if (masterData == null) {
+            table.setItems(FXCollections.observableArrayList());
+            lastVisibleCount = 0;
+            lastTotalCount = 0;
+            updateSummaryLabel();
+            return;
         }
 
-        List<T> filtered = masterData.stream().filter(item -> {
-            if (globalMatcher == null || search.isBlank()) {
-                return true;
+        List<T> filtered = new ArrayList<>(masterData);
+
+        if (globalSearchField != null && globalMatcher != null) {
+            String text = globalSearchField.getText();
+            if (text != null && !text.isBlank()) {
+                String lower = text.toLowerCase(Locale.ROOT);
+                filtered = filtered.stream().filter(item -> globalMatcher.test(item, lower)).collect(Collectors.toList());
             }
-            return globalMatcher.test(item, search);
-        }).filter(this::matchesAllColumnFilters).collect(Collectors.toList());
+        }
 
+        filtered = filtered.stream().filter(this::matchesAllColumnFilters).collect(Collectors.toList());
         lastTotalCount = filtered.size();
 
-        List<T> visible = filtered.subList(0, Math.min(limit, filtered.size()));
+        int limit = filtered.size();
+        if (pageSizeCombo != null) {
+            Integer value = pageSizeCombo.getValue();
+            if (value != null && value > 0) {
+                limit = Math.min(value, filtered.size());
+            }
+        }
+
+        List<T> visible = filtered.subList(0, limit);
         lastVisibleCount = visible.size();
         table.setItems(FXCollections.observableArrayList(visible));
         updateSummaryLabel();
@@ -132,8 +140,13 @@ public class SmartTable<T> {
 
         if (lastTotalCount == 0) {
             summaryLabel.setText("No hay " + entityLabelPlural + " que mostrar.");
+            return;
+        }
+
+        if (lastVisibleCount == lastTotalCount) {
+            summaryLabel.setText("Mostrando " + lastTotalCount + " " + entityLabelPlural + ".");
         } else {
-            summaryLabel.setText("Mostrando " + lastVisibleCount + " de " + lastTotalCount + " " + entityLabelPlural);
+            summaryLabel.setText("Mostrando " + lastVisibleCount + " de " + lastTotalCount + " " + entityLabelPlural + ".");
         }
     }
 
