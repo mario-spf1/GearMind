@@ -44,8 +44,6 @@ public class ClientesController {
     private TableColumn<Customer, Customer> colAcciones;
 
     @FXML
-    private TextField txtBuscar;
-    @FXML
     private ComboBox<Integer> cmbPageSize;
     @FXML
     private Button btnNuevoCliente;
@@ -59,7 +57,7 @@ public class ClientesController {
     @FXML
     private TextField filterEmailField;
     @FXML
-    private TextField filterEstadoField;
+    private ComboBox<String> filterEstadoCombo;
 
     @FXML
     private Label lblResumen;
@@ -81,6 +79,7 @@ public class ClientesController {
     private void initialize() {
         tblClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+        tblClientes.setPlaceholder(new Label("No hay clientes que mostrar."));
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
@@ -168,7 +167,7 @@ public class ClientesController {
                         btnToggle.getStyleClass().add("tfx-icon-btn-success");
                         btnToggle.setTooltip(new Tooltip("Activar cliente"));
                     }
-
+                    
                     setGraphic(box);
                 }
             }
@@ -176,11 +175,38 @@ public class ClientesController {
         colAcciones.setSortable(false);
 
         if (cmbPageSize != null) {
-            cmbPageSize.setItems(FXCollections.observableArrayList(5, 10, 25, 50));
-            cmbPageSize.getSelectionModel().select(Integer.valueOf(10));
-        }
+            cmbPageSize.setItems(FXCollections.observableArrayList(5, 15, 25, 0));
+            cmbPageSize.getSelectionModel().select(Integer.valueOf(15));
 
-        smartTable = new SmartTable<>(tblClientes, masterData, txtBuscar, cmbPageSize, lblResumen, "clientes", this::matchesGlobalFilter);
+            var converter = new javafx.util.StringConverter<Integer>() {
+                @Override public String toString(Integer value) {
+                    if (value == null) return "";
+                    return value == 0 ? "Todos" : String.valueOf(value);
+                }
+                @Override public Integer fromString(String s) {
+                    if (s == null) return 15;
+                    s = s.trim();
+                    return "Todos".equalsIgnoreCase(s) ? 0 : Integer.valueOf(s);
+                }
+            };
+
+            cmbPageSize.setConverter(converter);
+
+            cmbPageSize.setButtonCell(new javafx.scene.control.ListCell<>() {
+                @Override protected void updateItem(Integer item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : (item == 0 ? "Todos" : String.valueOf(item)));
+                }
+            });
+
+            cmbPageSize.setCellFactory(lv -> new javafx.scene.control.ListCell<>() {
+                @Override protected void updateItem(Integer item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : (item == 0 ? "Todos" : String.valueOf(item)));
+                }
+            });
+        }
+        smartTable = new SmartTable<>(tblClientes, masterData, null, cmbPageSize, lblResumen, "clientes", null);
         tblClientes.setFixedCellSize(28);
         smartTable.setAfterRefreshCallback(() -> {
             int rows = Math.max(smartTable.getLastVisibleCount(), 1);
@@ -192,8 +218,18 @@ public class ClientesController {
         smartTable.addColumnFilter(filterNombreField, (c, text) -> safe(c.getNombre()).contains(text));
         smartTable.addColumnFilter(filterTelefonoField, (c, text) -> safe(c.getTelefono()).contains(text));
         smartTable.addColumnFilter(filterEmailField, (c, text) -> safe(c.getEmail()).contains(text));
-        smartTable.addColumnFilter(filterEstadoField, (c, text) -> (c.isActivo() ? "activo" : "inactivo").toLowerCase(Locale.ROOT).contains(text));
 
+        if (filterEstadoCombo != null) {
+            filterEstadoCombo.setItems(FXCollections.observableArrayList("Todos", "Activo", "Inactivo"));
+            filterEstadoCombo.getSelectionModel().select("Todos");
+
+            smartTable.addColumnFilter(filterEstadoCombo, (c, selected) -> {
+                if (selected == null || "Todos".equalsIgnoreCase(selected)) {
+                    return true;
+                }
+                return "Activo".equalsIgnoreCase(selected) ? c.isActivo() : !c.isActivo();
+            });
+        }
         setupRowDoubleClick();
         loadClientesFromDb();
     }
@@ -210,23 +246,6 @@ public class ClientesController {
         if (lblHeaderInfo != null) {
             lblHeaderInfo.setText(masterData.size() + " clientes registrados");
         }
-    }
-
-    /**
-     * Filtro global (campo Buscar cliente...)
-     */
-    private boolean matchesGlobalFilter(Customer c, String filtro) {
-        if (filtro == null || filtro.isBlank()) {
-            return true;
-        }
-        String f = filtro.toLowerCase(Locale.ROOT);
-        String nombre = safe(c.getNombre());
-        String email = safe(c.getEmail());
-        String telefono = safe(c.getTelefono());
-        String notas = safe(c.getNotas());
-        String estado = c.isActivo() ? "activo" : "inactivo";
-
-        return nombre.contains(f) || email.contains(f) || telefono.contains(f) || notas.contains(f) || estado.contains(f);
     }
 
     private String safe(String s) {
@@ -328,9 +347,6 @@ public class ClientesController {
 
     @FXML
     private void onLimpiarFiltros() {
-        if (txtBuscar != null) {
-            txtBuscar.clear();
-        }
         if (filterNombreField != null) {
             filterNombreField.clear();
         }
@@ -340,10 +356,9 @@ public class ClientesController {
         if (filterEmailField != null) {
             filterEmailField.clear();
         }
-        if (filterEstadoField != null) {
-            filterEstadoField.clear();
+        if (filterEstadoCombo != null) {
+            filterEstadoCombo.getSelectionModel().select("Todos");
         }
-
         smartTable.refresh();
     }
 }

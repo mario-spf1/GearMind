@@ -23,9 +23,11 @@
 
                 <Region HBox.hgrow="ALWAYS"/>
 
-                <Label text="Mostrar" styleClass="tfx-muted"/>
-                <ComboBox fx:id="cmbPageSize" prefWidth="70"/>
-                <Label text="por página" styleClass="tfx-muted"/>
+                <HBox spacing="10" alignment="CENTER_RIGHT" styleClass="tfx-toolbar-pagesize">
+                    <Label text="Mostrar" styleClass="tfx-toolbar-label"/>
+                    <ComboBox fx:id="cmbPageSize" prefWidth="90"/>
+                    <Label text="por página" styleClass="tfx-toolbar-label"/>
+                </HBox>
                 <Button text="Recargar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
                 <Button fx:id="btnNuevoCliente" text="Nuevo cliente" styleClass="tfx-btn-primary" onAction="#onNuevoCliente"/>
             </children>
@@ -51,11 +53,12 @@
                         <TextField fx:id="filterNombreField" promptText="Nombre" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                         <TextField fx:id="filterTelefonoField" promptText="Teléfono" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
                         <TextField fx:id="filterEmailField" promptText="Email" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
-                        <TextField fx:id="filterEstadoField" promptText="Activo / inactivo" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="3">
+                            <Label text="Estado" styleClass="tfx-filter-label"/>
+                            <ComboBox fx:id="filterEstadoCombo" promptText="Estado" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+                        </HBox>
                     </children>
                 </GridPane>
-
-                <TextField fx:id="txtBuscar" visible="false" managed="false"/>
 
                 <HBox spacing="8">
                     <children>

@@ -71,13 +71,31 @@ public class SmartTable<T> {
      * matcher: recibe (fila, textoFiltroMinusculas) y devuelve true si coincide.
      */
     public void addColumnFilter(TextField field, BiPredicate<T, String> matcher) {
-        if (field == null || matcher == null) return;
+        if (field == null || matcher == null) {
+            return;
+        }
 
         ColumnFilter<T> cf = new ColumnFilter<>(field, matcher);
         columnFilters.add(cf);
 
         field.textProperty().addListener((obs, o, n) -> refresh());
     }
+    
+    /**
+    * Registra un filtro por columna basado en ComboBox.
+    * combo: ComboBox del footer (p.ej. "Todos/Activo/Inactivo").
+    * matcher: recibe (fila, valorSeleccionadoMinusculas) y devuelve true si coincide.
+    */
+   public void addColumnFilter(ComboBox<String> combo, BiPredicate<T, String> matcher) {
+       if (combo == null || matcher == null) {
+           return;
+       }
+
+       ColumnFilter<T> cf = new ColumnFilter<>(combo, matcher);
+       columnFilters.add(cf);
+
+       combo.valueProperty().addListener((obs, o, n) -> refresh());
+   }
 
     /**
      * Reaplica todos los filtros y repone los datos en la tabla.
@@ -124,11 +142,27 @@ public class SmartTable<T> {
 
     private boolean matchesAllColumnFilters(T item) {
         for (ColumnFilter<T> cf : columnFilters) {
-            String text = cf.field.getText();
-            if (text != null && !text.isBlank()) {
-                String lower = text.toLowerCase(Locale.ROOT);
-                if (!cf.matcher.test(item, lower)) {
-                    return false;
+
+            if (cf.field != null) {
+                String text = cf.field.getText();
+                if (text != null && !text.isBlank()) {
+                    String lower = text.toLowerCase(Locale.ROOT);
+                    if (!cf.matcher.test(item, lower)) {
+                        return false;
+                    }
+                }
+                continue;
+            }
+
+            if (cf.combo != null) {
+                String value = cf.combo.getValue();
+                if (value != null && !value.isBlank()) {
+                    String lower = value.toLowerCase(Locale.ROOT);
+                    if (!"todos".equals(lower)) {
+                        if (!cf.matcher.test(item, lower)) {
+                            return false;
+                        }
+                    }
                 }
             }
         }
@@ -160,10 +194,18 @@ public class SmartTable<T> {
 
     private static class ColumnFilter<T> {
         final TextField field;
+        final ComboBox<String> combo;
         final BiPredicate<T, String> matcher;
 
         ColumnFilter(TextField field, BiPredicate<T, String> matcher) {
             this.field = field;
+            this.combo = null;
+            this.matcher = matcher;
+        }
+
+        ColumnFilter(ComboBox<String> combo, BiPredicate<T, String> matcher) {
+            this.field = null;
+            this.combo = combo;
             this.matcher = matcher;
         }
     }

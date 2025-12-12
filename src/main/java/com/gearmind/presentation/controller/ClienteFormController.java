@@ -25,6 +25,9 @@ public class ClienteFormController {
 
     @FXML
     private TextArea txtNotas;
+    
+    @FXML
+    private Button btnGuardar;
 
     private final SaveCustomerUseCase saveCustomerUseCase;
 
@@ -62,8 +65,18 @@ public class ClienteFormController {
             long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
 
             String nombre = txtNombre.getText() != null ? txtNombre.getText().trim() : "";
+            if (nombre.isBlank()) {
+                new Alert(Alert.AlertType.WARNING, "El nombre es obligatorio.").showAndWait();
+                return;
+            }
+            
             String email = txtEmail.getText() != null ? txtEmail.getText().trim() : "";
-            String telefono = txtTelefono.getText() != null ? txtTelefono.getText().trim() : "";
+            if (!email.isBlank() && !email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+                new Alert(Alert.AlertType.WARNING, "El email no tiene un formato válido.").showAndWait();
+                return;
+            }
+            
+            String telefono = txtTelefono.getText() != null ? txtTelefono.getText().trim().replaceAll("\\s+", " ") : "";
             String notas = txtNotas.getText() != null ? txtNotas.getText().trim() : "";
 
             SaveCustomerRequest request = new SaveCustomerRequest(editingId, empresaId, nombre, email, telefono, notas);
@@ -93,6 +106,15 @@ public class ClienteFormController {
     private void onCancelar() {
         saved = false;
         closeWindow();
+    }
+    
+    @FXML
+    private void initialize() {
+        btnGuardar.setDisable(true);
+        txtNombre.textProperty().addListener((obs, oldV, newV) -> {
+            boolean invalid = (newV == null || newV.trim().isEmpty());
+            btnGuardar.setDisable(invalid);
+        });
     }
 
     private void closeWindow() {

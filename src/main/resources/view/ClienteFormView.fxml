@@ -46,7 +46,7 @@
             <children>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Cancelar" onAction="#onCancelar" styleClass="tfx-btn-ghost"/>
-                <Button text="Guardar" styleClass="tfx-btn-primary" onAction="#onGuardar"/>
+                <Button fx:id="btnGuardar" text="Guardar" styleClass="tfx-btn-primary" onAction="#onGuardar"/>
             </children>
         </HBox>
 
