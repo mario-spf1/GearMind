@@ -133,7 +133,7 @@ public class HomeController {
     }
 
     private void setActiveNavButton(Button activeButton) {
-        List<Button> buttons = List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavUsuarios, btnNavEmpresas);
+        List<Button> buttons = List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavVehiculos, btnNavUsuarios, btnNavEmpresas);
 
         for (Button b : buttons) {
             if (b != null) {
