@@ -25,11 +25,8 @@ public class ClienteFormController {
 
     @FXML
     private Label lblTitulo;
-
-    // ✅ importante: label separado para poder ocultarlo
     @FXML
     private Label lblEmpresa;
-
     @FXML
     private TextField txtNombre;
     @FXML
@@ -47,7 +44,6 @@ public class ClienteFormController {
     @FXML
     private ComboBox<EmpresaOption> cmbEmpresa;
 
-    private long selectedEmpresaId;
     private Long editingId = null;
     private boolean saved = false;
 
@@ -74,10 +70,9 @@ public class ClienteFormController {
         if (AuthContext.isSuperAdmin()) {
             if (cmbEmpresa != null) {
                 cmbEmpresa.getSelectionModel().clearSelection();
+                cmbEmpresa.getEditor().clear();
+                cmbEmpresa.setValue(null);
             }
-            selectedEmpresaId = 0;
-        } else {
-            selectedEmpresaId = SessionManager.getInstance().getCurrentEmpresaId();
         }
     }
 
@@ -93,27 +88,30 @@ public class ClienteFormController {
         txtNotas.setText(customer.getNotas());
 
         if (AuthContext.isSuperAdmin()) {
-            selectedEmpresaId = customer.getEmpresaId();
-
             if (cmbEmpresa != null) {
-                EmpresaOption opt = empresas.stream()
-                        .filter(e -> e.id == selectedEmpresaId)
-                        .findFirst()
-                        .orElse(null);
+                long empresaId = customer.getEmpresaId();
+                EmpresaOption opt = empresas.stream().filter(e -> e.id == empresaId).findFirst().orElse(null);
 
                 if (opt != null) {
                     cmbEmpresa.getSelectionModel().select(opt);
+                    if (cmbEmpresa.isEditable()) {
+                        cmbEmpresa.getEditor().setText(opt.nombre);
+                    }
+                    cmbEmpresa.setValue(opt);
+                } else {
+                    cmbEmpresa.getSelectionModel().clearSelection();
+                    if (cmbEmpresa.isEditable()) {
+                        cmbEmpresa.getEditor().clear();
+                    }
+                    cmbEmpresa.setValue(null);
                 }
             }
-        } else {
-            selectedEmpresaId = SessionManager.getInstance().getCurrentEmpresaId();
         }
     }
 
     @FXML
     private void initialize() {
 
-        // Botón guardar activo solo si hay nombre
         if (btnGuardar != null) {
             btnGuardar.setDisable(true);
         }
@@ -125,7 +123,6 @@ public class ClienteFormController {
 
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
 
-        // ✅ Admin/Empleado: ocultar label + combo de empresa
         if (!isSuperAdmin) {
             if (lblEmpresa != null) {
                 lblEmpresa.setVisible(false);
@@ -135,11 +132,9 @@ public class ClienteFormController {
                 boxEmpresa.setVisible(false);
                 boxEmpresa.setManaged(false);
             }
-            selectedEmpresaId = SessionManager.getInstance().getCurrentEmpresaId();
             return;
         }
 
-        // ✅ SuperAdmin: mostrar y cargar empresas
         if (lblEmpresa != null) {
             lblEmpresa.setVisible(true);
             lblEmpresa.setManaged(true);
@@ -154,8 +149,8 @@ public class ClienteFormController {
 
         if (cmbEmpresa != null) {
             cmbEmpresa.valueProperty().addListener((obs, o, n) -> {
-                if (n != null) {
-                    selectedEmpresaId = n.id;
+                Object v = cmbEmpresa.getValue();
+                if (v instanceof EmpresaOption eo) {
                 }
             });
         }
@@ -167,11 +162,18 @@ public class ClienteFormController {
             long empresaId;
 
             if (AuthContext.isSuperAdmin()) {
-                if (cmbEmpresa == null || cmbEmpresa.getValue() == null) {
+                if (cmbEmpresa == null) {
                     new Alert(Alert.AlertType.WARNING, "Selecciona una empresa.").showAndWait();
                     return;
                 }
-                empresaId = selectedEmpresaId;
+
+                Object v = cmbEmpresa.getValue();
+                if (!(v instanceof EmpresaOption eo)) {
+                    new Alert(Alert.AlertType.WARNING, "Selecciona una empresa válida.").showAndWait();
+                    return;
+                }
+
+                empresaId = eo.id;
             } else {
                 empresaId = SessionManager.getInstance().getCurrentEmpresaId();
             }
@@ -265,10 +267,7 @@ public class ClienteFormController {
                     return null;
                 }
 
-                return empresas.stream()
-                        .filter(e -> e.nombre != null && e.nombre.equalsIgnoreCase(t))
-                        .findFirst()
-                        .orElse(null);
+                return empresas.stream().filter(e -> e.nombre != null && e.nombre.equalsIgnoreCase(t)).findFirst().orElse(null);
             }
         });
 
@@ -292,9 +291,7 @@ public class ClienteFormController {
 
         combo.getEditor().textProperty().addListener((obs, oldText, newText) -> {
             String f = (newText == null ? "" : newText).toLowerCase(Locale.ROOT).trim();
-            empresasFiltradas.setPredicate(opt
-                    -> f.isEmpty() || (opt.nombre != null && opt.nombre.toLowerCase(Locale.ROOT).contains(f))
-            );
+            empresasFiltradas.setPredicate(opt -> f.isEmpty() || (opt.nombre != null && opt.nombre.toLowerCase(Locale.ROOT).contains(f)));
             if (!combo.isShowing()) {
                 combo.show();
             }
@@ -308,8 +305,19 @@ public class ClienteFormController {
             EmpresaOption match = combo.getConverter().fromString(combo.getEditor().getText());
             if (match != null) {
                 combo.getSelectionModel().select(match);
+                combo.setValue(match);
             } else {
                 combo.getSelectionModel().clearSelection();
+                combo.getEditor().clear();
+                combo.setValue(null);
+            }
+        });
+
+        combo.setOnHidden(e -> {
+            EmpresaOption match = combo.getConverter().fromString(combo.getEditor().getText());
+            if (match != null) {
+                combo.getSelectionModel().select(match);
+                combo.setValue(match);
             }
         });
     }
