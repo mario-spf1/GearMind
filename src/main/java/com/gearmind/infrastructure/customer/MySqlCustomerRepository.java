@@ -16,6 +16,31 @@ public class MySqlCustomerRepository implements CustomerRepository {
     public MySqlCustomerRepository() {
         this.dataSource = DataSourceFactory.getDataSource();
     }
+    
+    @Override
+    public List<Customer> findAll() {
+        List<Customer> result = new ArrayList<>();
+
+        String sql = """
+                SELECT id, empresa_id, nombre, email, telefono, notas, activo
+                FROM cliente
+                ORDER BY nombre ASC
+                """;
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                result.add(mapRow(rs));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error listando todos los clientes", e);
+        }
+
+        return result;
+    }
 
     @Override
     public List<Customer> findByEmpresaId(long empresaId) {
@@ -165,5 +190,36 @@ public class MySqlCustomerRepository implements CustomerRepository {
 
     private Customer mapRow(ResultSet rs) throws SQLException {
         return new Customer(rs.getLong("id"), rs.getLong("empresa_id"), rs.getString("nombre"), rs.getString("email"), rs.getString("telefono"), rs.getString("notas"), rs.getBoolean("activo"));
+    }
+    
+    @Override
+    public List<Customer> findAllWithEmpresa() {
+        List<Customer> result = new ArrayList<>();
+
+        String sql = """
+            SELECT c.id,
+                c.empresa_id,
+                e.nombre AS empresa_nombre,
+                c.nombre,
+                c.email,
+                c.telefono,
+                c.notas,
+                c.activo
+            FROM cliente c
+            JOIN empresa e ON e.id = c.empresa_id
+            ORDER BY e.nombre, c.nombre
+            """;
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Customer c = new Customer(rs.getLong("id"), rs.getLong("empresa_id"), rs.getString("nombre"), rs.getString("email"), rs.getString("telefono"), rs.getString("notas"), rs.getBoolean("activo")); c.setEmpresaNombre(rs.getString("empresa_nombre"));
+                result.add(c);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error listando clientes con empresa", e);
+        }
+
+        return result;
     }
 }

@@ -1,5 +1,6 @@
 package com.gearmind.presentation.controller;
 
+import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
 import com.gearmind.application.customer.ActivateCustomerUseCase;
 import com.gearmind.application.customer.DeactivateCustomerUseCase;
@@ -18,53 +19,44 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
 public class ClientesController {
 
-    @FXML
-    private TableView<Customer> tblClientes;
-    @FXML
-    private TableColumn<Customer, String> colNombre;
-    @FXML
-    private TableColumn<Customer, String> colTelefono;
-    @FXML
-    private TableColumn<Customer, String> colEmail;
-    @FXML
-    private TableColumn<Customer, String> colNotas;
-    @FXML
-    private TableColumn<Customer, String> colEstado;
-    @FXML
-    private TableColumn<Customer, Customer> colAcciones;
+    @FXML private TableView<Customer> tblClientes;
+    @FXML private TableColumn<Customer, String> colEmpresa;
+    @FXML private TableColumn<Customer, String> colNombre;
+    @FXML private TableColumn<Customer, String> colTelefono;
+    @FXML private TableColumn<Customer, String> colEmail;
+    @FXML private TableColumn<Customer, String> colNotas;
+    @FXML private TableColumn<Customer, String> colEstado;
+    @FXML private TableColumn<Customer, Customer> colAcciones;
 
-    @FXML
-    private ComboBox<Integer> cmbPageSize;
-    @FXML
-    private Button btnNuevoCliente;
-    @FXML
-    private Label lblHeaderInfo;
+    @FXML private ComboBox<Integer> cmbPageSize;
+    @FXML private Button btnNuevoCliente;
+    @FXML private Label lblHeaderInfo;
 
-    @FXML
-    private TextField filterNombreField;
-    @FXML
-    private TextField filterTelefonoField;
-    @FXML
-    private TextField filterEmailField;
-    @FXML
-    private ComboBox<String> filterEstadoCombo;
+    @FXML private TextField filterNombreField;
+    @FXML private TextField filterTelefonoField;
+    @FXML private TextField filterEmailField;
+    @FXML private ComboBox<String> filterEstadoCombo;
 
-    @FXML
-    private Label lblResumen;
+    @FXML private ComboBox<String> filterEmpresaCombo;
+    @FXML private HBox boxFilterEmpresa;
+    @FXML private HBox boxFilterEstado;
+
+    @FXML private Label lblResumen;
 
     private final ListCustomersUseCase listCustomersUseCase;
     private final DeactivateCustomerUseCase deactivateCustomerUseCase;
     private final ActivateCustomerUseCase activateCustomerUseCase;
+
     private final ObservableList<Customer> masterData = FXCollections.observableArrayList();
     private SmartTable<Customer> smartTable;
 
@@ -77,9 +69,30 @@ public class ClientesController {
 
     @FXML
     private void initialize() {
-        tblClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+        boolean isSuperAdmin = AuthContext.isSuperAdmin();
+
+        tblClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tblClientes.setPlaceholder(new Label("No hay clientes que mostrar."));
+
+        // ===== Empresa (solo SuperAdmin) =====
+        if (!isSuperAdmin) {
+            if (colEmpresa != null) {
+                colEmpresa.setVisible(false);
+            }
+            if (boxFilterEmpresa != null) {
+                boxFilterEmpresa.setVisible(false);
+                boxFilterEmpresa.setManaged(false);
+            }
+        } else {
+            if (colEmpresa != null) {
+                colEmpresa.setCellValueFactory(c ->
+                        new SimpleStringProperty(safeRaw(c.getValue().getEmpresaNombre()))
+                );
+            }
+        }
+
+        // ===== Columnas base =====
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
@@ -100,7 +113,9 @@ public class ClientesController {
             }
         });
 
-        colEstado.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo"));
+        colEstado.setCellValueFactory(c ->
+                new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo")
+        );
         colEstado.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -109,19 +124,15 @@ public class ClientesController {
 
                 if (empty || item == null) {
                     setText(null);
-                    setTooltip(null);
                 } else {
                     setText(item);
                     getStyleClass().add("tfx-badge");
-                    if ("Activo".equalsIgnoreCase(item)) {
-                        getStyleClass().add("tfx-badge-success");
-                    } else {
-                        getStyleClass().add("tfx-badge-danger");
-                    }
+                    getStyleClass().add("Activo".equalsIgnoreCase(item) ? "tfx-badge-success" : "tfx-badge-danger");
                 }
             }
         });
 
+        // ===== Acciones =====
         colAcciones.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
         colAcciones.setCellFactory(col -> new TableCell<>() {
 
@@ -135,18 +146,15 @@ public class ClientesController {
 
                 btnEditar.setTooltip(new Tooltip("Editar cliente"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
+
                 btnEditar.setOnAction(e -> {
                     Customer c = getItem();
-                    if (c != null) {
-                        openClienteForm(c);
-                    }
+                    if (c != null) openClienteForm(c);
                 });
 
                 btnToggle.setOnAction(e -> {
                     Customer c = getItem();
-                    if (c != null) {
-                        toggleCustomerActive(c);
-                    }
+                    if (c != null) toggleCustomerActive(c);
                 });
             }
 
@@ -155,25 +163,27 @@ public class ClientesController {
                 super.updateItem(customer, empty);
                 if (empty || customer == null) {
                     setGraphic(null);
-                } else {
-                    btnToggle.getStyleClass().removeAll("tfx-icon-btn-danger", "tfx-icon-btn-success");
-
-                    if (customer.isActivo()) {
-                        btnToggle.setText("Desactivar");
-                        btnToggle.getStyleClass().add("tfx-icon-btn-danger");
-                        btnToggle.setTooltip(new Tooltip("Desactivar cliente"));
-                    } else {
-                        btnToggle.setText("Activar");
-                        btnToggle.getStyleClass().add("tfx-icon-btn-success");
-                        btnToggle.setTooltip(new Tooltip("Activar cliente"));
-                    }
-                    
-                    setGraphic(box);
+                    return;
                 }
+
+                btnToggle.getStyleClass().removeAll("tfx-icon-btn-danger", "tfx-icon-btn-success");
+
+                if (customer.isActivo()) {
+                    btnToggle.setText("Desactivar");
+                    btnToggle.getStyleClass().add("tfx-icon-btn-danger");
+                    btnToggle.setTooltip(new Tooltip("Desactivar cliente"));
+                } else {
+                    btnToggle.setText("Activar");
+                    btnToggle.getStyleClass().add("tfx-icon-btn-success");
+                    btnToggle.setTooltip(new Tooltip("Activar cliente"));
+                }
+
+                setGraphic(box);
             }
         });
         colAcciones.setSortable(false);
 
+        // ===== Page Size =====
         if (cmbPageSize != null) {
             cmbPageSize.setItems(FXCollections.observableArrayList(5, 15, 25, 0));
             cmbPageSize.getSelectionModel().select(Integer.valueOf(15));
@@ -191,30 +201,33 @@ public class ClientesController {
             };
 
             cmbPageSize.setConverter(converter);
-
-            cmbPageSize.setButtonCell(new javafx.scene.control.ListCell<>() {
+            cmbPageSize.setButtonCell(new ListCell<>() {
                 @Override protected void updateItem(Integer item, boolean empty) {
                     super.updateItem(item, empty);
                     setText(empty || item == null ? null : (item == 0 ? "Todos" : String.valueOf(item)));
                 }
             });
-
-            cmbPageSize.setCellFactory(lv -> new javafx.scene.control.ListCell<>() {
+            cmbPageSize.setCellFactory(lv -> new ListCell<>() {
                 @Override protected void updateItem(Integer item, boolean empty) {
                     super.updateItem(item, empty);
                     setText(empty || item == null ? null : (item == 0 ? "Todos" : String.valueOf(item)));
                 }
             });
         }
+
+        // ===== SmartTable =====
         smartTable = new SmartTable<>(tblClientes, masterData, null, cmbPageSize, lblResumen, "clientes", null);
+
         tblClientes.setFixedCellSize(28);
         smartTable.setAfterRefreshCallback(() -> {
             int rows = Math.max(smartTable.getLastVisibleCount(), 1);
             double headerHeight = 28;
             double tableHeight = headerHeight + rows * tblClientes.getFixedCellSize() + 2;
             tblClientes.setPrefHeight(tableHeight);
+            tblClientes.setMinHeight(Region.USE_PREF_SIZE);
         });
 
+        // ===== Filtros =====
         smartTable.addColumnFilter(filterNombreField, (c, text) -> safe(c.getNombre()).contains(text));
         smartTable.addColumnFilter(filterTelefonoField, (c, text) -> safe(c.getTelefono()).contains(text));
         smartTable.addColumnFilter(filterEmailField, (c, text) -> safe(c.getEmail()).contains(text));
@@ -224,23 +237,51 @@ public class ClientesController {
             filterEstadoCombo.getSelectionModel().select("Todos");
 
             smartTable.addColumnFilter(filterEstadoCombo, (c, selected) -> {
-                if (selected == null || "Todos".equalsIgnoreCase(selected)) {
-                    return true;
-                }
+                if (selected == null || "Todos".equalsIgnoreCase(selected)) return true;
                 return "Activo".equalsIgnoreCase(selected) ? c.isActivo() : !c.isActivo();
             });
         }
+
+        if (isSuperAdmin && filterEmpresaCombo != null) {
+            // OJO: el filtro se define UNA sola vez aquí
+            smartTable.addColumnFilter(filterEmpresaCombo, (c, selected) -> {
+                if (selected == null || "Todas".equalsIgnoreCase(selected)) return true;
+                return safeRaw(c.getEmpresaNombre()).equalsIgnoreCase(selected);
+            });
+        }
+
         setupRowDoubleClick();
         loadClientesFromDb();
     }
 
     private void loadClientesFromDb() {
-        long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
-        List<Customer> clientes = listCustomersUseCase.listByEmpresa(empresaId);
+        boolean isSuperAdmin = AuthContext.isSuperAdmin();
+
+        List<Customer> clientes;
+        if (isSuperAdmin) {
+            clientes = listCustomersUseCase.listAllWithEmpresa();
+        } else {
+            long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+            clientes = listCustomersUseCase.listByEmpresa(empresaId);
+        }
 
         clientes.sort(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER));
-
         masterData.setAll(clientes);
+
+        // Cargar opciones de empresa SOLO para SuperAdmin (sin re-addColumnFilter)
+        if (isSuperAdmin && filterEmpresaCombo != null) {
+            var empresas = clientes.stream()
+                    .map(Customer::getEmpresaNombre)
+                    .filter(s -> s != null && !s.isBlank())
+                    .distinct()
+                    .sorted(String.CASE_INSENSITIVE_ORDER)
+                    .toList();
+
+            filterEmpresaCombo.setItems(FXCollections.observableArrayList(empresas));
+            filterEmpresaCombo.getItems().add(0, "Todas");
+            filterEmpresaCombo.getSelectionModel().select("Todas");
+        }
+
         smartTable.refresh();
 
         if (lblHeaderInfo != null) {
@@ -248,32 +289,21 @@ public class ClientesController {
         }
     }
 
-    private String safe(String s) {
-        return s == null ? "" : s.toLowerCase(Locale.ROOT);
-    }
-
     private void setupRowDoubleClick() {
         tblClientes.setRowFactory(tv -> {
             TableRow<Customer> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && !row.isEmpty()) {
-                    Customer c = row.getItem();
-                    openClienteForm(c);
+                    openClienteForm(row.getItem());
                 }
             });
             return row;
         });
     }
 
-    /**
-     * Si está activo → desactiva. Si está inactivo → activa.
-     */
     private void toggleCustomerActive(Customer customer) {
-        if (customer.isActivo()) {
-            deactivateCustomer(customer);
-        } else {
-            activateCustomer(customer);
-        }
+        if (customer.isActivo()) deactivateCustomer(customer);
+        else activateCustomer(customer);
     }
 
     private void deactivateCustomer(Customer customer) {
@@ -284,8 +314,7 @@ public class ClientesController {
 
         alert.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
-                long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
-                deactivateCustomerUseCase.deactivate(customer.getId(), empresaId);
+                deactivateCustomerUseCase.deactivate(customer.getId(), customer.getEmpresaId());
                 loadClientesFromDb();
             }
         });
@@ -299,8 +328,7 @@ public class ClientesController {
 
         alert.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
-                long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
-                activateCustomerUseCase.activate(customer.getId(), empresaId);
+                activateCustomerUseCase.activate(customer.getId(), customer.getEmpresaId());
                 loadClientesFromDb();
             }
         });
@@ -322,43 +350,57 @@ public class ClientesController {
             Parent root = loader.load();
 
             ClienteFormController controller = loader.getController();
-            if (customer == null) {
-                controller.initForNew();
-            } else {
-                controller.initForEdit(customer);
-            }
+            if (customer == null) controller.initForNew();
+            else controller.initForEdit(customer);
+
+            Scene scene = new Scene(root);
+
+            // ✅ aplicar tema a modales (evita ventana “blanca”)
+            var theme = getClass().getResource("/css/theme.css");
+            var components = getClass().getResource("/css/components.css");
+            if (theme != null) scene.getStylesheets().add(theme.toExternalForm());
+            if (components != null) scene.getStylesheets().add(components.toExternalForm());
 
             Stage dialog = new Stage();
             dialog.initOwner(tblClientes.getScene().getWindow());
             dialog.initModality(Modality.WINDOW_MODAL);
             dialog.setTitle(customer == null ? "Nuevo cliente" : "Editar cliente");
-            dialog.setScene(new Scene(root));
+            dialog.setScene(scene);
             dialog.setResizable(false);
             dialog.showAndWait();
 
-            if (controller.isSaved()) {
-                loadClientesFromDb();
-            }
+            if (controller.isSaved()) loadClientesFromDb();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            Alert a = new Alert(Alert.AlertType.ERROR);
+            a.setTitle("Error");
+            a.setHeaderText("No se pudo abrir el formulario de cliente");
+            a.setContentText(e.getMessage());
+            a.showAndWait();
         }
     }
 
     @FXML
     private void onLimpiarFiltros() {
-        if (filterNombreField != null) {
-            filterNombreField.clear();
+        if (filterNombreField != null) filterNombreField.clear();
+        if (filterTelefonoField != null) filterTelefonoField.clear();
+        if (filterEmailField != null) filterEmailField.clear();
+
+        if (filterEstadoCombo != null) filterEstadoCombo.getSelectionModel().select("Todos");
+
+        if (AuthContext.isSuperAdmin() && filterEmpresaCombo != null) {
+            filterEmpresaCombo.getSelectionModel().select("Todas");
         }
-        if (filterTelefonoField != null) {
-            filterTelefonoField.clear();
-        }
-        if (filterEmailField != null) {
-            filterEmailField.clear();
-        }
-        if (filterEstadoCombo != null) {
-            filterEstadoCombo.getSelectionModel().select("Todos");
-        }
+
         smartTable.refresh();
+    }
+
+    private String safe(String s) {
+        return s == null ? "" : s.toLowerCase(Locale.ROOT);
+    }
+
+    private String safeRaw(String s) {
+        return s == null ? "" : s;
     }
 }

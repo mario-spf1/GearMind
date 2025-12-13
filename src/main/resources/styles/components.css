@@ -206,6 +206,10 @@
 .tfx-footer {
     -fx-background-color: -tfx-surface;
     -fx-padding: 6 16;
+    
+}
+.tfx-nav-active {
+    -fx-background-color: rgba(59,130,246,0.18);
     -fx-border-color: -tfx-border;
     -fx-border-width: 1 0 0 0;
 }
@@ -289,4 +293,16 @@
 
 .combo-box-base .arrow-button .arrow {
     -fx-background-color: -tfx-text;
+}
+
+.text-field, .password-field, .combo-box-base {
+  -fx-background-color: #0f1116, #0f1116;
+  -fx-text-fill: -tfx-text;
+  -fx-background-radius: 10;
+  -fx-padding: 10 12 10 12;
+  -fx-border-color: -tfx-border;
+  -fx-border-width: 1;
+  -fx-border-radius: 10;
+
+  -fx-prompt-text-fill: -tfx-muted;
 }

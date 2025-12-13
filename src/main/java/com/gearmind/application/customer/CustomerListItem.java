@@ -1,20 +1,20 @@
-package com.gearmind.domain.customer;
+package com.gearmind.application.customer;
 
-public class Customer {
+public class CustomerListItem {
 
     private final long id;
     private final long empresaId;
+    private final String empresaNombre;
     private final String nombre;
     private final String email;
     private final String telefono;
     private final String notas;
     private final boolean activo;
 
-    private String empresaNombre;
-
-    public Customer(long id, long empresaId, String nombre, String email, String telefono, String notas, boolean activo) {
+    public CustomerListItem(long id, long empresaId, String empresaNombre, String nombre, String email, String telefono, String notas, boolean activo) {
         this.id = id;
         this.empresaId = empresaId;
+        this.empresaNombre = empresaNombre;
         this.nombre = nombre;
         this.email = email;
         this.telefono = telefono;
@@ -28,6 +28,10 @@ public class Customer {
 
     public long getEmpresaId() {
         return empresaId;
+    }
+
+    public String getEmpresaNombre() {
+        return empresaNombre;
     }
 
     public String getNombre() {
@@ -50,11 +54,4 @@ public class Customer {
         return activo;
     }
 
-    public String getEmpresaNombre() {
-        return empresaNombre;
-    }
-
-    public void setEmpresaNombre(String empresaNombre) {
-        this.empresaNombre = empresaNombre;
-    }
 }

@@ -1,15 +1,13 @@
 package com.gearmind.domain.customer;
 
+import com.gearmind.application.customer.CustomerListItem;
 import java.util.List;
 import java.util.Optional;
 
 public interface CustomerRepository {
 
-    /**
-     * Devuelve todos los clientes de una empresa.
-     * @param empresaId
-     * @return 
-     */
+    List<Customer> findAll();
+
     List<Customer> findByEmpresaId(long empresaId);
 
     Optional<Customer> findById(long id);
@@ -21,4 +19,6 @@ public interface CustomerRepository {
     void deactivate(long customerId, long empresaId);
 
     void activate(long customerId, long empresaId);
+    
+    List<Customer> findAllWithEmpresa();
 }

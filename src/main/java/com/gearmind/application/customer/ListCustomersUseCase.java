@@ -1,5 +1,6 @@
 package com.gearmind.application.customer;
 
+import com.gearmind.application.common.AuthContext;
 import com.gearmind.domain.customer.Customer;
 import com.gearmind.domain.customer.CustomerRepository;
 
@@ -19,5 +20,16 @@ public class ListCustomersUseCase {
         }
         return repository.findByEmpresaId(empresaId);
     }
-}
 
+    public Object listVisibleForCurrentUser() {
+        if (AuthContext.isSuperAdmin()) {
+            return repository.findAllWithEmpresa();
+        }
+        return repository.findByEmpresaId(AuthContext.getEmpresaId());
+    }
+    
+    public List<Customer> listAllWithEmpresa() {
+        return repository.findAllWithEmpresa();
+    }
+
+}

@@ -43,19 +43,28 @@
 
                 <GridPane hgap="8" vgap="6">
                     <columnConstraints>
-                        <ColumnConstraints percentWidth="25"/>
-                        <ColumnConstraints percentWidth="25"/>
-                        <ColumnConstraints percentWidth="25"/>
-                        <ColumnConstraints percentWidth="25"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
                     </columnConstraints>
 
                     <children>
-                        <TextField fx:id="filterNombreField" promptText="Nombre" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                        <TextField fx:id="filterTelefonoField" promptText="Teléfono" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                        <TextField fx:id="filterEmailField" promptText="Email" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
-                        <HBox spacing="8" alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="3">
-                            <Label text="Estado" styleClass="tfx-filter-label"/>
-                            <ComboBox fx:id="filterEstadoCombo" promptText="Estado" styleClass="tfx-filter-field" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+                        <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnSpan="5">
+                            <HBox fx:id="boxFilterEmpresa" spacing="8" alignment="CENTER_LEFT">
+                                <Label text="Empresa" styleClass="tfx-filter-label"/>
+                                <ComboBox fx:id="filterEmpresaCombo" prefWidth="170" styleClass="tfx-filter-field"/>
+                            </HBox>
+
+                            <TextField fx:id="filterNombreField" promptText="Nombre" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="filterTelefonoField" promptText="Teléfono" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="filterEmailField" promptText="Email" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+
+                            <HBox fx:id="boxFilterEstado" spacing="8" alignment="CENTER_LEFT">
+                                <Label text="Estado" styleClass="tfx-filter-label"/>
+                                <ComboBox fx:id="filterEstadoCombo" prefWidth="170" styleClass="tfx-filter-field"/>
+                            </HBox>
                         </HBox>
                     </children>
                 </GridPane>
@@ -73,6 +82,7 @@
             <children>
                 <TableView fx:id="tblClientes">
                     <columns>
+                        <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="160"/>
                         <TableColumn fx:id="colNombre" text="Nombre"/>
                         <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="120"/>
                         <TableColumn fx:id="colEmail" text="Email"/>
