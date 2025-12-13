@@ -1,5 +1,6 @@
 package com.gearmind.presentation.controller;
 
+import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.company.ListEmpresasUseCase;
 import com.gearmind.application.company.SaveEmpresaRequest;
 import com.gearmind.application.company.SaveEmpresaUseCase;
@@ -17,6 +18,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -28,6 +30,7 @@ public class EmpresasController {
 
     @FXML
     private TableView<Empresa> tblEmpresas;
+
     @FXML
     private TableColumn<Empresa, String> colNombre;
     @FXML
@@ -46,14 +49,17 @@ public class EmpresasController {
     private TableColumn<Empresa, String> colEstado;
     @FXML
     private TableColumn<Empresa, Empresa> colAcciones;
+
     @FXML
     private Button btnNueva;
+
     @FXML
-    private TextField txtBuscar;
+    private TextField txtBuscar; // está oculto en FXML, OK
     @FXML
     private ComboBox<Integer> cmbPageSize;
     @FXML
     private Label lblResumen;
+
     @FXML
     private TextField filterNombreField;
     @FXML
@@ -73,6 +79,7 @@ public class EmpresasController {
 
     private final ListEmpresasUseCase listEmpresasUseCase;
     private final SaveEmpresaUseCase saveEmpresaUseCase;
+
     private final ObservableList<Empresa> masterData = FXCollections.observableArrayList();
     private SmartTable<Empresa> smartTable;
 
@@ -84,8 +91,32 @@ public class EmpresasController {
 
     @FXML
     private void initialize() {
-        tblEmpresas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+        // ===== Guard de rol: SOLO SuperAdmin =====
+        boolean isSuperAdmin = AuthContext.isSuperAdmin();
+
+        tblEmpresas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblEmpresas.setPlaceholder(new Label("No hay empresas que mostrar."));
+
+        if (!isSuperAdmin) {
+            // Bloqueamos UI y dejamos mensaje claro (para que no “parezca bug”)
+            if (btnNueva != null) {
+                btnNueva.setDisable(true);
+            }
+            if (cmbPageSize != null) {
+                cmbPageSize.setDisable(true);
+            }
+
+            tblEmpresas.setDisable(true);
+            tblEmpresas.setPlaceholder(new Label("Acceso restringido: solo SuperAdmin puede gestionar empresas."));
+
+            if (lblResumen != null) {
+                lblResumen.setText("Acceso restringido (Solo SuperAdmin).");
+            }
+            return;
+        }
+
+        // ===== Columnas base =====
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colCif.setCellValueFactory(new PropertyValueFactory<>("cif"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
@@ -94,14 +125,16 @@ public class EmpresasController {
         colProvincia.setCellValueFactory(new PropertyValueFactory<>("provincia"));
         colCp.setCellValueFactory(new PropertyValueFactory<>("cp"));
 
-        // Estado con badge como en Clientes/Usuarios
+        // ===== Estado con badge =====
         colEstado.setCellValueFactory(cd
-                -> new SimpleStringProperty(cd.getValue().isActiva() ? "Activa" : "Inactiva"));
+                -> new SimpleStringProperty(cd.getValue().isActiva() ? "Activa" : "Inactiva")
+        );
         colEstado.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-danger");
+
                 if (empty || item == null) {
                     setText(null);
                 } else {
@@ -116,25 +149,39 @@ public class EmpresasController {
             }
         });
 
+        // ===== Acciones =====
         setupAccionesColumn();
         setupRowDoubleClick();
 
+        // ===== Page size =====
         if (cmbPageSize != null) {
             cmbPageSize.setItems(FXCollections.observableArrayList(10, 25, 50, 100));
             cmbPageSize.getSelectionModel().select(Integer.valueOf(25));
         }
 
-        // SmartTable como en Clientes/Usuarios
-        smartTable = new SmartTable<>(tblEmpresas, masterData, txtBuscar, cmbPageSize, lblResumen, "empresas", this::matchesGlobalFilter);
+        // ===== SmartTable =====
+        smartTable = new SmartTable<>(
+                tblEmpresas,
+                masterData,
+                txtBuscar, // está hidden en FXML: si un día lo quieres, ya está
+                cmbPageSize,
+                lblResumen,
+                "empresas",
+                this::matchesGlobalFilter
+        );
 
+        // Igual que Clientes: fixedCell + altura dinámica + no estirar raro
         tblEmpresas.setFixedCellSize(28);
         smartTable.setAfterRefreshCallback(() -> {
             int rows = Math.max(smartTable.getLastVisibleCount(), 1);
             double headerHeight = 28;
             double tableHeight = headerHeight + rows * tblEmpresas.getFixedCellSize() + 2;
+
             tblEmpresas.setPrefHeight(tableHeight);
+            tblEmpresas.setMinHeight(Region.USE_PREF_SIZE);
         });
 
+        // ===== Filtros por columna =====
         smartTable.addColumnFilter(filterNombreField, (e, text) -> safe(e.getNombre()).contains(text));
         smartTable.addColumnFilter(filterCifField, (e, text) -> safe(e.getCif()).contains(text));
         smartTable.addColumnFilter(filterTelefonoField, (e, text) -> safe(e.getTelefono()).contains(text));
@@ -142,7 +189,10 @@ public class EmpresasController {
         smartTable.addColumnFilter(filterCiudadField, (e, text) -> safe(e.getCiudad()).contains(text));
         smartTable.addColumnFilter(filterProvinciaField, (e, text) -> safe(e.getProvincia()).contains(text));
         smartTable.addColumnFilter(filterCpField, (e, text) -> safe(e.getCp()).contains(text));
-        smartTable.addColumnFilter(filterEstadoField, (e, text) -> (e.isActiva() ? "activa" : "inactiva").toLowerCase(Locale.ROOT).contains(text));
+        smartTable.addColumnFilter(filterEstadoField, (e, text)
+                -> (e.isActiva() ? "activa" : "inactiva").contains(text)
+        );
+
         cargarEmpresas();
     }
 
@@ -157,6 +207,7 @@ public class EmpresasController {
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
                 btnToggle.getStyleClass().add("tfx-icon-btn");
+
                 btnEditar.setTooltip(new Tooltip("Editar empresa"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
 
@@ -178,25 +229,28 @@ public class EmpresasController {
             @Override
             protected void updateItem(Empresa empresa, boolean empty) {
                 super.updateItem(empresa, empty);
+
                 if (empty || empresa == null) {
                     setGraphic(null);
-                } else {
-                    btnToggle.getStyleClass().removeAll("tfx-icon-btn-danger", "tfx-icon-btn-success");
-
-                    if (empresa.isActiva()) {
-                        btnToggle.setText("Desactivar");
-                        btnToggle.getStyleClass().add("tfx-icon-btn-danger");
-                        btnToggle.setTooltip(new Tooltip("Desactivar empresa"));
-                    } else {
-                        btnToggle.setText("Activar");
-                        btnToggle.getStyleClass().add("tfx-icon-btn-success");
-                        btnToggle.setTooltip(new Tooltip("Activar empresa"));
-                    }
-
-                    setGraphic(container);
+                    return;
                 }
+
+                btnToggle.getStyleClass().removeAll("tfx-icon-btn-danger", "tfx-icon-btn-success");
+
+                if (empresa.isActiva()) {
+                    btnToggle.setText("Desactivar");
+                    btnToggle.getStyleClass().add("tfx-icon-btn-danger");
+                    btnToggle.setTooltip(new Tooltip("Desactivar empresa"));
+                } else {
+                    btnToggle.setText("Activar");
+                    btnToggle.getStyleClass().add("tfx-icon-btn-success");
+                    btnToggle.setTooltip(new Tooltip("Activar empresa"));
+                }
+
+                setGraphic(container);
             }
         });
+
         colAcciones.setSortable(false);
     }
 
@@ -205,8 +259,7 @@ public class EmpresasController {
             TableRow<Empresa> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && !row.isEmpty()) {
-                    Empresa e = row.getItem();
-                    onEditar(e);
+                    onEditar(row.getItem());
                 }
             });
             return row;
@@ -223,6 +276,7 @@ public class EmpresasController {
         if (filtro == null || filtro.isBlank()) {
             return true;
         }
+
         String f = filtro.toLowerCase(Locale.ROOT);
         String nombre = safe(e.getNombre());
         String cif = safe(e.getCif());
@@ -233,7 +287,8 @@ public class EmpresasController {
         String cp = safe(e.getCp());
         String estado = e.isActiva() ? "activa" : "inactiva";
 
-        return nombre.contains(f) || cif.contains(f) || telefono.contains(f) || email.contains(f) || ciudad.contains(f) || provincia.contains(f) || cp.contains(f) || estado.contains(f);
+        return nombre.contains(f) || cif.contains(f) || telefono.contains(f) || email.contains(f)
+                || ciudad.contains(f) || provincia.contains(f) || cp.contains(f) || estado.contains(f);
     }
 
     private String safe(String value) {
@@ -242,21 +297,33 @@ public class EmpresasController {
 
     @FXML
     private void onRefrescar() {
+        if (!AuthContext.isSuperAdmin()) {
+            return;
+        }
         cargarEmpresas();
     }
 
     @FXML
     private void onNuevaEmpresa() {
+        if (!AuthContext.isSuperAdmin()) {
+            return;
+        }
         openForm(null);
     }
 
     private void onEditar(Empresa empresa) {
+        if (!AuthContext.isSuperAdmin()) {
+            return;
+        }
         if (empresa != null) {
             openForm(empresa);
         }
     }
 
     private void onToggleActiva(Empresa empresa) {
+        if (!AuthContext.isSuperAdmin()) {
+            return;
+        }
         if (empresa == null) {
             return;
         }
@@ -293,6 +360,10 @@ public class EmpresasController {
 
     @FXML
     private void onLimpiarFiltros() {
+        if (!AuthContext.isSuperAdmin()) {
+            return;
+        }
+
         if (txtBuscar != null) {
             txtBuscar.clear();
         }

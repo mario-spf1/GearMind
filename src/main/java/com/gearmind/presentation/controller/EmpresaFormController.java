@@ -1,5 +1,6 @@
 package com.gearmind.presentation.controller;
 
+import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.company.SaveEmpresaRequest;
 import com.gearmind.application.company.SaveEmpresaUseCase;
 import com.gearmind.domain.company.Empresa;
@@ -12,31 +13,23 @@ public class EmpresaFormController {
 
     @FXML
     private Label lblTitle;
-
     @FXML
     private Label lblError;
 
     @FXML
     private TextField txtNombre;
-
     @FXML
     private TextField txtCif;
-
     @FXML
     private TextField txtTelefono;
-
     @FXML
     private TextField txtEmail;
-
     @FXML
     private TextField txtDireccion;
-
     @FXML
     private TextField txtCiudad;
-
     @FXML
     private TextField txtProvincia;
-
     @FXML
     private TextField txtCp;
 
@@ -45,7 +38,6 @@ public class EmpresaFormController {
 
     @FXML
     private Button btnGuardar;
-
     @FXML
     private Button btnCancelar;
 
@@ -62,45 +54,50 @@ public class EmpresaFormController {
 
     @FXML
     private void initialize() {
-        lblError.setVisible(false);
-        lblError.setManaged(false);
+        ocultarError();
+
+        if (!AuthContext.isSuperAdmin()) {
+            bloquearFormulario();
+            mostrarError("Acceso restringido: solo SuperAdmin puede gestionar empresas.");
+            return;
+        }
 
         if (chkActiva != null) {
             chkActiva.setSelected(true);
         }
-
         if (lblTitle != null) {
             lblTitle.setText("Nueva empresa");
         }
     }
 
-    /**
-     * Carga una empresa en el formulario para editarla. Si se pasa null, se
-     * deja en modo "nueva".
-     */
     public void setEmpresa(Empresa empresa) {
         this.empresa = empresa;
+
+        if (!AuthContext.isSuperAdmin()) {
+            return;
+        }
 
         if (empresa == null) {
             if (lblTitle != null) {
                 lblTitle.setText("Nueva empresa");
             }
             limpiarFormulario();
-        } else {
-            if (lblTitle != null) {
-                lblTitle.setText("Editar empresa");
-            }
-
-            txtNombre.setText(nullToEmpty(empresa.getNombre()));
-            txtCif.setText(nullToEmpty(empresa.getCif()));
-            txtTelefono.setText(nullToEmpty(empresa.getTelefono()));
-            txtEmail.setText(nullToEmpty(empresa.getEmail()));
-            txtDireccion.setText(nullToEmpty(empresa.getDireccion()));
-            txtCiudad.setText(nullToEmpty(empresa.getCiudad()));
-            txtProvincia.setText(nullToEmpty(empresa.getProvincia()));
-            txtCp.setText(nullToEmpty(empresa.getCp()));
-            chkActiva.setSelected(empresa.isActiva());
+            return;
         }
+
+        if (lblTitle != null) {
+            lblTitle.setText("Editar empresa");
+        }
+
+        txtNombre.setText(nullToEmpty(empresa.getNombre()));
+        txtCif.setText(nullToEmpty(empresa.getCif()));
+        txtTelefono.setText(nullToEmpty(empresa.getTelefono()));
+        txtEmail.setText(nullToEmpty(empresa.getEmail()));
+        txtDireccion.setText(nullToEmpty(empresa.getDireccion()));
+        txtCiudad.setText(nullToEmpty(empresa.getCiudad()));
+        txtProvincia.setText(nullToEmpty(empresa.getProvincia()));
+        txtCp.setText(nullToEmpty(empresa.getCp()));
+        chkActiva.setSelected(empresa.isActiva());
     }
 
     private void limpiarFormulario() {
@@ -118,6 +115,10 @@ public class EmpresaFormController {
 
     @FXML
     private void onGuardar() {
+        if (!AuthContext.isSuperAdmin()) {
+            return;
+        }
+
         ocultarError();
 
         try {
@@ -154,13 +155,52 @@ public class EmpresaFormController {
         cerrarVentana();
     }
 
+    private void bloquearFormulario() {
+        if (txtNombre != null) {
+            txtNombre.setDisable(true);
+        }
+        if (txtCif != null) {
+            txtCif.setDisable(true);
+        }
+        if (txtTelefono != null) {
+            txtTelefono.setDisable(true);
+        }
+        if (txtEmail != null) {
+            txtEmail.setDisable(true);
+        }
+        if (txtDireccion != null) {
+            txtDireccion.setDisable(true);
+        }
+        if (txtCiudad != null) {
+            txtCiudad.setDisable(true);
+        }
+        if (txtProvincia != null) {
+            txtProvincia.setDisable(true);
+        }
+        if (txtCp != null) {
+            txtCp.setDisable(true);
+        }
+        if (chkActiva != null) {
+            chkActiva.setDisable(true);
+        }
+        if (btnGuardar != null) {
+            btnGuardar.setDisable(true);
+        }
+    }
+
     private void mostrarError(String mensaje) {
+        if (lblError == null) {
+            return;
+        }
         lblError.setText(mensaje);
         lblError.setVisible(true);
         lblError.setManaged(true);
     }
 
     private void ocultarError() {
+        if (lblError == null) {
+            return;
+        }
         lblError.setText("");
         lblError.setVisible(false);
         lblError.setManaged(false);
