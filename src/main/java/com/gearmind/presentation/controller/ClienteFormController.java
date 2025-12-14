@@ -250,7 +250,8 @@ public class ClienteFormController {
         }
 
         combo.setEditable(true);
-
+        combo.setVisibleRowCount(10);
+        final boolean[] internalChange = {false};
         combo.setConverter(new javafx.util.StringConverter<>() {
             @Override
             public String toString(EmpresaOption opt) {
@@ -281,6 +282,7 @@ public class ClienteFormController {
                 setText(empty || item == null ? null : item.nombre);
             }
         });
+
         combo.setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(EmpresaOption item, boolean empty) {
@@ -289,10 +291,29 @@ public class ClienteFormController {
             }
         });
 
+        combo.valueProperty().addListener((obs, oldV, newV) -> {
+            if (internalChange[0]) {
+                return;
+            }
+            if (newV == null) {
+                return;
+            }
+
+            internalChange[0] = true;
+            combo.getEditor().setText(newV.nombre);
+            combo.setValue(newV);
+            internalChange[0] = false;
+        });
+
         combo.getEditor().textProperty().addListener((obs, oldText, newText) -> {
+            if (internalChange[0]) {
+                return;
+            }
+
             String f = (newText == null ? "" : newText).toLowerCase(Locale.ROOT).trim();
             empresasFiltradas.setPredicate(opt -> f.isEmpty() || (opt.nombre != null && opt.nombre.toLowerCase(Locale.ROOT).contains(f)));
-            if (!combo.isShowing()) {
+
+            if (!combo.isShowing() && combo.isFocused()) {
                 combo.show();
             }
         });
@@ -303,21 +324,27 @@ public class ClienteFormController {
             }
 
             EmpresaOption match = combo.getConverter().fromString(combo.getEditor().getText());
+            internalChange[0] = true;
             if (match != null) {
                 combo.getSelectionModel().select(match);
                 combo.setValue(match);
+                combo.getEditor().setText(match.nombre);
             } else {
                 combo.getSelectionModel().clearSelection();
-                combo.getEditor().clear();
                 combo.setValue(null);
+                combo.getEditor().clear();
             }
+            internalChange[0] = false;
         });
 
         combo.setOnHidden(e -> {
             EmpresaOption match = combo.getConverter().fromString(combo.getEditor().getText());
             if (match != null) {
+                internalChange[0] = true;
                 combo.getSelectionModel().select(match);
                 combo.setValue(match);
+                combo.getEditor().setText(match.nombre);
+                internalChange[0] = false;
             }
         });
     }

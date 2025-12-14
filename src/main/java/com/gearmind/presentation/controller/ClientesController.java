@@ -29,29 +29,48 @@ import java.util.Locale;
 
 public class ClientesController {
 
-    @FXML private TableView<Customer> tblClientes;
-    @FXML private TableColumn<Customer, String> colEmpresa;
-    @FXML private TableColumn<Customer, String> colNombre;
-    @FXML private TableColumn<Customer, String> colTelefono;
-    @FXML private TableColumn<Customer, String> colEmail;
-    @FXML private TableColumn<Customer, String> colNotas;
-    @FXML private TableColumn<Customer, String> colEstado;
-    @FXML private TableColumn<Customer, Customer> colAcciones;
+    @FXML
+    private TableView<Customer> tblClientes;
+    @FXML
+    private TableColumn<Customer, String> colEmpresa;
+    @FXML
+    private TableColumn<Customer, String> colNombre;
+    @FXML
+    private TableColumn<Customer, String> colTelefono;
+    @FXML
+    private TableColumn<Customer, String> colEmail;
+    @FXML
+    private TableColumn<Customer, String> colNotas;
+    @FXML
+    private TableColumn<Customer, String> colEstado;
+    @FXML
+    private TableColumn<Customer, Customer> colAcciones;
 
-    @FXML private ComboBox<Integer> cmbPageSize;
-    @FXML private Button btnNuevoCliente;
-    @FXML private Label lblHeaderInfo;
+    @FXML
+    private ComboBox<Integer> cmbPageSize;
+    @FXML
+    private Button btnNuevoCliente;
+    @FXML
+    private Label lblHeaderInfo;
 
-    @FXML private TextField filterNombreField;
-    @FXML private TextField filterTelefonoField;
-    @FXML private TextField filterEmailField;
-    @FXML private ComboBox<String> filterEstadoCombo;
+    @FXML
+    private TextField filterNombreField;
+    @FXML
+    private TextField filterTelefonoField;
+    @FXML
+    private TextField filterEmailField;
+    @FXML
+    private ComboBox<String> filterEstadoCombo;
 
-    @FXML private ComboBox<String> filterEmpresaCombo;
-    @FXML private HBox boxFilterEmpresa;
-    @FXML private HBox boxFilterEstado;
+    @FXML
+    private ComboBox<String> filterEmpresaCombo;
+    @FXML
+    private HBox boxFilterEmpresa;
+    @FXML
+    private HBox boxFilterEstado;
 
-    @FXML private Label lblResumen;
+    @FXML
+    private Label lblResumen;
 
     private final ListCustomersUseCase listCustomersUseCase;
     private final DeactivateCustomerUseCase deactivateCustomerUseCase;
@@ -86,8 +105,8 @@ public class ClientesController {
             }
         } else {
             if (colEmpresa != null) {
-                colEmpresa.setCellValueFactory(c ->
-                        new SimpleStringProperty(safeRaw(c.getValue().getEmpresaNombre()))
+                colEmpresa.setCellValueFactory(c
+                        -> new SimpleStringProperty(safeRaw(c.getValue().getEmpresaNombre()))
                 );
             }
         }
@@ -113,8 +132,8 @@ public class ClientesController {
             }
         });
 
-        colEstado.setCellValueFactory(c ->
-                new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo")
+        colEstado.setCellValueFactory(c
+                -> new ReadOnlyObjectWrapper<>(c.getValue().isActivo() ? "Activo" : "Inactivo")
         );
         colEstado.setCellFactory(col -> new TableCell<>() {
             @Override
@@ -149,12 +168,16 @@ public class ClientesController {
 
                 btnEditar.setOnAction(e -> {
                     Customer c = getItem();
-                    if (c != null) openClienteForm(c);
+                    if (c != null) {
+                        openClienteForm(c);
+                    }
                 });
 
                 btnToggle.setOnAction(e -> {
                     Customer c = getItem();
-                    if (c != null) toggleCustomerActive(c);
+                    if (c != null) {
+                        toggleCustomerActive(c);
+                    }
                 });
             }
 
@@ -189,12 +212,19 @@ public class ClientesController {
             cmbPageSize.getSelectionModel().select(Integer.valueOf(15));
 
             var converter = new javafx.util.StringConverter<Integer>() {
-                @Override public String toString(Integer value) {
-                    if (value == null) return "";
+                @Override
+                public String toString(Integer value) {
+                    if (value == null) {
+                        return "";
+                    }
                     return value == 0 ? "Todos" : String.valueOf(value);
                 }
-                @Override public Integer fromString(String s) {
-                    if (s == null) return 15;
+
+                @Override
+                public Integer fromString(String s) {
+                    if (s == null) {
+                        return 15;
+                    }
                     s = s.trim();
                     return "Todos".equalsIgnoreCase(s) ? 0 : Integer.valueOf(s);
                 }
@@ -202,13 +232,15 @@ public class ClientesController {
 
             cmbPageSize.setConverter(converter);
             cmbPageSize.setButtonCell(new ListCell<>() {
-                @Override protected void updateItem(Integer item, boolean empty) {
+                @Override
+                protected void updateItem(Integer item, boolean empty) {
                     super.updateItem(item, empty);
                     setText(empty || item == null ? null : (item == 0 ? "Todos" : String.valueOf(item)));
                 }
             });
             cmbPageSize.setCellFactory(lv -> new ListCell<>() {
-                @Override protected void updateItem(Integer item, boolean empty) {
+                @Override
+                protected void updateItem(Integer item, boolean empty) {
                     super.updateItem(item, empty);
                     setText(empty || item == null ? null : (item == 0 ? "Todos" : String.valueOf(item)));
                 }
@@ -237,7 +269,9 @@ public class ClientesController {
             filterEstadoCombo.getSelectionModel().select("Todos");
 
             smartTable.addColumnFilter(filterEstadoCombo, (c, selected) -> {
-                if (selected == null || "Todos".equalsIgnoreCase(selected)) return true;
+                if (selected == null || "Todos".equalsIgnoreCase(selected)) {
+                    return true;
+                }
                 return "Activo".equalsIgnoreCase(selected) ? c.isActivo() : !c.isActivo();
             });
         }
@@ -245,7 +279,9 @@ public class ClientesController {
         if (isSuperAdmin && filterEmpresaCombo != null) {
             // OJO: el filtro se define UNA sola vez aquí
             smartTable.addColumnFilter(filterEmpresaCombo, (c, selected) -> {
-                if (selected == null || "Todas".equalsIgnoreCase(selected)) return true;
+                if (selected == null || "Todas".equalsIgnoreCase(selected)) {
+                    return true;
+                }
                 return safeRaw(c.getEmpresaNombre()).equalsIgnoreCase(selected);
             });
         }
@@ -302,8 +338,11 @@ public class ClientesController {
     }
 
     private void toggleCustomerActive(Customer customer) {
-        if (customer.isActivo()) deactivateCustomer(customer);
-        else activateCustomer(customer);
+        if (customer.isActivo()) {
+            deactivateCustomer(customer);
+        } else {
+            activateCustomer(customer);
+        }
     }
 
     private void deactivateCustomer(Customer customer) {
@@ -350,44 +389,48 @@ public class ClientesController {
             Parent root = loader.load();
 
             ClienteFormController controller = loader.getController();
-            if (customer == null) controller.initForNew();
-            else controller.initForEdit(customer);
+            if (customer == null) {
+                controller.initForNew();
+            } else {
+                controller.initForEdit(customer);
+            }
 
             Scene scene = new Scene(root);
+            scene.getStylesheets().add(java.util.Objects.requireNonNull(getClass().getResource("/styles/theme.css")).toExternalForm());
+            scene.getStylesheets().add(java.util.Objects.requireNonNull(getClass().getResource("/styles/components.css")).toExternalForm());
+            Stage stage = new Stage();
+            stage.initOwner(tblClientes.getScene().getWindow());
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.setTitle(customer == null ? "Nuevo cliente" : "Editar cliente");
+            stage.setResizable(false);
+            stage.setScene(scene);
+            stage.showAndWait();
 
-            // ✅ aplicar tema a modales (evita ventana “blanca”)
-            var theme = getClass().getResource("/css/theme.css");
-            var components = getClass().getResource("/css/components.css");
-            if (theme != null) scene.getStylesheets().add(theme.toExternalForm());
-            if (components != null) scene.getStylesheets().add(components.toExternalForm());
-
-            Stage dialog = new Stage();
-            dialog.initOwner(tblClientes.getScene().getWindow());
-            dialog.initModality(Modality.WINDOW_MODAL);
-            dialog.setTitle(customer == null ? "Nuevo cliente" : "Editar cliente");
-            dialog.setScene(scene);
-            dialog.setResizable(false);
-            dialog.showAndWait();
-
-            if (controller.isSaved()) loadClientesFromDb();
+            if (controller.isSaved()) {
+                loadClientesFromDb();
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
-            Alert a = new Alert(Alert.AlertType.ERROR);
-            a.setTitle("Error");
-            a.setHeaderText("No se pudo abrir el formulario de cliente");
-            a.setContentText(e.getMessage());
-            a.showAndWait();
+            new Alert(Alert.AlertType.ERROR, "No se pudo abrir el formulario.\n\n" + e.getMessage()).showAndWait();
         }
     }
 
     @FXML
     private void onLimpiarFiltros() {
-        if (filterNombreField != null) filterNombreField.clear();
-        if (filterTelefonoField != null) filterTelefonoField.clear();
-        if (filterEmailField != null) filterEmailField.clear();
+        if (filterNombreField != null) {
+            filterNombreField.clear();
+        }
+        if (filterTelefonoField != null) {
+            filterTelefonoField.clear();
+        }
+        if (filterEmailField != null) {
+            filterEmailField.clear();
+        }
 
-        if (filterEstadoCombo != null) filterEstadoCombo.getSelectionModel().select("Todos");
+        if (filterEstadoCombo != null) {
+            filterEstadoCombo.getSelectionModel().select("Todos");
+        }
 
         if (AuthContext.isSuperAdmin() && filterEmpresaCombo != null) {
             filterEmpresaCombo.getSelectionModel().select("Todas");
