@@ -22,7 +22,6 @@ import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
@@ -49,16 +48,16 @@ public class EmpresasController {
     private TableColumn<Empresa, String> colEstado;
     @FXML
     private TableColumn<Empresa, Empresa> colAcciones;
-
     @FXML
     private Button btnNueva;
-
     @FXML
-    private TextField txtBuscar; // está oculto en FXML, OK
+    private TextField txtBuscar;
     @FXML
     private ComboBox<Integer> cmbPageSize;
     @FXML
     private Label lblResumen;
+    @FXML
+    private Label lblTotalEmpresas;
 
     @FXML
     private TextField filterNombreField;
@@ -75,7 +74,7 @@ public class EmpresasController {
     @FXML
     private TextField filterCpField;
     @FXML
-    private TextField filterEstadoField;
+    private ComboBox<String> filterEstadoCombo;
 
     private final ListEmpresasUseCase listEmpresasUseCase;
     private final SaveEmpresaUseCase saveEmpresaUseCase;
@@ -92,14 +91,12 @@ public class EmpresasController {
     @FXML
     private void initialize() {
 
-        // ===== Guard de rol: SOLO SuperAdmin =====
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
 
         tblEmpresas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tblEmpresas.setPlaceholder(new Label("No hay empresas que mostrar."));
 
         if (!isSuperAdmin) {
-            // Bloqueamos UI y dejamos mensaje claro (para que no “parezca bug”)
             if (btnNueva != null) {
                 btnNueva.setDisable(true);
             }
@@ -113,10 +110,12 @@ public class EmpresasController {
             if (lblResumen != null) {
                 lblResumen.setText("Acceso restringido (Solo SuperAdmin).");
             }
+            if (lblTotalEmpresas != null) {
+                lblTotalEmpresas.setText("");
+            }
             return;
         }
 
-        // ===== Columnas base =====
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colCif.setCellValueFactory(new PropertyValueFactory<>("cif"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
@@ -125,10 +124,7 @@ public class EmpresasController {
         colProvincia.setCellValueFactory(new PropertyValueFactory<>("provincia"));
         colCp.setCellValueFactory(new PropertyValueFactory<>("cp"));
 
-        // ===== Estado con badge =====
-        colEstado.setCellValueFactory(cd
-                -> new SimpleStringProperty(cd.getValue().isActiva() ? "Activa" : "Inactiva")
-        );
+        colEstado.setCellValueFactory(cd -> new SimpleStringProperty(cd.getValue().isActiva() ? "Activa" : "Inactiva"));
         colEstado.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -149,28 +145,50 @@ public class EmpresasController {
             }
         });
 
-        // ===== Acciones =====
         setupAccionesColumn();
         setupRowDoubleClick();
 
-        // ===== Page size =====
         if (cmbPageSize != null) {
-            cmbPageSize.setItems(FXCollections.observableArrayList(10, 25, 50, 100));
-            cmbPageSize.getSelectionModel().select(Integer.valueOf(25));
+            cmbPageSize.setItems(FXCollections.observableArrayList(5, 15, 25, 0));
+            cmbPageSize.getSelectionModel().select(Integer.valueOf(15));
+
+            var converter = new javafx.util.StringConverter<Integer>() {
+                @Override
+                public String toString(Integer value) {
+                    if (value == null) {
+                        return "";
+                    }
+                    return value == 0 ? "Todos" : String.valueOf(value);
+                }
+
+                @Override
+                public Integer fromString(String s) {
+                    if (s == null) {
+                        return 15;
+                    }
+                    s = s.trim();
+                    return "Todos".equalsIgnoreCase(s) ? 0 : Integer.valueOf(s);
+                }
+            };
+
+            cmbPageSize.setConverter(converter);
+            cmbPageSize.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(Integer item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : (item == 0 ? "Todos" : String.valueOf(item)));
+                }
+            });
+            cmbPageSize.setCellFactory(lv -> new ListCell<>() {
+                @Override
+                protected void updateItem(Integer item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : (item == 0 ? "Todos" : String.valueOf(item)));
+                }
+            });
         }
 
-        // ===== SmartTable =====
-        smartTable = new SmartTable<>(
-                tblEmpresas,
-                masterData,
-                txtBuscar, // está hidden en FXML: si un día lo quieres, ya está
-                cmbPageSize,
-                lblResumen,
-                "empresas",
-                this::matchesGlobalFilter
-        );
-
-        // Igual que Clientes: fixedCell + altura dinámica + no estirar raro
+        smartTable = new SmartTable<>(tblEmpresas, masterData, txtBuscar, cmbPageSize, lblResumen, "empresas", this::matchesGlobalFilter);
         tblEmpresas.setFixedCellSize(28);
         smartTable.setAfterRefreshCallback(() -> {
             int rows = Math.max(smartTable.getLastVisibleCount(), 1);
@@ -181,7 +199,6 @@ public class EmpresasController {
             tblEmpresas.setMinHeight(Region.USE_PREF_SIZE);
         });
 
-        // ===== Filtros por columna =====
         smartTable.addColumnFilter(filterNombreField, (e, text) -> safe(e.getNombre()).contains(text));
         smartTable.addColumnFilter(filterCifField, (e, text) -> safe(e.getCif()).contains(text));
         smartTable.addColumnFilter(filterTelefonoField, (e, text) -> safe(e.getTelefono()).contains(text));
@@ -189,10 +206,17 @@ public class EmpresasController {
         smartTable.addColumnFilter(filterCiudadField, (e, text) -> safe(e.getCiudad()).contains(text));
         smartTable.addColumnFilter(filterProvinciaField, (e, text) -> safe(e.getProvincia()).contains(text));
         smartTable.addColumnFilter(filterCpField, (e, text) -> safe(e.getCp()).contains(text));
-        smartTable.addColumnFilter(filterEstadoField, (e, text)
-                -> (e.isActiva() ? "activa" : "inactiva").contains(text)
-        );
+        if (filterEstadoCombo != null) {
+            filterEstadoCombo.setItems(FXCollections.observableArrayList("Todos", "Activa", "Inactiva"));
+            filterEstadoCombo.getSelectionModel().select("Todos");
 
+            smartTable.addColumnFilter(filterEstadoCombo, (e, selected) -> {
+                if (selected == null || "Todos".equalsIgnoreCase(selected)) {
+                    return true;
+                }
+                return "Activa".equalsIgnoreCase(selected) ? e.isActiva() : !e.isActiva();
+            });
+        }
         cargarEmpresas();
     }
 
@@ -270,6 +294,11 @@ public class EmpresasController {
         List<Empresa> empresas = listEmpresasUseCase.execute();
         masterData.setAll(empresas);
         smartTable.refresh();
+
+        if (lblTotalEmpresas != null) {
+            int total = masterData.size();
+            lblTotalEmpresas.setText(total + (total == 1 ? " empresa registrada" : " empresas registradas"));
+        }
     }
 
     private boolean matchesGlobalFilter(Empresa e, String filtro) {
@@ -339,8 +368,14 @@ public class EmpresasController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/EmpresaFormView.fxml"));
             Parent root = loader.load();
+
             EmpresaFormController controller = loader.getController();
-            controller.setEmpresa(empresa);
+            if (empresa == null) {
+                controller.initForNew();
+            } else {
+                controller.initForEdit(empresa);
+            }
+
             Stage stage = new Stage();
             stage.setTitle(empresa == null ? "Nueva empresa" : "Editar empresa");
             stage.initOwner(tblEmpresas.getScene().getWindow());
@@ -351,9 +386,12 @@ public class EmpresasController {
             scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
             stage.setScene(scene);
             stage.showAndWait();
-            cargarEmpresas();
 
-        } catch (IOException e) {
+            if (controller.isSaved()) {
+                cargarEmpresas();
+            }
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -388,8 +426,8 @@ public class EmpresasController {
         if (filterCpField != null) {
             filterCpField.clear();
         }
-        if (filterEstadoField != null) {
-            filterEstadoField.clear();
+        if (filterEstadoCombo != null) {
+            filterEstadoCombo.getSelectionModel().select("Todos");
         }
         smartTable.refresh();
     }

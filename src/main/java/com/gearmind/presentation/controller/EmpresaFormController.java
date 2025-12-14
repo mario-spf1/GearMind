@@ -12,7 +12,7 @@ import javafx.stage.Stage;
 public class EmpresaFormController {
 
     @FXML
-    private Label lblTitle;
+    private Label lblTitulo;
     @FXML
     private Label lblError;
 
@@ -38,55 +38,52 @@ public class EmpresaFormController {
 
     @FXML
     private Button btnGuardar;
-    @FXML
-    private Button btnCancelar;
 
     private final SaveEmpresaUseCase saveEmpresaUseCase;
 
-    /**
-     * Empresa que se está editando; null si es nueva.
-     */
-    private Empresa empresa;
+    private Long editingId = null;   // null => nueva
+    private boolean saved = false;
 
     public EmpresaFormController() {
         this.saveEmpresaUseCase = new SaveEmpresaUseCase(new MySqlEmpresaRepository());
     }
 
-    @FXML
-    private void initialize() {
-        ocultarError();
+    public boolean isSaved() {
+        return saved;
+    }
 
-        if (!AuthContext.isSuperAdmin()) {
-            bloquearFormulario();
-            mostrarError("Acceso restringido: solo SuperAdmin puede gestionar empresas.");
-            return;
+    /**
+     * Igual que los otros: prepara el formulario para "Nueva empresa"
+     */
+    public void initForNew() {
+        editingId = null;
+        saved = false;
+
+        if (lblTitulo != null) {
+            lblTitulo.setText("Nueva empresa");
         }
+        limpiarFormulario();
 
         if (chkActiva != null) {
             chkActiva.setSelected(true);
         }
-        if (lblTitle != null) {
-            lblTitle.setText("Nueva empresa");
-        }
+        ocultarError();
     }
 
-    public void setEmpresa(Empresa empresa) {
-        this.empresa = empresa;
-
-        if (!AuthContext.isSuperAdmin()) {
-            return;
-        }
-
+    /**
+     * Igual que los otros: prepara el formulario para "Editar empresa"
+     */
+    public void initForEdit(Empresa empresa) {
         if (empresa == null) {
-            if (lblTitle != null) {
-                lblTitle.setText("Nueva empresa");
-            }
-            limpiarFormulario();
+            initForNew();
             return;
         }
 
-        if (lblTitle != null) {
-            lblTitle.setText("Editar empresa");
+        editingId = empresa.getId();
+        saved = false;
+
+        if (lblTitulo != null) {
+            lblTitulo.setText("Editar empresa");
         }
 
         txtNombre.setText(nullToEmpty(empresa.getNombre()));
@@ -97,20 +94,49 @@ public class EmpresaFormController {
         txtCiudad.setText(nullToEmpty(empresa.getCiudad()));
         txtProvincia.setText(nullToEmpty(empresa.getProvincia()));
         txtCp.setText(nullToEmpty(empresa.getCp()));
-        chkActiva.setSelected(empresa.isActiva());
+        if (chkActiva != null) {
+            chkActiva.setSelected(empresa.isActiva());
+        }
+
+        ocultarError();
+        refreshGuardarEnabled();
     }
 
-    private void limpiarFormulario() {
-        txtNombre.clear();
-        txtCif.clear();
-        txtTelefono.clear();
-        txtEmail.clear();
-        txtDireccion.clear();
-        txtCiudad.clear();
-        txtProvincia.clear();
-        txtCp.clear();
-        chkActiva.setSelected(true);
+    @FXML
+    private void initialize() {
         ocultarError();
+
+        // ✅ Patrón igual: guardar solo activo si hay nombre
+        if (btnGuardar != null) {
+            btnGuardar.setDisable(true);
+        }
+
+        if (txtNombre != null) {
+            txtNombre.textProperty().addListener((obs, oldV, newV) -> refreshGuardarEnabled());
+        }
+
+        // ✅ Guard por rol (igual que estabas haciendo)
+        if (!AuthContext.isSuperAdmin()) {
+            bloquearFormulario();
+            mostrarError("Acceso restringido: solo SuperAdmin puede gestionar empresas.");
+        } else {
+            // Estado inicial por defecto si no llaman initForNew/initForEdit
+            if (lblTitulo != null) {
+                lblTitulo.setText("Empresa");
+            }
+            if (chkActiva != null) {
+                chkActiva.setSelected(true);
+            }
+        }
+    }
+
+    private void refreshGuardarEnabled() {
+        if (btnGuardar == null) {
+            return;
+        }
+
+        String nombre = txtNombre != null ? safeTrim(txtNombre.getText()) : "";
+        btnGuardar.setDisable(nombre.isBlank());
     }
 
     @FXML
@@ -123,7 +149,7 @@ public class EmpresaFormController {
 
         try {
             String nombre = safeTrim(txtNombre.getText());
-            if (nombre.isEmpty()) {
+            if (nombre.isBlank()) {
                 mostrarError("El nombre de la empresa es obligatorio.");
                 return;
             }
@@ -135,12 +161,25 @@ public class EmpresaFormController {
             String ciudad = safeTrim(txtCiudad.getText());
             String provincia = safeTrim(txtProvincia.getText());
             String cp = safeTrim(txtCp.getText());
-            boolean activa = chkActiva.isSelected();
+            boolean activa = chkActiva != null && chkActiva.isSelected();
 
-            Long id = (empresa != null) ? empresa.getId() : null;
-            SaveEmpresaRequest request = new SaveEmpresaRequest(id, nombre, cif, telefono, email, direccion, ciudad, provincia, cp, activa);
+            SaveEmpresaRequest request = new SaveEmpresaRequest(
+                    editingId,
+                    nombre,
+                    cif,
+                    telefono,
+                    email,
+                    direccion,
+                    ciudad,
+                    provincia,
+                    cp,
+                    activa
+            );
+
             saveEmpresaUseCase.execute(request);
-            cerrarVentana();
+
+            saved = true;
+            closeWindow();
 
         } catch (IllegalArgumentException ex) {
             mostrarError(ex.getMessage());
@@ -152,7 +191,46 @@ public class EmpresaFormController {
 
     @FXML
     private void onCancelar() {
-        cerrarVentana();
+        saved = false;
+        closeWindow();
+    }
+
+    private void closeWindow() {
+        Stage stage = (Stage) btnGuardar.getScene().getWindow();
+        stage.close();
+    }
+
+    private void limpiarFormulario() {
+        if (txtNombre != null) {
+            txtNombre.clear();
+        }
+        if (txtCif != null) {
+            txtCif.clear();
+        }
+        if (txtTelefono != null) {
+            txtTelefono.clear();
+        }
+        if (txtEmail != null) {
+            txtEmail.clear();
+        }
+        if (txtDireccion != null) {
+            txtDireccion.clear();
+        }
+        if (txtCiudad != null) {
+            txtCiudad.clear();
+        }
+        if (txtProvincia != null) {
+            txtProvincia.clear();
+        }
+        if (txtCp != null) {
+            txtCp.clear();
+        }
+
+        if (chkActiva != null) {
+            chkActiva.setSelected(true);
+        }
+        ocultarError();
+        refreshGuardarEnabled();
     }
 
     private void bloquearFormulario() {
@@ -212,10 +290,5 @@ public class EmpresaFormController {
 
     private String nullToEmpty(String value) {
         return value != null ? value : "";
-    }
-
-    private void cerrarVentana() {
-        Stage stage = (Stage) btnCancelar.getScene().getWindow();
-        stage.close();
     }
 }

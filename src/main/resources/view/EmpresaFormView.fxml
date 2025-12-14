@@ -1,23 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.*?>
 
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gearmind.presentation.controller.EmpresaFormController" spacing="16" styleClass="tfx-page" prefWidth="520">
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.EmpresaFormController"
+      spacing="12"
+      styleClass="tfx-page">
+
     <children>
 
-        <Label fx:id="lblTitle" text="Empresa" styleClass="tfx-title-xl"/>
+        <!-- TÍTULO -->
+        <Label fx:id="lblTitulo"
+               text="Empresa"
+               styleClass="tfx-title-xl"/>
 
+        <!-- CARD -->
         <VBox styleClass="tfx-card" spacing="12">
             <children>
 
                 <GridPane hgap="10" vgap="10">
+                    <padding>
+                        <Insets top="5" right="5" bottom="5" left="5"/>
+                    </padding>
+
                     <columnConstraints>
                         <ColumnConstraints percentWidth="30"/>
                         <ColumnConstraints percentWidth="70"/>
                     </columnConstraints>
 
                     <children>
+
                         <Label text="Nombre:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                         <TextField fx:id="txtNombre" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
@@ -42,20 +57,32 @@
                         <Label text="CP:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
                         <TextField fx:id="txtCp" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
 
-                        <Label text="Estado:" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
-                        <CheckBox fx:id="chkActiva" text="Empresa activa" selected="true" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+                        <Label text="Activa:" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+                        <CheckBox fx:id="chkActiva" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+
                     </children>
                 </GridPane>
 
-                <Label fx:id="lblError" text="" styleClass="tfx-error" visible="false" managed="false"/>
+                <!-- ERROR -->
+                <Label fx:id="lblError"
+                       styleClass="tfx-error"
+                       visible="false"
+                       managed="false"/>
+
             </children>
         </VBox>
 
-        <HBox spacing="10">
+        <!-- BOTONES -->
+        <HBox spacing="8">
             <children>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button fx:id="btnCancelar" text="Cancelar" onAction="#onCancelar" styleClass="tfx-btn-ghost"/>
-                <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="tfx-btn-primary"/>
+                <Button text="Cancelar"
+                        onAction="#onCancelar"
+                        styleClass="tfx-btn-ghost"/>
+                <Button fx:id="btnGuardar"
+                        text="Guardar"
+                        onAction="#onGuardar"
+                        styleClass="tfx-btn-primary"/>
             </children>
         </HBox>
 
