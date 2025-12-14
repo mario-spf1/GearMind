@@ -4,43 +4,57 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.gearmind.presentation.controller.VehiculoFormController"
-            styleClass="tfx-root">
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.VehiculoFormController"
+      spacing="12"
+      styleClass="tfx-page">
 
-    <center>
-        <VBox spacing="16" styleClass="tfx-card">
-            <padding>
-                <Insets top="16.0" right="16.0" bottom="16.0" left="16.0"/>
-            </padding>
+    <children>
 
-            <Label text="Datos del vehículo" styleClass="tfx-title-xl"/>
-            <GridPane hgap="12" vgap="12" styleClass="tfx-grid">
-                <columnConstraints>
-                    <ColumnConstraints halignment="RIGHT" minWidth="100"/>
-                    <ColumnConstraints hgrow="ALWAYS"/>
-                </columnConstraints>
-                <Label text="Cliente" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                <ComboBox fx:id="cmbCliente" promptText="Selecciona un cliente" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                <Label text="Matrícula" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtMatricula" promptText="1234-ABC" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                <Label text="Marca" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtMarca" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                <Label text="Modelo" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtModelo" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-                <Label text="Año" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtYear" promptText="2020" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-                <Label text="VIN" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtVin" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
-            </GridPane>
+        <Label fx:id="lblTitulo" text="Vehículo" styleClass="tfx-title-xl"/>
 
-            <HBox spacing="8" alignment="CENTER_RIGHT">
-                <Button fx:id="btnCancelar" text="Cancelar" onAction="#onCancelar" styleClass="button tfx-btn-ghost"/>
-                <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="button tfx-btn-primary"/>
-            </HBox>
+        <VBox styleClass="tfx-card" spacing="12">
+            <children>
+                <GridPane hgap="10" vgap="10">
+                    <padding>
+                        <Insets top="5" right="5" bottom="5" left="5"/>
+                    </padding>
 
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="30"/>
+                        <ColumnConstraints percentWidth="70"/>
+                    </columnConstraints>
+
+                    <children>
+                        <Label fx:id="lblEmpresa" text="Empresa:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <HBox fx:id="boxEmpresa" spacing="10" alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                            <ComboBox fx:id="cmbEmpresa" prefWidth="260"/>
+                        </HBox>
+                        <Label text="Cliente:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cmbCliente" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label text="Matrícula:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtMatricula" promptText="1234-ABC" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Label text="Marca:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtMarca" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <Label text="Modelo:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtModelo" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <Label text="Año:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtYear" promptText="2020" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                        <Label text="VIN:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtVin" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                    </children>
+                </GridPane>
+            </children>
         </VBox>
-    </center>
 
-</BorderPane>
+        <HBox spacing="8">
+            <children>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Cancelar" onAction="#onCancelar" styleClass="tfx-btn-ghost"/>
+                <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="tfx-btn-primary"/>
+            </children>
+        </HBox>
+
+    </children>
+</VBox>

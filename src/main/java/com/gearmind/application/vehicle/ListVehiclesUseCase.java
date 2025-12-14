@@ -15,6 +15,9 @@ public class ListVehiclesUseCase {
     }
 
     public List<Vehicle> execute() {
+        if (AuthContext.isSuperAdmin()) {
+            return vehicleRepository.findAllWithEmpresa();
+        }
         long empresaId = AuthContext.getEmpresaId();
         return vehicleRepository.findByEmpresaId(empresaId);
     }

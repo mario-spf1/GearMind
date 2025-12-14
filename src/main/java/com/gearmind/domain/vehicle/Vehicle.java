@@ -15,6 +15,7 @@ public class Vehicle {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String clienteNombre;
+    private String empresaNombre;
 
     public Vehicle() {
     }
@@ -118,5 +119,13 @@ public class Vehicle {
 
     public void setClienteNombre(String clienteNombre) {
         this.clienteNombre = clienteNombre;
+    }
+
+    public String getEmpresaNombre() {
+        return empresaNombre;
+    }
+
+    public void setEmpresaNombre(String empresaNombre) {
+        this.empresaNombre = empresaNombre;
     }
 }

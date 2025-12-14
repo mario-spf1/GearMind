@@ -6,7 +6,6 @@ import com.gearmind.domain.vehicle.VehicleRepository;
 import com.gearmind.infrastructure.database.DataSourceFactory;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,11 +16,13 @@ public class MySqlVehicleRepository implements VehicleRepository {
     public List<Vehicle> findByEmpresaId(Long empresaId) {
         String sql = """
             SELECT v.id, v.empresa_id, v.cliente_id,
-                   v.matricula, v.marca, v.modelo, v.year, v.vin,
-                   v.created_at, v.updated_at,
-                   c.nombre AS cliente_nombre
+                v.matricula, v.marca, v.modelo, v.year, v.vin,
+                v.created_at, v.updated_at,
+                c.nombre AS cliente_nombre,
+                e.nombre AS empresa_nombre
             FROM vehiculo v
             JOIN cliente c ON c.id = v.cliente_id
+            JOIN empresa e ON e.id = v.empresa_id
             WHERE v.empresa_id = ?
             ORDER BY v.matricula
             """;
@@ -43,14 +44,43 @@ public class MySqlVehicleRepository implements VehicleRepository {
     }
 
     @Override
+    public List<Vehicle> findAllWithEmpresa() {
+        String sql = """
+            SELECT v.id, v.empresa_id, v.cliente_id,
+                v.matricula, v.marca, v.modelo, v.year, v.vin,
+                v.created_at, v.updated_at,
+                c.nombre AS cliente_nombre,
+                e.nombre AS empresa_nombre
+            FROM vehiculo v
+            JOIN cliente c ON c.id = v.cliente_id
+            JOIN empresa e ON e.id = v.empresa_id
+            ORDER BY e.nombre, v.matricula
+            """;
+
+        try (Connection con = DataSourceFactory.getDataSource().getConnection(); PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+            List<Vehicle> result = new ArrayList<>();
+            while (rs.next()) {
+                result.add(mapRow(rs));
+            }
+            return result;
+
+        } catch (SQLException e) {
+            throw new InfrastructureException("Error al listar vehículos (SuperAdmin)", e);
+        }
+    }
+
+    @Override
     public Optional<Vehicle> findById(Long id) {
         String sql = """
             SELECT v.id, v.empresa_id, v.cliente_id,
-                   v.matricula, v.marca, v.modelo, v.year, v.vin,
-                   v.created_at, v.updated_at,
-                   c.nombre AS cliente_nombre
+                v.matricula, v.marca, v.modelo, v.year, v.vin,
+                v.created_at, v.updated_at,
+                c.nombre AS cliente_nombre,
+                e.nombre AS empresa_nombre
             FROM vehiculo v
             JOIN cliente c ON c.id = v.cliente_id
+            JOIN empresa e ON e.id = v.empresa_id
             WHERE v.id = ?
             """;
 
@@ -73,9 +103,8 @@ public class MySqlVehicleRepository implements VehicleRepository {
     public Vehicle save(Vehicle vehicle) {
         if (vehicle.getId() == null) {
             return insert(vehicle);
-        } else {
-            return update(vehicle);
         }
+        return update(vehicle);
     }
 
     private Vehicle insert(Vehicle vehicle) {
@@ -117,23 +146,24 @@ public class MySqlVehicleRepository implements VehicleRepository {
     private Vehicle update(Vehicle vehicle) {
         String sql = """
             UPDATE vehiculo
-            SET cliente_id = ?, matricula = ?, marca = ?, modelo = ?, year = ?, vin = ?
+            SET empresa_id = ?, cliente_id = ?, matricula = ?, marca = ?, modelo = ?, year = ?, vin = ?
             WHERE id = ?
             """;
 
         try (Connection con = DataSourceFactory.getDataSource().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setLong(1, vehicle.getClienteId());
-            ps.setString(2, vehicle.getMatricula());
-            ps.setString(3, vehicle.getMarca());
-            ps.setString(4, vehicle.getModelo());
+            ps.setLong(1, vehicle.getEmpresaId());
+            ps.setLong(2, vehicle.getClienteId());
+            ps.setString(3, vehicle.getMatricula());
+            ps.setString(4, vehicle.getMarca());
+            ps.setString(5, vehicle.getModelo());
             if (vehicle.getYear() != null) {
-                ps.setInt(5, vehicle.getYear());
+                ps.setInt(6, vehicle.getYear());
             } else {
-                ps.setNull(5, Types.INTEGER);
+                ps.setNull(6, Types.INTEGER);
             }
-            ps.setString(6, vehicle.getVin());
-            ps.setLong(7, vehicle.getId());
+            ps.setString(7, vehicle.getVin());
+            ps.setLong(8, vehicle.getId());
 
             ps.executeUpdate();
             return vehicle;
@@ -146,11 +176,11 @@ public class MySqlVehicleRepository implements VehicleRepository {
     @Override
     public boolean existsMatriculaInEmpresa(Long empresaId, String matricula, Long excludeId) {
         String sql = """
-            SELECT COUNT(*) 
-            FROM vehiculo 
-            WHERE empresa_id = ? 
-              AND UPPER(matricula) = UPPER(?) 
-              AND (? IS NULL OR id <> ?)
+            SELECT COUNT(*)
+            FROM vehiculo
+            WHERE empresa_id = ?
+                AND UPPER(matricula) = UPPER(?)
+                AND (? IS NULL OR id <> ?)
             """;
 
         try (Connection con = DataSourceFactory.getDataSource().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
@@ -200,6 +230,7 @@ public class MySqlVehicleRepository implements VehicleRepository {
         }
 
         v.setClienteNombre(rs.getString("cliente_nombre"));
+        v.setEmpresaNombre(rs.getString("empresa_nombre"));
         return v;
     }
 }

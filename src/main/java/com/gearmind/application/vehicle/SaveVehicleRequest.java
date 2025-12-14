@@ -3,6 +3,7 @@ package com.gearmind.application.vehicle;
 public class SaveVehicleRequest {
 
     private Long id;
+    private Long empresaId;
     private Long clienteId;
     private String matricula;
     private String marca;
@@ -16,6 +17,14 @@ public class SaveVehicleRequest {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getEmpresaId() {
+        return empresaId;
+    }
+
+    public void setEmpresaId(Long empresaId) {
+        this.empresaId = empresaId;
     }
 
     public Long getClienteId() {

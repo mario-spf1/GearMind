@@ -19,26 +19,40 @@
                 <Label text="Vehículos" styleClass="tfx-title-xl"/>
                 <Label fx:id="lblTotalVehiculos" styleClass="tfx-muted" text=""/>
                 <Pane HBox.hgrow="ALWAYS"/>
-                <Button fx:id="btnRefrescar" text="Recargar" onAction="#onRefrescar" styleClass="button tfx-btn-ghost"/>
-                <Button fx:id="btnNuevo" text="Nuevo vehículo" onAction="#onNuevo" styleClass="button tfx-btn-primary"/>
+                <Label text="Mostrar" styleClass="tfx-muted"/>
+                <ComboBox fx:id="cmbPageSize" prefWidth="90"/>
+                <Label text="por página" styleClass="tfx-muted"/>
+                <Button text="Recargar" onAction="#onRefrescar" styleClass="button tfx-btn-ghost"/>
+                <Button text="Nuevo vehículo" onAction="#onNuevo" styleClass="button tfx-btn-primary"/>
             </HBox>
 
             <VBox spacing="12" styleClass="tfx-card">
-                <HBox spacing="8" alignment="CENTER_LEFT">
-                    <TextField fx:id="txtBuscar" promptText="Buscar por matrícula, marca, modelo o cliente" HBox.hgrow="ALWAYS" styleClass="text-field"/>
-                    <Label text="Mostrar" styleClass="tfx-muted"/>
-                    <ComboBox fx:id="cmbPageSize" prefWidth="80"/>
-                    <Label text="por página" styleClass="tfx-muted"/>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <HBox fx:id="boxFilterEmpresa" spacing="8" alignment="CENTER_LEFT">
+                        <Label text="Empresa" styleClass="tfx-muted"/>
+                        <ComboBox fx:id="filterEmpresaCombo" prefWidth="220"/>
+                    </HBox>
+                    <TextField fx:id="filterClienteField" promptText="Cliente" HBox.hgrow="ALWAYS" styleClass="text-field"/>
+                    <TextField fx:id="filterMatriculaField" promptText="Matrícula" HBox.hgrow="ALWAYS" styleClass="text-field"/>
+                    <TextField fx:id="filterMarcaField" promptText="Marca" HBox.hgrow="ALWAYS" styleClass="text-field"/>
+                    <TextField fx:id="filterModeloField" promptText="Modelo" HBox.hgrow="ALWAYS" styleClass="text-field"/>
                 </HBox>
-
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <TextField fx:id="filterVinField" promptText="VIN" HBox.hgrow="ALWAYS" styleClass="text-field"/>
+                    <TextField fx:id="filterYearField" promptText="Año (2016-2020)" prefWidth="190" styleClass="text-field"/>
+                    <Pane HBox.hgrow="ALWAYS"/>
+                    <Button text="Limpiar filtros" onAction="#onLimpiarFiltros" styleClass="button tfx-btn-ghost"/>
+                </HBox>
                 <VBox spacing="4">
                     <TableView fx:id="tblVehiculos">
                         <columns>
+                            <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="160"/>
+                            <TableColumn fx:id="colCliente" text="Cliente" prefWidth="200"/>
                             <TableColumn fx:id="colMatricula" text="Matrícula" prefWidth="120"/>
                             <TableColumn fx:id="colMarca" text="Marca" prefWidth="120"/>
                             <TableColumn fx:id="colModelo" text="Modelo" prefWidth="160"/>
                             <TableColumn fx:id="colYear" text="Año" prefWidth="80"/>
-                            <TableColumn fx:id="colCliente" text="Cliente" prefWidth="200"/>
+                            <TableColumn fx:id="colVin" text="VIN" prefWidth="180"/>
                             <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
                         </columns>
                     </TableView>

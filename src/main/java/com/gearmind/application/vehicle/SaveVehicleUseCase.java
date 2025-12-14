@@ -20,8 +20,7 @@ public class SaveVehicleUseCase {
     }
 
     public Vehicle execute(SaveVehicleRequest request) {
-        long empresaId = AuthContext.getEmpresaId();
-
+        long empresaId = resolveEmpresaId(request);
         validate(request, empresaId);
         Vehicle vehicle = new Vehicle();
         vehicle.setId(request.getId());
@@ -35,6 +34,16 @@ public class SaveVehicleUseCase {
         return vehicleRepository.save(vehicle);
     }
 
+    private long resolveEmpresaId(SaveVehicleRequest request) {
+        if (AuthContext.isSuperAdmin()) {
+            if (request.getEmpresaId() == null) {
+                throw new ValidationException("Debe seleccionar una empresa.");
+            }
+            return request.getEmpresaId();
+        }
+        return AuthContext.getEmpresaId();
+    }
+
     private void validate(SaveVehicleRequest request, long empresaId) {
         if (request.getClienteId() == null) {
             throw new ValidationException("Debe seleccionar un cliente para el vehículo.");
@@ -45,7 +54,7 @@ public class SaveVehicleUseCase {
 
         var customerOpt = customerRepository.findById(request.getClienteId());
         if (customerOpt.isEmpty() || !Objects.equals(customerOpt.get().getEmpresaId(), empresaId)) {
-            throw new ValidationException("El cliente seleccionado no pertenece a tu empresa.");
+            throw new ValidationException("El cliente seleccionado no pertenece a la empresa indicada.");
         }
 
         Long excludeId = request.getId();

@@ -7,6 +7,8 @@ public interface VehicleRepository {
 
     List<Vehicle> findByEmpresaId(Long empresaId);
 
+    List<Vehicle> findAllWithEmpresa();
+
     Optional<Vehicle> findById(Long id);
 
     Vehicle save(Vehicle vehicle);
