@@ -8,50 +8,47 @@
       fx:controller="com.gearmind.presentation.controller.UsuarioFormController"
       spacing="12"
       styleClass="tfx-page">
-    <padding>
-        <Insets top="16" right="16" bottom="16" left="16"/>
-    </padding>
 
     <children>
-        <Label text="Usuario" styleClass="tfx-title-xl"/>
 
-        <VBox spacing="8" styleClass="tfx-card">
+        <Label fx:id="lblTitulo" text="Usuario" styleClass="tfx-title-xl"/>
+
+        <VBox styleClass="tfx-card" spacing="12">
             <children>
                 <GridPane hgap="10" vgap="10">
+                    <padding>
+                        <Insets top="5" right="5" bottom="5" left="5"/>
+                    </padding>
+
                     <columnConstraints>
-                        <ColumnConstraints halignment="RIGHT" minWidth="100"/>
-                        <ColumnConstraints hgrow="ALWAYS"/>
+                        <ColumnConstraints percentWidth="30"/>
+                        <ColumnConstraints percentWidth="70"/>
                     </columnConstraints>
 
                     <children>
-                        <Label text="Nombre:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtNombre"
-                                   promptText="Nombre completo"
-                                   GridPane.rowIndex="0"
-                                   GridPane.columnIndex="1"/>
 
-                        <Label text="Email:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtEmail"
-                                   promptText="correo@ejemplo.com"
-                                   GridPane.rowIndex="1"
-                                   GridPane.columnIndex="1"/>
+                        <!-- Empresa (solo superadmin, se oculta por controller) -->
+                        <Label fx:id="lblEmpresa" text="Empresa:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <HBox fx:id="boxEmpresa" spacing="10" alignment="CENTER_LEFT"
+                              GridPane.rowIndex="0" GridPane.columnIndex="1">
+                            <ComboBox fx:id="cmbEmpresa" prefWidth="260"/>
+                        </HBox>
 
-                        <Label text="Contraseña:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                        <PasswordField fx:id="pwdPassword"
-                                       promptText="(dejar en blanco para no cambiar)"
-                                       GridPane.rowIndex="2"
-                                       GridPane.columnIndex="1"/>
+                        <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtNombre" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-                        <Label text="Rol:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                        <ComboBox fx:id="cmbRol"
-                                  prefWidth="200"
-                                  GridPane.rowIndex="3"
-                                  GridPane.columnIndex="1"/>
+                        <Label text="Email:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtEmail" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-                        <Label text="Activo:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                        <CheckBox fx:id="chkActivo"
-                                  GridPane.rowIndex="4"
-                                  GridPane.columnIndex="1"/>
+                        <Label text="Contraseña:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <PasswordField fx:id="txtPassword" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                        <Label text="Rol:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cmbRol" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                        <Label text="Activo:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                        <CheckBox fx:id="chkActivo" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
                     </children>
                 </GridPane>
             </children>
@@ -60,15 +57,10 @@
         <HBox spacing="8">
             <children>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button fx:id="btnCancelar"
-                        text="Cancelar"
-                        onAction="#onCancelar"
-                        styleClass="tfx-btn-ghost"/>
-                <Button fx:id="btnGuardar"
-                        text="Guardar"
-                        onAction="#onGuardar"
-                        styleClass="tfx-btn-primary"/>
+                <Button text="Cancelar" onAction="#onCancelar" styleClass="tfx-btn-ghost"/>
+                <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="tfx-btn-primary"/>
             </children>
         </HBox>
+
     </children>
 </VBox>
