@@ -18,12 +18,14 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Locale;
 
 public class CitaFormController {
 
@@ -46,11 +48,11 @@ public class CitaFormController {
     private SaveAppointmentUseCase saveAppointmentUseCase;
     private Appointment existingAppointment;
     private boolean saved = false;
-
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-
     private final ObservableList<CustomerOption> allCustomers = FXCollections.observableArrayList();
     private final ObservableList<EmployeeOption> allEmployees = FXCollections.observableArrayList();
+    private boolean settingClienteProgrammatically = false;
+    private boolean settingEmpleadoProgrammatically = false;
 
     public void init(Long empresaId, SaveAppointmentUseCase saveAppointmentUseCase, Appointment existingAppointment) {
         this.empresaId = empresaId;
@@ -92,6 +94,7 @@ public class CitaFormController {
         CustomerRepository customerRepository = new MySqlCustomerRepository();
         List<Customer> customers = customerRepository.findByEmpresaId(empresaId);
 
+        allCustomers.clear();
         for (Customer c : customers) {
             String label = c.getNombre() + " (ID " + c.getId() + ")";
             allCustomers.add(new CustomerOption(c.getId(), label));
@@ -101,14 +104,60 @@ public class CitaFormController {
         cbCliente.setItems(filteredCustomers);
         cbCliente.setEditable(true);
 
+        cbCliente.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(CustomerOption object) {
+                return object == null ? "" : object.getLabel();
+            }
+
+            @Override
+            public CustomerOption fromString(String string) {
+                if (string == null) {
+                    return null;
+                }
+                String s = string.trim().toLowerCase(Locale.ROOT);
+                if (s.isBlank()) {
+                    return null;
+                }
+                return allCustomers.stream().filter(o -> o.getLabel().toLowerCase(Locale.ROOT).equals(s)).findFirst().orElse(null);
+            }
+        });
+
         cbCliente.getEditor().textProperty().addListener((obs, oldV, newV) -> {
-            String filtro = (newV == null) ? "" : newV.toLowerCase();
-            filteredCustomers.setPredicate(opt -> filtro.isBlank() || opt.getLabel().toLowerCase().contains(filtro));
+            if (settingClienteProgrammatically) {
+                return;
+            }
+
+            CustomerOption selected = cbCliente.getSelectionModel().getSelectedItem();
+            String nt = (newV == null ? "" : newV).trim();
+
+            if (selected != null && selected.getLabel() != null
+                    && selected.getLabel().equalsIgnoreCase(nt)) {
+                return;
+            }
+
+            String filtro = nt.toLowerCase(Locale.ROOT);
+            settingClienteProgrammatically = true;
+            try {
+                filteredCustomers.setPredicate(opt -> filtro.isBlank() || opt.getLabel().toLowerCase(Locale.ROOT).contains(filtro));
+            } finally {
+                settingClienteProgrammatically = false;
+            }
+
+            if (cbCliente.isFocused() && !cbCliente.isShowing()) {
+                cbCliente.show();
+            }
         });
 
         cbCliente.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
+            if (newVal == null) {
+                return;
+            }
+            settingClienteProgrammatically = true;
+            try {
                 cbCliente.getEditor().setText(newVal.getLabel());
+            } finally {
+                settingClienteProgrammatically = false;
             }
         });
 
@@ -119,7 +168,6 @@ public class CitaFormController {
                 setText(empty || item == null ? "" : item.getLabel());
             }
         });
-
         cbCliente.setCellFactory(listView -> new ListCell<>() {
             @Override
             protected void updateItem(CustomerOption item, boolean empty) {
@@ -130,25 +178,70 @@ public class CitaFormController {
 
         UserRepository userRepository = new MySqlUserRepository();
         List<User> users = userRepository.findByEmpresaId(empresaId);
-
+        allEmployees.clear();
         for (User u : users) {
             String label = u.getNombre() + " (ID " + u.getId() + ")";
             allEmployees.add(new EmployeeOption(u.getId(), label, u.getRol()));
         }
 
         FilteredList<EmployeeOption> filteredEmployees = new FilteredList<>(allEmployees, opt -> true);
-
         cbEmpleado.setItems(filteredEmployees);
         cbEmpleado.setEditable(true);
+        cbEmpleado.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(EmployeeOption object) {
+                return object == null ? "" : object.getLabel();
+            }
+
+            @Override
+            public EmployeeOption fromString(String string) {
+                if (string == null) {
+                    return null;
+                }
+                String s = string.trim().toLowerCase(Locale.ROOT);
+                if (s.isBlank()) {
+                    return null;
+                }
+
+                return allEmployees.stream().filter(o -> o.getLabel().toLowerCase(Locale.ROOT).equals(s)).findFirst().orElse(null);
+            }
+        });
 
         cbEmpleado.getEditor().textProperty().addListener((obs, oldV, newV) -> {
-            String filtro = (newV == null) ? "" : newV.toLowerCase();
-            filteredEmployees.setPredicate(opt -> filtro.isBlank() || opt.getLabel().toLowerCase().contains(filtro));
+            if (settingEmpleadoProgrammatically) {
+                return;
+            }
+
+            EmployeeOption selected = cbEmpleado.getSelectionModel().getSelectedItem();
+            String nt = (newV == null ? "" : newV).trim();
+
+            if (selected != null && selected.getLabel() != null
+                    && selected.getLabel().equalsIgnoreCase(nt)) {
+                return;
+            }
+
+            String filtro = nt.toLowerCase(Locale.ROOT);
+            settingEmpleadoProgrammatically = true;
+            try {
+                filteredEmployees.setPredicate(opt -> filtro.isBlank() || opt.getLabel().toLowerCase(Locale.ROOT).contains(filtro));
+            } finally {
+                settingEmpleadoProgrammatically = false;
+            }
+
+            if (cbEmpleado.isFocused() && !cbEmpleado.isShowing()) {
+                cbEmpleado.show();
+            }
         });
 
         cbEmpleado.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
+            if (newVal == null) {
+                return;
+            }
+            settingEmpleadoProgrammatically = true;
+            try {
                 cbEmpleado.getEditor().setText(newVal.getLabel());
+            } finally {
+                settingEmpleadoProgrammatically = false;
             }
         });
 
@@ -170,25 +263,43 @@ public class CitaFormController {
         if (AuthContext.isLoggedIn() && AuthContext.getRole() == UserRole.EMPLEADO) {
             User current = AuthContext.getCurrentUser();
             if (current != null) {
-                EmployeeOption self = allEmployees.stream().filter(e -> e.getId() == current.getId()).findFirst().orElse(new EmployeeOption(current.getId(), current.getNombre() + " (ID " + current.getId() + ")", current.getRol()));
+                EmployeeOption self = allEmployees.stream().filter(e -> e.getId().equals(current.getId())).findFirst().orElse(new EmployeeOption(current.getId(), current.getNombre() + " (ID " + current.getId() + ")", current.getRol()));
 
-                if (!allEmployees.contains(self)) {
+                if (allEmployees.stream().noneMatch(e -> e.getId().equals(self.getId()))) {
                     allEmployees.add(self);
                 }
-
-                cbEmpleado.setValue(self);
-                cbEmpleado.setDisable(true);
-                cbEmpleado.setEditable(false);
+                settingEmpleadoProgrammatically = true;
+                try {
+                    cbEmpleado.setValue(self);
+                    cbEmpleado.setDisable(true);
+                    cbEmpleado.setEditable(false);
+                } finally {
+                    settingEmpleadoProgrammatically = false;
+                }
             }
         }
     }
 
     private void selectCustomerById(Long customerId) {
-        allCustomers.stream().filter(o -> o.getId().equals(customerId)).findFirst().ifPresent(cbCliente::setValue);
+        allCustomers.stream().filter(o -> o.getId().equals(customerId)).findFirst().ifPresent(opt -> {
+            settingClienteProgrammatically = true;
+            try {
+                cbCliente.setValue(opt);
+            } finally {
+                settingClienteProgrammatically = false;
+            }
+        });
     }
 
     private void selectEmployeeById(Long employeeId) {
-        allEmployees.stream().filter(o -> o.getId().equals(employeeId)).findFirst().ifPresent(cbEmpleado::setValue);
+        allEmployees.stream().filter(o -> o.getId().equals(employeeId)).findFirst().ifPresent(opt -> {
+            settingEmpleadoProgrammatically = true;
+            try {
+                cbEmpleado.setValue(opt);
+            } finally {
+                settingEmpleadoProgrammatically = false;
+            }
+        });
     }
 
     @FXML
@@ -214,7 +325,6 @@ public class CitaFormController {
         }
 
         CustomerOption clienteOpt = cbCliente.getValue();
-
         if (clienteOpt == null) {
             throw new IllegalArgumentException("Debes seleccionar un cliente.");
         }
