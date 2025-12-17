@@ -6,17 +6,19 @@ import com.gearmind.application.user.SaveUserRequest;
 import com.gearmind.application.user.SaveUserUseCase;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRole;
-import com.gearmind.infrastructure.auth.BCryptPasswordHasher;
 import com.gearmind.infrastructure.database.DataSourceFactory;
 import com.gearmind.infrastructure.auth.MySqlUserRepository;
+import com.gearmind.infrastructure.auth.BCryptPasswordHasher;
+
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import javafx.scene.Node;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -26,36 +28,39 @@ import java.util.Locale;
 
 public class UsuarioFormController {
 
-    @FXML private Label lblTitulo;
-
-    // Empresa (solo SuperAdmin)
-    @FXML private Label lblEmpresa;
-    @FXML private HBox boxEmpresa;
-    @FXML private ComboBox<EmpresaOption> cmbEmpresa;
-
-    @FXML private TextField txtNombre;
-    @FXML private TextField txtEmail;
-    @FXML private PasswordField txtPassword;
-    @FXML private ComboBox<UserRole> cmbRol;
-    @FXML private CheckBox chkActivo;
-
-    @FXML private Button btnGuardar;
+    @FXML
+    private Label lblTitulo;
+    @FXML
+    private Label lblEmpresa;
+    @FXML
+    private HBox boxEmpresa;
+    @FXML
+    private ComboBox<EmpresaOption> cmbEmpresa;
+    @FXML
+    private TextField txtNombre;
+    @FXML
+    private TextField txtEmail;
+    @FXML
+    private PasswordField txtPassword;
+    @FXML
+    private ComboBox<UserRole> cmbRol;
+    @FXML
+    private CheckBox chkActivo;
+    @FXML
+    private Button btnGuardar;
 
     private final SaveUserUseCase saveUserUseCase;
-
     private final DataSource dataSource = DataSourceFactory.getDataSource();
     private final ObservableList<EmpresaOption> empresas = FXCollections.observableArrayList();
     private FilteredList<EmpresaOption> empresasFiltradas;
-
     private Long editingId = null;
-    private long selectedEmpresaId = 0;
     private boolean saved = false;
+    private long selectedEmpresaId = 0;
+    private Long pendingEmpresaIdToSelect = null;
+    private boolean settingComboProgrammatically = false;
 
     public UsuarioFormController() {
-        this.saveUserUseCase = new SaveUserUseCase(
-                new MySqlUserRepository(),
-                new BCryptPasswordHasher()
-        );
+        this.saveUserUseCase = new SaveUserUseCase(new MySqlUserRepository(), new BCryptPasswordHasher());
     }
 
     public boolean isSaved() {
@@ -64,18 +69,32 @@ public class UsuarioFormController {
 
     public void initForNew() {
         editingId = null;
-        if (lblTitulo != null) lblTitulo.setText("Nuevo usuario");
+        saved = false;
 
-        txtNombre.clear();
-        txtEmail.clear();
-        txtPassword.clear();
-
-        if (cmbRol != null) cmbRol.getSelectionModel().select(UserRole.EMPLEADO);
-        if (chkActivo != null) chkActivo.setSelected(true);
-
+        if (lblTitulo != null) {
+            lblTitulo.setText("Nuevo usuario");
+        }
+        if (txtNombre != null) {
+            txtNombre.clear();
+        }
+        if (txtEmail != null) {
+            txtEmail.clear();
+        }
+        if (txtPassword != null) {
+            txtPassword.clear();
+        }
+        if (cmbRol != null) {
+            cmbRol.getSelectionModel().select(UserRole.EMPLEADO);
+        }
+        if (chkActivo != null) {
+            chkActivo.setSelected(true);
+        }
         if (AuthContext.isSuperAdmin()) {
+            pendingEmpresaIdToSelect = null;
             selectedEmpresaId = 0;
-            if (cmbEmpresa != null) cmbEmpresa.getSelectionModel().clearSelection();
+            if (cmbEmpresa != null) {
+                cmbEmpresa.getSelectionModel().clearSelection();
+            }
         } else {
             selectedEmpresaId = SessionManager.getInstance().getCurrentEmpresaId();
         }
@@ -83,25 +102,28 @@ public class UsuarioFormController {
 
     public void initForEdit(User user) {
         editingId = user.getId();
-        if (lblTitulo != null) lblTitulo.setText("Editar usuario");
+        saved = false;
 
-        txtNombre.setText(nullToEmpty(user.getNombre()));
-        txtEmail.setText(nullToEmpty(user.getEmail()));
-        txtPassword.clear(); // opcional: si está vacío, mantiene la existente
-
-        if (cmbRol != null) cmbRol.getSelectionModel().select(user.getRol());
-        if (chkActivo != null) chkActivo.setSelected(user.isActivo());
-
+        if (lblTitulo != null) {
+            lblTitulo.setText("Editar usuario");
+        }
+        if (txtNombre != null) {
+            txtNombre.setText(nullToEmpty(user.getNombre()));
+        }
+        if (txtEmail != null) {
+            txtEmail.setText(nullToEmpty(user.getEmail()));
+        }
+        if (txtPassword != null) {
+            txtPassword.clear();
+        }
+        if (cmbRol != null) {
+            cmbRol.getSelectionModel().select(user.getRol());
+        }
+        if (chkActivo != null) {
+            chkActivo.setSelected(user.isActivo());
+        }
         if (AuthContext.isSuperAdmin()) {
-            selectedEmpresaId = user.getEmpresaId();
-
-            // seleccionar empresa (cuando ya estén cargadas)
-            if (cmbEmpresa != null && !empresas.isEmpty()) {
-                EmpresaOption opt = empresas.stream()
-                        .filter(e -> e.id == selectedEmpresaId)
-                        .findFirst().orElse(null);
-                if (opt != null) cmbEmpresa.getSelectionModel().select(opt);
-            }
+            pendingEmpresaIdToSelect = user.getEmpresaId();
         } else {
             selectedEmpresaId = SessionManager.getInstance().getCurrentEmpresaId();
         }
@@ -109,10 +131,16 @@ public class UsuarioFormController {
 
     @FXML
     private void initialize() {
-        // Guard: empleados no deberían entrar aquí igualmente
-        if (AuthContext.isEmpleado()) {
-            bloquearTodo("Acceso restringido.");
-            return;
+
+        if (btnGuardar != null) {
+            btnGuardar.setDisable(true);
+        }
+
+        if (txtNombre != null) {
+            txtNombre.textProperty().addListener((obs, o, n) -> validateForm());
+        }
+        if (txtEmail != null) {
+            txtEmail.textProperty().addListener((obs, o, n) -> validateForm());
         }
 
         if (cmbRol != null) {
@@ -120,35 +148,50 @@ public class UsuarioFormController {
             cmbRol.getSelectionModel().select(UserRole.EMPLEADO);
         }
 
-        if (chkActivo != null) chkActivo.setSelected(true);
+        if (chkActivo != null) {
+            chkActivo.setSelected(true);
+        }
 
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
 
         if (!isSuperAdmin) {
-            // ocultar empresa
             hideNode(lblEmpresa);
             hideNode(boxEmpresa);
             selectedEmpresaId = SessionManager.getInstance().getCurrentEmpresaId();
         } else {
             showNode(lblEmpresa);
             showNode(boxEmpresa);
-
             loadEmpresas();
             enableComboSearchEmpresa(cmbEmpresa);
 
             if (cmbEmpresa != null) {
                 cmbEmpresa.valueProperty().addListener((obs, o, n) -> {
-                    if (n != null) selectedEmpresaId = n.id;
+                    if (settingComboProgrammatically) {
+                        return;
+                    }
+                    if (n != null) {
+                        selectedEmpresaId = n.id;
+                    }
                 });
             }
+            applyPendingEmpresaSelectionIfAny();
         }
+        validateForm();
+    }
+
+    private void validateForm() {
+        if (btnGuardar == null) {
+            return;
+        }
+        String nombre = safeTrim(txtNombre != null ? txtNombre.getText() : "");
+        String email = safeTrim(txtEmail != null ? txtEmail.getText() : "");
+        boolean ok = !nombre.isBlank() && !email.isBlank();
+        btnGuardar.setDisable(!ok);
     }
 
     @FXML
     private void onGuardar() {
         try {
-            if (AuthContext.isEmpleado()) return;
-
             long empresaId;
             if (AuthContext.isSuperAdmin()) {
                 if (cmbEmpresa == null || cmbEmpresa.getValue() == null) {
@@ -160,33 +203,43 @@ public class UsuarioFormController {
                 empresaId = SessionManager.getInstance().getCurrentEmpresaId();
             }
 
-            String nombre = safeTrim(txtNombre.getText());
-            String email = safeTrim(txtEmail.getText());
-            String rawPassword = (txtPassword != null) ? txtPassword.getText() : null;
+            String nombre = safeTrim(txtNombre != null ? txtNombre.getText() : "");
+            if (nombre.isBlank()) {
+                new Alert(Alert.AlertType.WARNING, "El nombre es obligatorio.").showAndWait();
+                return;
+            }
 
+            String email = safeTrim(txtEmail != null ? txtEmail.getText() : "");
+            if (email.isBlank()) {
+                new Alert(Alert.AlertType.WARNING, "El email es obligatorio.").showAndWait();
+                return;
+            }
+            if (!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+                new Alert(Alert.AlertType.WARNING, "El email no tiene un formato válido.").showAndWait();
+                return;
+            }
+
+            String password = (txtPassword != null) ? safeTrim(txtPassword.getText()) : "";
             UserRole rol = (cmbRol != null && cmbRol.getValue() != null) ? cmbRol.getValue() : UserRole.EMPLEADO;
             boolean activo = chkActivo != null && chkActivo.isSelected();
-
-            SaveUserRequest req = new SaveUserRequest(
-                    editingId,
-                    empresaId,
-                    nombre,
-                    email,
-                    rawPassword,
-                    rol,
-                    activo
-            );
-
-            saveUserUseCase.save(req);
-
+            SaveUserRequest request = new SaveUserRequest(editingId, empresaId, nombre, email, password, rol, activo);
+            saveUserUseCase.save(request);
             saved = true;
             closeWindow();
 
         } catch (IllegalArgumentException ex) {
-            new Alert(Alert.AlertType.WARNING, ex.getMessage()).showAndWait();
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Datos inválidos");
+            alert.setHeaderText(null);
+            alert.setContentText(ex.getMessage());
+            alert.showAndWait();
         } catch (Exception ex) {
             ex.printStackTrace();
-            new Alert(Alert.AlertType.ERROR, "No se pudo guardar el usuario: " + ex.getMessage()).showAndWait();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No se pudo guardar el usuario");
+            alert.setContentText(ex.getMessage());
+            alert.showAndWait();
         }
     }
 
@@ -197,19 +250,15 @@ public class UsuarioFormController {
     }
 
     private void closeWindow() {
-        Stage stage = (Stage) txtNombre.getScene().getWindow();
+        Stage stage = (Stage) btnGuardar.getScene().getWindow();
         stage.close();
     }
-
-    // ===== Empresas =====
 
     private void loadEmpresas() {
         empresas.clear();
         String sql = "SELECT id, nombre FROM empresa ORDER BY nombre ASC";
 
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 empresas.add(new EmpresaOption(rs.getLong("id"), rs.getString("nombre")));
@@ -217,13 +266,31 @@ public class UsuarioFormController {
         } catch (Exception ex) {
             throw new RuntimeException("No se pudieron cargar las empresas", ex);
         }
+        if (cmbEmpresa != null) {
+            cmbEmpresa.setItems(empresas);
+        }
     }
 
-    /**
-     * Buscador estable (no castea String->EmpresaOption, evita el bug que comentabas).
-     */
+    private void applyPendingEmpresaSelectionIfAny() {
+        if (cmbEmpresa == null || pendingEmpresaIdToSelect == null) {
+            return;
+        }
+
+        EmpresaOption opt = empresas.stream().filter(e -> e.id == pendingEmpresaIdToSelect).findFirst().orElse(null);
+
+        if (opt != null) {
+            settingComboProgrammatically = true;
+            cmbEmpresa.getSelectionModel().select(opt);
+            selectedEmpresaId = opt.id;
+            Platform.runLater(() -> settingComboProgrammatically = false);
+        }
+        pendingEmpresaIdToSelect = null;
+    }
+
     private void enableComboSearchEmpresa(ComboBox<EmpresaOption> combo) {
-        if (combo == null) return;
+        if (combo == null) {
+            return;
+        }
 
         combo.setEditable(true);
 
@@ -234,14 +301,14 @@ public class UsuarioFormController {
             }
             @Override
             public EmpresaOption fromString(String s) {
-                // NO devolvemos un String, siempre EmpresaOption o null
-                if (s == null) return null;
+                if (s == null) {
+                    return null;
+                }
                 String t = s.trim();
-                if (t.isEmpty()) return null;
-
-                return empresas.stream()
-                        .filter(e -> e.nombre != null && e.nombre.equalsIgnoreCase(t))
-                        .findFirst().orElse(null);
+                if (t.isEmpty()) {
+                    return null;
+                }
+                return empresas.stream().filter(e -> e.nombre != null && e.nombre.equalsIgnoreCase(t)).findFirst().orElse(null);
             }
         });
 
@@ -249,79 +316,95 @@ public class UsuarioFormController {
         combo.setItems(empresasFiltradas);
 
         combo.setCellFactory(lv -> new ListCell<>() {
-            @Override protected void updateItem(EmpresaOption item, boolean empty) {
+            @Override
+            protected void updateItem(EmpresaOption item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? null : item.nombre);
             }
         });
         combo.setButtonCell(new ListCell<>() {
-            @Override protected void updateItem(EmpresaOption item, boolean empty) {
+            @Override
+            protected void updateItem(EmpresaOption item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? null : item.nombre);
             }
         });
 
         combo.getEditor().textProperty().addListener((obs, oldText, newText) -> {
-            String f = (newText == null ? "" : newText).toLowerCase(Locale.ROOT).trim();
+            if (settingComboProgrammatically) {
+                return;
+            }
+            EmpresaOption selected = combo.getSelectionModel().getSelectedItem();
+            String nt = (newText == null ? "" : newText).trim();
+            if (selected != null && selected.nombre != null && selected.nombre.equalsIgnoreCase(nt)) {
+                return;
+            }
+            String f = nt.toLowerCase(Locale.ROOT);
+            settingComboProgrammatically = true;
+            try {
+                empresasFiltradas.setPredicate(opt
+                        -> f.isEmpty() || (opt.nombre != null && opt.nombre.toLowerCase(Locale.ROOT).contains(f))
+                );
+            } finally {
+                settingComboProgrammatically = false;
+            }
 
-            empresasFiltradas.setPredicate(opt ->
-                    f.isEmpty() || (opt.nombre != null && opt.nombre.toLowerCase(Locale.ROOT).contains(f))
-            );
-
-            if (!combo.isShowing()) combo.show();
+            if (combo.isFocused() && !combo.isShowing()) {
+                combo.show();
+            }
         });
 
-        combo.getEditor().focusedProperty().addListener((obs, was, is) -> {
-            if (is) return;
+        combo.getEditor().focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+            if (isFocused) {
+                return;
+            }
             EmpresaOption match = combo.getConverter().fromString(combo.getEditor().getText());
-            if (match != null) combo.getSelectionModel().select(match);
-            else combo.getSelectionModel().clearSelection();
+            settingComboProgrammatically = true;
+            if (match != null) {
+                combo.getSelectionModel().select(match);
+                selectedEmpresaId = match.id;
+            } else {
+                combo.getSelectionModel().clearSelection();
+            }
+            settingComboProgrammatically = false;
         });
-    }
-
-    private static class EmpresaOption {
-        final long id;
-        final String nombre;
-
-        EmpresaOption(long id, String nombre) {
-            this.id = id;
-            this.nombre = nombre;
-        }
-
-        @Override public String toString() {
-            return nombre;
-        }
-    }
-
-    // ===== Helpers =====
-
-    private void bloquearTodo(String msg) {
-        if (btnGuardar != null) btnGuardar.setDisable(true);
-        if (txtNombre != null) txtNombre.setDisable(true);
-        if (txtEmail != null) txtEmail.setDisable(true);
-        if (txtPassword != null) txtPassword.setDisable(true);
-        if (cmbRol != null) cmbRol.setDisable(true);
-        if (chkActivo != null) chkActivo.setDisable(true);
-        if (lblTitulo != null) lblTitulo.setText(msg);
     }
 
     private void hideNode(Node n) {
-        if (n == null) return;
+        if (n == null) {
+            return;
+        }
         n.setVisible(false);
         n.setManaged(false);
     }
 
     private void showNode(Node n) {
-        if (n == null) return;
+        if (n == null) {
+            return;
+        }
         n.setVisible(true);
         n.setManaged(true);
     }
 
-    private String safeTrim(String s) {
-        return s == null ? "" : s.trim();
+    private String safeTrim(String value) {
+        return value != null ? value.trim() : "";
     }
 
-    private String nullToEmpty(String s) {
-        return s == null ? "" : s;
+    private String nullToEmpty(String value) {
+        return value != null ? value : "";
+    }
+
+    public static class EmpresaOption {
+
+        public final long id;
+        public final String nombre;
+        public EmpresaOption(long id, String nombre) {
+            this.id = id;
+            this.nombre = nombre;
+        }
+        @Override
+        public String toString() {
+            return nombre;
+        }
     }
 }
