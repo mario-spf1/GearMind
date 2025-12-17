@@ -16,7 +16,7 @@
                 <Label text="Citas" styleClass="tfx-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label text="Mostrar:"/>
-                <ComboBox fx:id="cmbPageSize" prefWidth="80.0"/>
+                <ComboBox fx:id="cmbPageSize" prefWidth="90.0"/>
                 <Label text="por página"/>
                 <Button text="Refrescar" onAction="#onRefrescar" styleClass="button-secondary"/>
                 <Button text="Nueva cita" onAction="#onNuevaCita" styleClass="button"/>
@@ -31,116 +31,92 @@
         <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
 
             <tabs>
-                <Tab text="Agenda">
-                    <content>
-                        <BorderPane>
-                            <top>
-                                <HBox spacing="10" alignment="CENTER_LEFT" styleClass="tfx-subtoolbar">
-                                    <children>
-                                        <Label text="Fecha:"/>
-                                        <DatePicker fx:id="dpAgendaFecha"/>
-                                        <Button text="Hoy" onAction="#onAgendaHoy"/>
-                                        <Region HBox.hgrow="ALWAYS"/>
-                                        <Label text="Estado:"/>
-                                        <ComboBox fx:id="cbAgendaEstado" prefWidth="140"/>
-                                    </children>
-                                    <padding>
-                                        <Insets top="8" right="10" bottom="8" left="10"/>
-                                    </padding>
-                                </HBox>
-                            </top>
-
-                            <center>
-                                <ListView fx:id="lstAgenda" fixedCellSize="40.0">
-                                    <padding>
-                                        <Insets top="4" right="10" bottom="10" left="10"/>
-                                    </padding>
-                                </ListView>
-                            </center>
-                        </BorderPane>
-                    </content>
-                </Tab>
-
                 <Tab text="Tabla">
                     <content>
                         <BorderPane>
                             <top>
-                                <VBox spacing="6">
+                                <VBox spacing="8" styleClass="tfx-card">
                                     <padding>
-                                        <Insets top="8" right="10" bottom="8" left="10"/>
+                                        <Insets top="12" right="12" bottom="12" left="12"/>
                                     </padding>
-
                                     <children>
-                                        <Label text="Filtros" styleClass="tfx-muted"/>
-
-                                        <GridPane hgap="8" vgap="6">
+                                        <HBox alignment="CENTER_LEFT" spacing="10">
+                                            <children>
+                                                <Label text="Filtros" styleClass="tfx-muted"/>
+                                                <Region HBox.hgrow="ALWAYS"/>
+                                                <Button text="Limpiar" onAction="#onLimpiarFiltros" styleClass="button-secondary"/>
+                                            </children>
+                                        </HBox>
+                                        <GridPane hgap="10" vgap="8">
                                             <columnConstraints>
                                                 <ColumnConstraints percentWidth="25"/>
                                                 <ColumnConstraints percentWidth="25"/>
                                                 <ColumnConstraints percentWidth="25"/>
                                                 <ColumnConstraints percentWidth="25"/>
                                             </columnConstraints>
-
                                             <children>
-                                                <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="0">
+                                                <HBox spacing="8" alignment="CENTER_LEFT"
+                                                      GridPane.rowIndex="0" GridPane.columnIndex="0">
+                                                    <children>
+                                                        <Label text="Empresa:" styleClass="tfx-muted"/>
+                                                        <ComboBox fx:id="cbFiltroEmpresa" prefWidth="220"/>
+                                                    </children>
+                                                </HBox>
+                                                <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="1">
                                                     <children>
                                                         <Label text="Cliente" styleClass="tfx-muted"/>
                                                         <TextField fx:id="filterClienteField" promptText="Cliente" styleClass="tfx-filter-field"/>
                                                     </children>
                                                 </VBox>
-                                                <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                                                <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="2">
                                                     <children>
                                                         <Label text="Vehículo" styleClass="tfx-muted"/>
                                                         <TextField fx:id="filterVehiculoField" promptText="Vehículo" styleClass="tfx-filter-field"/>
                                                     </children>
                                                 </VBox>
-                                                <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="2">
+                                                <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="3">
                                                     <children>
                                                         <Label text="Empleado" styleClass="tfx-muted"/>
                                                         <TextField fx:id="filterEmpleadoField" promptText="Empleado" styleClass="tfx-filter-field"/>
                                                     </children>
                                                 </VBox>
-                                                <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="3">
+                                                <HBox spacing="8" alignment="CENTER_LEFT"
+                                                      GridPane.rowIndex="1" GridPane.columnIndex="0">
                                                     <children>
-                                                        <Label text="Empresa" styleClass="tfx-muted"/>
-                                                        <TextField fx:id="filterEmpresaField" promptText="Empresa" styleClass="tfx-filter-field"/>
+                                                        <Label text="Estado:" styleClass="tfx-muted"/>
+                                                        <ComboBox fx:id="cbFiltroEstado" prefWidth="220"/>
                                                     </children>
-                                                </VBox>
-                                                <VBox spacing="2" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                                                </HBox>
+                                                <HBox spacing="8" alignment="CENTER_LEFT"
+                                                      GridPane.rowIndex="1" GridPane.columnIndex="1">
                                                     <children>
-                                                        <Label text="Estado" styleClass="tfx-muted"/>
-                                                        <ComboBox fx:id="cbFiltroEstado" promptText="Estado"/>
+                                                        <Label text="Origen:" styleClass="tfx-muted"/>
+                                                        <ComboBox fx:id="cbFiltroOrigen" prefWidth="220"/>
                                                     </children>
-                                                </VBox>
-                                                <VBox spacing="2" GridPane.rowIndex="1" GridPane.columnIndex="1">
-                                                    <children>
-                                                        <Label text="Origen" styleClass="tfx-muted"/>
-                                                        <ComboBox fx:id="cbFiltroOrigen" promptText="Origen"/>
-                                                    </children>
-                                                </VBox>
+                                                </HBox>
                                                 <VBox spacing="2" GridPane.rowIndex="1" GridPane.columnIndex="2" GridPane.columnSpan="2">
                                                     <children>
                                                         <Label text="Notas" styleClass="tfx-muted"/>
                                                         <TextField fx:id="filterNotasField" promptText="Notas" styleClass="tfx-filter-field"/>
                                                     </children>
                                                 </VBox>
+                                                <TextField fx:id="filterEmpresaField" visible="false" managed="false"/>
                                                 <TextField fx:id="filterEstadoField" visible="false" managed="false"/>
                                                 <TextField fx:id="filterOrigenField" visible="false" managed="false"/>
-                                                <TextField fx:id="txtBuscar" visible="false" managed="false"/>
                                             </children>
                                         </GridPane>
                                     </children>
                                 </VBox>
                             </top>
+
                             <center>
-                                <VBox spacing="6">
+                                <VBox spacing="8">
                                     <padding>
-                                        <Insets top="4" right="10" bottom="10" left="10"/>
+                                        <Insets top="10" right="10" bottom="10" left="10"/>
                                     </padding>
 
                                     <children>
-
-                                        <TableView fx:id="tblCitas" prefHeight="400.0">
+                                        <TableView fx:id="tblCitas" prefHeight="400.0" styleClass="tfx-table">
                                             <columns>
                                                 <TableColumn fx:id="colFechaHora" text="Fecha / Hora"/>
                                                 <TableColumn fx:id="colCliente" text="Cliente"/>
@@ -163,9 +139,39 @@
                                     </children>
                                 </VBox>
                             </center>
+
                         </BorderPane>
                     </content>
                 </Tab>
+                <Tab text="Agenda">
+                    <content>
+                        <BorderPane>
+                            <top>
+                                <HBox spacing="10" alignment="CENTER_LEFT" styleClass="tfx-subtoolbar">
+                                    <children>
+                                        <Label text="Fecha:"/>
+                                        <DatePicker fx:id="dpAgendaFecha"/>
+                                        <Button text="Hoy" onAction="#onAgendaHoy"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Label text="Estado:"/>
+                                        <ComboBox fx:id="cbAgendaEstado" prefWidth="160"/>
+                                    </children>
+                                    <padding>
+                                        <Insets top="8" right="10" bottom="8" left="10"/>
+                                    </padding>
+                                </HBox>
+                            </top>
+                            <center>
+                                <ListView fx:id="lstAgenda" fixedCellSize="40.0">
+                                    <padding>
+                                        <Insets top="4" right="10" bottom="10" left="10"/>
+                                    </padding>
+                                </ListView>
+                            </center>
+                        </BorderPane>
+                    </content>
+                </Tab>
+
             </tabs>
         </TabPane>
     </center>
