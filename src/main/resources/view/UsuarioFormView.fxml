@@ -26,34 +26,25 @@
                     </columnConstraints>
 
                     <children>
-
-                        <!-- Empresa (solo superadmin, se oculta por controller) -->
                         <Label fx:id="lblEmpresa" text="Empresa:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                         <HBox fx:id="boxEmpresa" spacing="10" alignment="CENTER_LEFT"
                               GridPane.rowIndex="0" GridPane.columnIndex="1">
                             <ComboBox fx:id="cmbEmpresa" prefWidth="260"/>
                         </HBox>
-
                         <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                         <TextField fx:id="txtNombre" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-
                         <Label text="Email:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                         <TextField fx:id="txtEmail" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-
                         <Label text="Contraseña:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                         <PasswordField fx:id="txtPassword" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-
                         <Label text="Rol:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
                         <ComboBox fx:id="cmbRol" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-
                         <Label text="Activo:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
                         <CheckBox fx:id="chkActivo" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
-
                     </children>
                 </GridPane>
             </children>
         </VBox>
-
         <HBox spacing="8">
             <children>
                 <Region HBox.hgrow="ALWAYS"/>
