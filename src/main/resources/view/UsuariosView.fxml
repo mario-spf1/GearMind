@@ -11,7 +11,6 @@
 
     <children>
 
-        <!-- HEADER -->
         <HBox spacing="8" alignment="CENTER_LEFT">
             <Label text="Usuarios" styleClass="tfx-title-xl"/>
             <Pane HBox.hgrow="ALWAYS"/>
@@ -22,46 +21,33 @@
             <Button fx:id="btnNuevo" text="Nuevo usuario" onAction="#onNuevoUsuario" styleClass="button tfx-btn-primary"/>
         </HBox>
 
-        <!-- FILTROS -->
         <VBox spacing="12" styleClass="tfx-card">
             <padding>
                 <Insets top="10" right="10" bottom="10" left="10"/>
             </padding>
-
             <children>
-
                 <HBox spacing="10" alignment="CENTER_LEFT">
-
-                    <!-- Empresa (solo SuperAdmin). Se oculta por controller -->
                     <HBox fx:id="boxFilterEmpresa" spacing="8" alignment="CENTER_LEFT">
                         <Label text="Empresa:" styleClass="tfx-muted"/>
                         <ComboBox fx:id="filterEmpresaCombo" prefWidth="220"/>
                     </HBox>
-
                     <TextField fx:id="filterNombreField" promptText="Nombre" HBox.hgrow="ALWAYS" styleClass="text-field"/>
                     <TextField fx:id="filterEmailField" promptText="Email" HBox.hgrow="ALWAYS" styleClass="text-field"/>
-
                     <HBox spacing="8" alignment="CENTER_LEFT">
                         <Label text="Rol:" styleClass="tfx-muted"/>
                         <ComboBox fx:id="filterRolCombo" prefWidth="160"/>
                     </HBox>
-
                     <HBox spacing="8" alignment="CENTER_LEFT">
                         <Label text="Estado:" styleClass="tfx-muted"/>
                         <ComboBox fx:id="filterEstadoCombo" prefWidth="140"/>
                     </HBox>
-
                     <Pane HBox.hgrow="ALWAYS"/>
                     <Button text="Limpiar filtros" onAction="#onLimpiarFiltros" styleClass="button tfx-btn-ghost"/>
                 </HBox>
-
             </children>
         </VBox>
-
-        <!-- TABLA -->
         <VBox spacing="6" styleClass="tfx-card">
             <children>
-
                 <TableView fx:id="tblUsuarios">
                     <columns>
                         <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="160"/>
@@ -72,7 +58,6 @@
                         <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="220"/>
                     </columns>
                 </TableView>
-
                 <Label fx:id="lblResumen" styleClass="tfx-muted"/>
             </children>
         </VBox>
