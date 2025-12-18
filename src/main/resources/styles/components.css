@@ -36,13 +36,18 @@
     -fx-background-color: transparent;
     -fx-border-color: transparent;
     -fx-text-fill: -tfx-text;
-    -fx-padding: 4 8;
-    -fx-background-radius: 8;
-    -fx-font-size: 13px;
+    -fx-padding: 6 10;
+    -fx-background-radius: 10;
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
 }
 
 .tfx-icon-btn:hover {
     -fx-background-color: rgba(255,255,255,0.05);
+}
+
+.tfx-icon-btn:armed {
+    -fx-background-color: rgba(255,255,255,0.08);
 }
 
 .tfx-icon-btn-danger {
@@ -61,11 +66,23 @@
     -fx-border-color: -tfx-border;
     -fx-border-width: 1;
     -fx-border-radius: 10;
+    -fx-prompt-text-fill: -tfx-muted;
 }
 
-.text-field:focused,
-.password-field:focused {
+.text-field:focused, .password-field:focused {
     -fx-border-color: -tfx-focus;
+}
+
+.combo-box .list-cell, .combo-box > .list-cell {
+    -fx-text-fill: -tfx-text;
+}
+
+.combo-box-base .arrow-button .arrow {
+    -fx-background-color: -tfx-text;
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-text-fill: #111111;
 }
 
 .tfx-search {
@@ -90,6 +107,7 @@
     -fx-border-width: 1;
     -fx-border-radius: 8;
     -fx-font-size: 12px;
+    -fx-prompt-text-fill: -tfx-muted;
 }
 
 .tfx-filter-field:focused {
@@ -172,6 +190,22 @@
     -fx-background-color: -tfx-bg;
 }
 
+.tfx-content {
+    -fx-background-color: -tfx-bg;
+}
+
+.tfx-toolbar {
+    -fx-background-color: -tfx-surface;
+    -fx-padding: 10 16;
+    -fx-border-color: -tfx-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.tfx-toolbar-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+}
+
 .tfx-sidebar {
     -fx-background-color: -tfx-surface;
     -fx-padding: 12 8;
@@ -186,32 +220,31 @@
     -fx-padding: 0 4 4 4;
 }
 
-.tfx-sidebar .button {
+.tfx-sidebar .tfx-nav-item {
     -fx-background-radius: 8;
     -fx-padding: 8 10;
     -fx-alignment: CENTER_LEFT;
     -fx-background-color: transparent;
     -fx-border-color: transparent;
+    -fx-text-fill: -tfx-text;
 }
 
-.tfx-sidebar .button:hover {
+.tfx-sidebar .tfx-nav-item:hover {
     -fx-background-color: rgba(255,255,255,0.04);
 }
 
 .tfx-nav-active {
     -fx-background-color: rgba(59,130,246,0.18);
     -fx-text-fill: -tfx-primary;
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
 }
 
 .tfx-footer {
     -fx-background-color: -tfx-surface;
     -fx-padding: 6 16;
-    
-}
-.tfx-nav-active {
-    -fx-background-color: rgba(59,130,246,0.18);
-    -fx-border-color: -tfx-border;
-    -fx-border-width: 1 0 0 0;
 }
 
 .tfx-userbox {
@@ -258,7 +291,7 @@
     -fx-text-fill: -tfx-primary;
 }
 
-.date-picker, .date-picker .text-field,.date-picker .arrow-button {
+.date-picker, .date-picker .text-field, .date-picker .arrow-button {
     -fx-background-radius: 8;
     -fx-background-color: #15171d;
     -fx-text-fill: #ffffff;
@@ -277,32 +310,4 @@
 
 .tfx-toolbar-pagesize {
     -fx-padding: 0 14 0 0;
-}
-
-.combo-box .list-cell {
-    -fx-text-fill: -tfx-text;
-}
-
-.combo-box > .list-cell {
-    -fx-text-fill: -tfx-text;
-}
-
-.combo-box-popup .list-view .list-cell {
-    -fx-text-fill: #111111; /* texto oscuro */
-}
-
-.combo-box-base .arrow-button .arrow {
-    -fx-background-color: -tfx-text;
-}
-
-.text-field, .password-field, .combo-box-base {
-  -fx-background-color: #0f1116, #0f1116;
-  -fx-text-fill: -tfx-text;
-  -fx-background-radius: 10;
-  -fx-padding: 10 12 10 12;
-  -fx-border-color: -tfx-border;
-  -fx-border-width: 1;
-  -fx-border-radius: 10;
-
-  -fx-prompt-text-fill: -tfx-muted;
 }
