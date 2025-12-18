@@ -8,17 +8,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-
 import java.io.IOException;
 
-/**
- * Controlador del "shell" principal.
- *
- * IMPORTANTE: - El botón ☰ debe estar en el TOP (fuera del sidebar). - El
- * sidebar se pliega poniendo root.setLeft(null) y se repone usando la
- * referencia guardada. - El botón activo se marca con la clase CSS
- * "tfx-nav-active" (según tu components.css).
- */
 public class HomeController {
 
     @FXML
@@ -27,12 +18,10 @@ public class HomeController {
     private VBox sidebar;
     @FXML
     private StackPane contentPane;
-
     @FXML
     private Button btnToggleSidebar;
     @FXML
     private Label lblUsuarioActual;
-
     @FXML
     private Button btnNavDashboard;
     @FXML
@@ -47,19 +36,16 @@ public class HomeController {
     private Button btnNavEmpresas;
 
     private VBox savedSidebar;
-
     private static final String NAV_ACTIVE_CLASS = "tfx-nav-active";
 
     @FXML
     public void initialize() {
-        // Guardamos referencia del sidebar para reponerlo al desplegar
         savedSidebar = sidebar;
 
         if (lblUsuarioActual != null) {
             lblUsuarioActual.setText("Mario Rodríguez  |  Mi cuenta");
         }
 
-        // Carga inicial
         loadView("/view/DashboardView.fxml");
         setActive(btnNavDashboard);
     }
@@ -137,10 +123,7 @@ public class HomeController {
             return;
         }
 
-        // Quita el activo de TODOS los botones dentro del sidebar
         sidebar.lookupAll(".button").forEach(n -> n.getStyleClass().remove(NAV_ACTIVE_CLASS));
-
-        // Marca el activo actual
         if (active != null && !active.getStyleClass().contains(NAV_ACTIVE_CLASS)) {
             active.getStyleClass().add(NAV_ACTIVE_CLASS);
         }
