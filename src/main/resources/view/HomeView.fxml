@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -8,21 +7,12 @@
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.gearmind.presentation.controller.HomeController"
             fx:id="root">
-
-    <!-- TOP: toolbar (el botón ☰ vive aquí para que NO desaparezca al plegar el sidebar) -->
     <top>
         <HBox spacing="12" styleClass="tfx-toolbar" alignment="CENTER_LEFT">
             <children>
-                <Button fx:id="btnToggleSidebar"
-                        text="☰"
-                        onAction="#onToggleSidebar"
-                        mnemonicParsing="false"
-                        styleClass="tfx-icon-btn"/>
-
+                <Button fx:id="btnToggleSidebar" text="☰" onAction="#onToggleSidebar" mnemonicParsing="false" styleClass="tfx-icon-btn"/>
                 <Label text="GearMind" styleClass="tfx-toolbar-title"/>
-
                 <Region HBox.hgrow="ALWAYS"/>
-
                 <Label fx:id="lblUsuarioActual" text="Usuario" styleClass="tfx-muted"/>
             </children>
             <padding>
@@ -31,22 +21,19 @@
         </HBox>
     </top>
 
-    <!-- LEFT: navegación -->
     <left>
         <VBox fx:id="sidebar" prefWidth="190" styleClass="tfx-sidebar" spacing="6">
             <padding>
                 <Insets top="14" right="10" bottom="14" left="10"/>
             </padding>
-
             <children>
                 <Label text="Navegación" styleClass="tfx-muted"/>
-
                 <Button fx:id="btnNavDashboard" text="Dashboard" onAction="#onNavDashboard" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
-                <Button fx:id="btnNavClientes"   text="Clientes"   onAction="#onNavClientes"   styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
-                <Button fx:id="btnNavVehiculos"  text="Vehículos"  onAction="#onNavVehiculos"  styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
-                <Button fx:id="btnNavCitas"      text="Citas"      onAction="#onNavCitas"      styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
-                <Button fx:id="btnNavUsuarios"   text="Usuarios"   onAction="#onNavUsuarios"   styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
-                <Button fx:id="btnNavEmpresas"   text="Empresas"   onAction="#onNavEmpresas"   styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
+                <Button fx:id="btnNavClientes" text="Clientes" onAction="#onNavClientes" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
+                <Button fx:id="btnNavVehiculos" text="Vehículos" onAction="#onNavVehiculos" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
+                <Button fx:id="btnNavCitas" text="Citas" onAction="#onNavCitas" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
+                <Button fx:id="btnNavUsuarios" text="Usuarios" onAction="#onNavUsuarios" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
+                <Button fx:id="btnNavEmpresas" text="Empresas" onAction="#onNavEmpresas" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
             </children>
         </VBox>
     </left>
