@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -13,7 +14,12 @@
                 <Button fx:id="btnToggleSidebar" text="☰" onAction="#onToggleSidebar" mnemonicParsing="false" styleClass="tfx-icon-btn"/>
                 <Label text="GearMind" styleClass="tfx-toolbar-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Label fx:id="lblUsuarioActual" text="Usuario" styleClass="tfx-muted"/>
+                <HBox fx:id="userBox" alignment="CENTER_RIGHT" spacing="8" styleClass="tfx-userbox">
+                    <children>
+                        <Label fx:id="lblUsuarioActual" text="Usuario" styleClass="tfx-muted"/>
+                        <Button fx:id="btnUserMenu" text="▾" mnemonicParsing="false" onAction="#onUserMenu" styleClass="tfx-icon-btn"/>
+                    </children>
+                </HBox>
             </children>
             <padding>
                 <Insets top="0" right="0" bottom="0" left="0"/>
