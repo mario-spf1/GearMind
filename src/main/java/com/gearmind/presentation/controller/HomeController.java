@@ -1,20 +1,24 @@
 package com.gearmind.presentation.controller;
 
-import com.gearmind.application.common.AuthContext;
-import com.gearmind.domain.user.User;
-import com.gearmind.domain.user.UserRole;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import java.io.IOException;
-import java.util.List;
 
+import java.io.IOException;
+
+/**
+ * Controlador del "shell" principal.
+ *
+ * IMPORTANTE: - El botón ☰ debe estar en el TOP (fuera del sidebar). - El
+ * sidebar se pliega poniendo root.setLeft(null) y se repone usando la
+ * referencia guardada. - El botón activo se marca con la clase CSS
+ * "tfx-nav-active" (según tu components.css).
+ */
 public class HomeController {
 
     @FXML
@@ -23,131 +27,49 @@ public class HomeController {
     private VBox sidebar;
     @FXML
     private StackPane contentPane;
+
+    @FXML
+    private Button btnToggleSidebar;
     @FXML
     private Label lblUsuarioActual;
-    @FXML
-    private Label lblAppTitle;
+
     @FXML
     private Button btnNavDashboard;
-    @FXML
-    private Button btnNavCitas;
     @FXML
     private Button btnNavClientes;
     @FXML
     private Button btnNavVehiculos;
     @FXML
+    private Button btnNavCitas;
+    @FXML
     private Button btnNavUsuarios;
     @FXML
     private Button btnNavEmpresas;
 
-    private Node savedSidebar;
+    private VBox savedSidebar;
+
+    private static final String NAV_ACTIVE_CLASS = "tfx-nav-active";
 
     @FXML
     public void initialize() {
+        // Guardamos referencia del sidebar para reponerlo al desplegar
         savedSidebar = sidebar;
-        setupFromAuthContext();
+
+        if (lblUsuarioActual != null) {
+            lblUsuarioActual.setText("Mario Rodríguez  |  Mi cuenta");
+        }
+
+        // Carga inicial
         loadView("/view/DashboardView.fxml");
-        setActiveNavButton(btnNavDashboard);
-    }
-
-    private void setupFromAuthContext() {
-        if (!AuthContext.isLoggedIn()) {
-            if (lblUsuarioActual != null) {
-                lblUsuarioActual.setText("Invitado");
-            }
-            return;
-        }
-
-        User user = AuthContext.getCurrentUser();
-        UserRole role = AuthContext.getRole();
-
-        if (lblUsuarioActual != null && user != null) {
-            String rolTexto = switch (role) {
-                case SUPER_ADMIN ->
-                    "Super admin";
-                case ADMIN ->
-                    "Admin";
-                case EMPLEADO ->
-                    "Empleado";
-            };
-            lblUsuarioActual.setText(user.getNombre() + " (" + rolTexto + ")");
-        }
-
-        if (lblAppTitle != null) {
-            String empresaNombre = AuthContext.getEmpresaNombre();
-            if (empresaNombre != null && !empresaNombre.isBlank()) {
-                lblAppTitle.setText("GearMind · " + empresaNombre);
-            } else {
-                lblAppTitle.setText("GearMind");
-            }
-        }
-
-        applyRoleToSidebar(role);
-    }
-
-    private void applyRoleToSidebar(UserRole role) {
-        setAllSidebarButtonsVisible(true);
-
-        if (role == UserRole.SUPER_ADMIN) {
-            return;
-        }
-
-        if (role == UserRole.ADMIN) {
-            hideButton(btnNavEmpresas);
-            return;
-        }
-
-        if (role == UserRole.EMPLEADO) {
-            hideButton(btnNavEmpresas);
-            hideButton(btnNavUsuarios);
-        }
-    }
-
-    private void setAllSidebarButtonsVisible(boolean visible) {
-        for (Button b : List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavVehiculos, btnNavUsuarios, btnNavEmpresas)) {
-            if (b != null) {
-                b.setVisible(visible);
-                b.setManaged(visible);
-            }
-        }
-    }
-
-    private void hideButton(Button b) {
-        if (b != null) {
-            b.setVisible(false);
-            b.setManaged(false);
-        }
-    }
-
-    private void loadView(String fxmlPath) {
-        try {
-            var url = getClass().getResource(fxmlPath);
-            if (url == null) {
-                throw new IllegalStateException("No se ha encontrado la vista: " + fxmlPath);
-            }
-            Parent view = FXMLLoader.load(url);
-            contentPane.getChildren().setAll(view);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void setActiveNavButton(Button activeButton) {
-        List<Button> buttons = List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavVehiculos, btnNavUsuarios, btnNavEmpresas);
-
-        for (Button b : buttons) {
-            if (b != null) {
-                b.getStyleClass().remove("tfx-nav-active");
-            }
-        }
-
-        if (activeButton != null && !activeButton.getStyleClass().contains("tfx-nav-active")) {
-            activeButton.getStyleClass().add("tfx-nav-active");
-        }
+        setActive(btnNavDashboard);
     }
 
     @FXML
     private void onToggleSidebar() {
+        if (root == null) {
+            return;
+        }
+
         if (root.getLeft() == null) {
             root.setLeft(savedSidebar);
         } else {
@@ -156,43 +78,71 @@ public class HomeController {
     }
 
     @FXML
-    private void onGoPerfilUsuario() {
-        System.out.println("Ir a mi perfil (placeholder)");
-    }
-
-    @FXML
-    private void onGoDashboard() {
+    private void onNavDashboard() {
         loadView("/view/DashboardView.fxml");
-        setActiveNavButton(btnNavDashboard);
+        setActive(btnNavDashboard);
     }
 
     @FXML
-    private void onGoCitas() {
-        loadView("/view/CitasView.fxml");
-        setActiveNavButton(btnNavCitas);
-    }
-
-    @FXML
-    private void onGoClientes() {
+    private void onNavClientes() {
         loadView("/view/ClientesView.fxml");
-        setActiveNavButton(btnNavClientes);
+        setActive(btnNavClientes);
     }
 
     @FXML
-    private void onGoVehiculos() {
+    private void onNavVehiculos() {
         loadView("/view/VehiculosView.fxml");
-        setActiveNavButton(btnNavVehiculos);
+        setActive(btnNavVehiculos);
     }
 
     @FXML
-    private void onGoUsuarios() {
+    private void onNavCitas() {
+        loadView("/view/CitasView.fxml");
+        setActive(btnNavCitas);
+    }
+
+    @FXML
+    private void onNavUsuarios() {
         loadView("/view/UsuariosView.fxml");
-        setActiveNavButton(btnNavUsuarios);
+        setActive(btnNavUsuarios);
     }
 
     @FXML
-    private void onGoEmpresas() {
+    private void onNavEmpresas() {
         loadView("/view/EmpresasView.fxml");
-        setActiveNavButton(btnNavEmpresas);
+        setActive(btnNavEmpresas);
+    }
+
+    private void loadView(String fxmlPath) {
+        if (contentPane == null) {
+            return;
+        }
+
+        try {
+            Node view = FXMLLoader.load(getClass().getResource(fxmlPath));
+            contentPane.getChildren().setAll(view);
+        } catch (Exception ex) {
+            Label placeholder = new Label("Vista no disponible: " + fxmlPath);
+            placeholder.getStyleClass().add("tfx-warn");
+            contentPane.getChildren().setAll(placeholder);
+        }
+    }
+
+    /**
+     * Marca el botón activo según tu CSS: ".tfx-nav-active". Limpia primero esa
+     * clase de todos los botones del sidebar.
+     */
+    private void setActive(Button active) {
+        if (sidebar == null) {
+            return;
+        }
+
+        // Quita el activo de TODOS los botones dentro del sidebar
+        sidebar.lookupAll(".button").forEach(n -> n.getStyleClass().remove(NAV_ACTIVE_CLASS));
+
+        // Marca el activo actual
+        if (active != null && !active.getStyleClass().contains(NAV_ACTIVE_CLASS)) {
+            active.getStyleClass().add(NAV_ACTIVE_CLASS);
+        }
     }
 }
