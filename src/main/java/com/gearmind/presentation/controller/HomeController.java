@@ -56,7 +56,7 @@ public class HomeController {
         savedSidebar = sidebar;
         setupFromAuthContext();
         initUserMenu();
-        
+
         if (userBox != null) {
             userBox.setOnMouseClicked(e -> showUserMenu());
         }
@@ -163,11 +163,36 @@ public class HomeController {
     }
 
     private void onManageAccount() {
-        Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle("Gestionar cuenta");
-        a.setHeaderText(null);
-        a.setContentText("Pendiente: implementar edición del usuario.");
-        a.showAndWait();
+        try {
+            User current = AuthContext.getCurrentUser();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/UsuarioFormView.fxml"));
+            Parent rootForm = loader.load();
+            UsuarioFormController controller = loader.getController();
+            controller.initForSelfEdit(current);
+            Stage stage = new Stage();
+            stage.setTitle("Mi cuenta");
+            stage.initOwner(root.getScene().getWindow());
+            stage.initModality(javafx.stage.Modality.WINDOW_MODAL);
+            stage.setResizable(false);
+            Scene scene = new Scene(rootForm);
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+            stage.setScene(scene);
+            stage.showAndWait();
+
+            if (controller.isSaved()) {
+                var repo = new com.gearmind.infrastructure.auth.MySqlUserRepository();
+                repo.findById(current.getId()).ifPresent(updated -> {
+                    String empresaNombre = SessionManager.getInstance().getCurrentEmpresaNombre();
+                    SessionManager.getInstance().startSession(updated, empresaNombre);
+                    setupFromAuthContext();
+                });
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "No se pudo abrir 'Mi cuenta': " + ex.getMessage()).showAndWait();
+        }
     }
 
     private void onLogout() {
