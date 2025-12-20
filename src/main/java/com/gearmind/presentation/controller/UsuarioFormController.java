@@ -58,6 +58,10 @@ public class UsuarioFormController {
     private long selectedEmpresaId = 0;
     private Long pendingEmpresaIdToSelect = null;
     private boolean settingComboProgrammatically = false;
+    private boolean selfEditMode = false;
+    private UserRole lockedRole = null;
+    private boolean lockedActivo = true;
+    private long lockedEmpresaId = 0;
 
     public UsuarioFormController() {
         this.saveUserUseCase = new SaveUserUseCase(new MySqlUserRepository(), new BCryptPasswordHasher());
@@ -65,6 +69,50 @@ public class UsuarioFormController {
 
     public boolean isSaved() {
         return saved;
+    }
+
+    public void initForSelfEdit(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("El usuario no puede ser null");
+        }
+
+        selfEditMode = true;
+        editingId = user.getId();
+        saved = false;
+        lockedRole = user.getRol();
+        lockedActivo = user.isActivo();
+        lockedEmpresaId = user.getEmpresaId();
+
+        if (lblTitulo != null) {
+            lblTitulo.setText("Mi cuenta");
+        }
+
+        if (txtNombre != null) {
+            txtNombre.setText(nullToEmpty(user.getNombre()));
+        }
+        if (txtEmail != null) {
+            txtEmail.setText(nullToEmpty(user.getEmail()));
+        }
+        if (txtPassword != null) {
+            txtPassword.clear();
+        }
+        hideNode(lblEmpresa);
+        hideNode(boxEmpresa);
+        if (cmbRol != null) {
+            cmbRol.setItems(FXCollections.observableArrayList(UserRole.values()));
+            cmbRol.getSelectionModel().select(user.getRol());
+            cmbRol.setDisable(true);
+            cmbRol.setManaged(false);
+            cmbRol.setVisible(false);
+        }
+        if (chkActivo != null) {
+            chkActivo.setSelected(user.isActivo());
+            chkActivo.setDisable(true);
+            chkActivo.setManaged(false);
+            chkActivo.setVisible(false);
+        }
+
+        validateForm();
     }
 
     public void initForNew() {
@@ -193,7 +241,10 @@ public class UsuarioFormController {
     private void onGuardar() {
         try {
             long empresaId;
-            if (AuthContext.isSuperAdmin()) {
+
+            if (selfEditMode) {
+                empresaId = lockedEmpresaId;
+            } else if (AuthContext.isSuperAdmin()) {
                 if (cmbEmpresa == null || cmbEmpresa.getValue() == null) {
                     new Alert(Alert.AlertType.WARNING, "Selecciona una empresa.").showAndWait();
                     return;
@@ -220,8 +271,8 @@ public class UsuarioFormController {
             }
 
             String password = (txtPassword != null) ? safeTrim(txtPassword.getText()) : "";
-            UserRole rol = (cmbRol != null && cmbRol.getValue() != null) ? cmbRol.getValue() : UserRole.EMPLEADO;
-            boolean activo = chkActivo != null && chkActivo.isSelected();
+            UserRole rol = selfEditMode ? lockedRole : (cmbRol != null && cmbRol.getValue() != null ? cmbRol.getValue() : UserRole.EMPLEADO);
+            boolean activo = selfEditMode ? lockedActivo : (chkActivo != null && chkActivo.isSelected());
             SaveUserRequest request = new SaveUserRequest(editingId, empresaId, nombre, email, password, rol, activo);
             saveUserUseCase.save(request);
             saved = true;
