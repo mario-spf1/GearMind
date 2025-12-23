@@ -548,7 +548,10 @@ public class CitasController {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle(appointment == null ? "Nueva cita" : "Editar cita");
-            stage.setScene(new Scene(root));
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+            stage.setScene(scene);
             stage.showAndWait();
 
             if (controller.isSaved()) {

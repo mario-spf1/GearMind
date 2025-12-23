@@ -24,17 +24,17 @@
                     </columnConstraints>
                     <children>
                         <Label text="Fecha:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                        <DatePicker fx:id="dpFecha" GridPane.rowIndex="0" GridPane.columnIndex="1" maxWidth="1.0" GridPane.hgrow="ALWAYS"/>
+                        <DatePicker fx:id="dpFecha" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Hora (HH:mm):" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtHora" promptText="HH:mm" GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="1.0" GridPane.hgrow="ALWAYS"/>
+                        <TextField fx:id="txtHora" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Cliente:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                        <ComboBox fx:id="cbCliente" promptText="Buscar cliente..." editable="true" GridPane.rowIndex="2" GridPane.columnIndex="1" maxWidth="1.0" GridPane.hgrow="ALWAYS"/>
+                        <ComboBox fx:id="cbCliente" editable="true" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Vehículo ID:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtVehiculoId" promptText="ID de vehículo (opcional)" GridPane.rowIndex="3" GridPane.columnIndex="1" maxWidth="1.0" GridPane.hgrow="ALWAYS"/>
+                        <TextField fx:id="txtVehiculoId" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Empleado:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                        <ComboBox fx:id="cbEmpleado" promptText="Buscar empleado..." editable="true" GridPane.rowIndex="4" GridPane.columnIndex="1" maxWidth="1.0" GridPane.hgrow="ALWAYS"/>
+                        <ComboBox fx:id="cbEmpleado" editable="true" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Notas:" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.valignment="TOP"/>
-                        <TextArea fx:id="txtNotas" prefRowCount="4" GridPane.rowIndex="5" GridPane.columnIndex="1" maxWidth="1.0" GridPane.hgrow="ALWAYS"/>
+                        <TextArea fx:id="txtNotas" prefRowCount="4" GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                     </children>
                 </GridPane>
 
@@ -42,8 +42,8 @@
 
                 <HBox spacing="10" alignment="CENTER_RIGHT">
                     <children>
-                        <Button text="Cancelar" onAction="#onCancelar" styleClass="button-secondary"/>
-                        <Button text="Guardar" onAction="#onGuardar" styleClass="button"/>
+                        <Button text="Cancelar" onAction="#onCancelar" styleClass="button tfx-btn-ghost"/>
+                        <Button text="Guardar" onAction="#onGuardar" styleClass="button tfx-btn-primary"/>
                     </children>
                 </HBox>
             </children>
