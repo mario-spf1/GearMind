@@ -37,6 +37,7 @@
                 <Button fx:id="btnNavDashboard" text="Dashboard" onAction="#onNavDashboard" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
                 <Button fx:id="btnNavClientes" text="Clientes" onAction="#onNavClientes" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
                 <Button fx:id="btnNavVehiculos" text="Vehículos" onAction="#onNavVehiculos" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
+                <Button fx:id="btnNavProductos" text="Productos" onAction="#onNavProductos" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
                 <Button fx:id="btnNavCitas" text="Citas" onAction="#onNavCitas" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
                 <Button fx:id="btnNavUsuarios" text="Usuarios" onAction="#onNavUsuarios" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
                 <Button fx:id="btnNavEmpresas" text="Empresas" onAction="#onNavEmpresas" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
