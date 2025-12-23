@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.ProductoFormController"
+      spacing="12"
+      styleClass="tfx-page">
+
+    <children>
+
+        <Label fx:id="lblTitulo" text="Producto" styleClass="tfx-title-xl"/>
+
+        <VBox styleClass="tfx-card" spacing="12">
+            <children>
+                <GridPane hgap="10" vgap="10">
+                    <padding>
+                        <Insets top="5" right="5" bottom="5" left="5"/>
+                    </padding>
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="30"/>
+                        <ColumnConstraints percentWidth="70"/>
+                    </columnConstraints>
+                    <children>
+                        <Label fx:id="lblEmpresa" text="Empresa:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <HBox fx:id="boxEmpresa" spacing="10" alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                            <ComboBox fx:id="cmbEmpresa" prefWidth="260"/>
+                        </HBox>
+                        <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtNombre" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label text="Referencia:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtReferencia" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Label text="Categoría:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtCategoria" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <Label text="Stock:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtStock" promptText="0" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <Label text="Stock mínimo:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtStockMinimo" promptText="0" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                        <Label text="Precio compra:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtPrecioCompra" promptText="0.00" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                        <Label text="Precio venta:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtPrecioVenta" promptText="0.00" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+                        <Label text="Descripción:" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+                        <TextArea fx:id="txtDescripcion" prefRowCount="3" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+                    </children>
+                </GridPane>
+            </children>
+        </VBox>
+
+        <HBox spacing="8">
+            <children>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Cancelar" onAction="#onCancelar" styleClass="tfx-btn-ghost"/>
+                <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="tfx-btn-primary"/>
+            </children>
+        </HBox>
+
+    </children>
+</VBox>
