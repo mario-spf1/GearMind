@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.ProductosController"
+      spacing="12"
+      styleClass="tfx-page">
+
+    <children>
+
+        <HBox spacing="8" styleClass="tfx-toolbar">
+            <children>
+
+                <VBox spacing="2">
+                    <children>
+                        <Label text="Productos" styleClass="tfx-title-xl"/>
+                        <Label fx:id="lblHeaderInfo" text="Gestión de productos" styleClass="tfx-subtitle"/>
+                    </children>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <HBox spacing="10" alignment="CENTER_RIGHT" styleClass="tfx-toolbar-pagesize">
+                    <Label text="Mostrar" styleClass="tfx-toolbar-label"/>
+                    <ComboBox fx:id="cmbPageSize" prefWidth="90"/>
+                    <Label text="por página" styleClass="tfx-toolbar-label"/>
+                </HBox>
+                <Button text="Recargar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
+                <Button fx:id="btnNuevoProducto" text="Nuevo producto" styleClass="tfx-btn-primary" onAction="#onNuevoProducto"/>
+            </children>
+        </HBox>
+
+        <VBox spacing="8" styleClass="tfx-card">
+            <padding>
+                <Insets top="8" right="8" bottom="8" left="8"/>
+            </padding>
+
+            <children>
+                <Label text="Filtros" styleClass="tfx-muted"/>
+
+                <GridPane hgap="8" vgap="6">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                    </columnConstraints>
+
+                    <children>
+                        <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnSpan="5">
+                            <HBox fx:id="boxFilterEmpresa" spacing="8" alignment="CENTER_LEFT">
+                                <Label text="Empresa" styleClass="tfx-filter-label"/>
+                                <ComboBox fx:id="filterEmpresaCombo" prefWidth="170" styleClass="tfx-filter-field"/>
+                            </HBox>
+
+                            <TextField fx:id="filterNombreField" promptText="Nombre" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="filterReferenciaField" promptText="Referencia" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="filterCategoriaField" promptText="Categoría" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+
+                            <HBox fx:id="boxFilterEstado" spacing="8" alignment="CENTER_LEFT">
+                                <Label text="Estado" styleClass="tfx-filter-label"/>
+                                <ComboBox fx:id="filterEstadoCombo" prefWidth="170" styleClass="tfx-filter-field"/>
+                            </HBox>
+                        </HBox>
+                    </children>
+                </GridPane>
+
+                <HBox spacing="8">
+                    <children>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Limpiar filtros" onAction="#onLimpiarFiltros" styleClass="tfx-btn-ghost"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+
+        <VBox spacing="6" styleClass="tfx-card">
+            <children>
+                <TableView fx:id="tblProductos">
+                    <columns>
+                        <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="140"/>
+                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="160"/>
+                        <TableColumn fx:id="colReferencia" text="Referencia" prefWidth="120"/>
+                        <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="120"/>
+                        <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="200"/>
+                        <TableColumn fx:id="colStock" text="Stock" prefWidth="80"/>
+                        <TableColumn fx:id="colStockMinimo" text="Stock mínimo" prefWidth="110"/>
+                        <TableColumn fx:id="colPrecioCompra" text="Precio compra" prefWidth="120"/>
+                        <TableColumn fx:id="colPrecioVenta" text="Precio venta" prefWidth="120"/>
+                        <TableColumn fx:id="colEstado" text="Estado" prefWidth="110"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
+                    </columns>
+                </TableView>
+
+                <HBox>
+                    <children>
+                        <Label fx:id="lblResumen" styleClass="tfx-muted"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+
+    </children>
+</VBox>
