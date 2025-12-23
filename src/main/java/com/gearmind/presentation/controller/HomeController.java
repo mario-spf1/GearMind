@@ -44,6 +44,8 @@ public class HomeController {
     @FXML
     private Button btnNavVehiculos;
     @FXML
+    private Button btnNavProductos;
+    @FXML
     private Button btnNavUsuarios;
     @FXML
     private Button btnNavEmpresas;
@@ -120,7 +122,7 @@ public class HomeController {
     }
 
     private void setAllSidebarButtonsVisible(boolean visible) {
-        for (Button b : List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavVehiculos, btnNavUsuarios, btnNavEmpresas)) {
+        for (Button b : List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas)) {
             if (b != null) {
                 b.setVisible(visible);
                 b.setManaged(visible);
@@ -242,7 +244,7 @@ public class HomeController {
     }
 
     private void setActiveNavButton(Button activeButton) {
-        List<Button> buttons = List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavVehiculos, btnNavUsuarios, btnNavEmpresas);
+        List<Button> buttons = List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas);
 
         for (Button b : buttons) {
             if (b != null) {
@@ -286,6 +288,12 @@ public class HomeController {
     private void onNavVehiculos() {
         loadView("/view/VehiculosView.fxml");
         setActiveNavButton(btnNavVehiculos);
+    }
+
+    @FXML
+    private void onNavProductos() {
+        loadView("/view/ProductosView.fxml");
+        setActiveNavButton(btnNavProductos);
     }
 
     @FXML
