@@ -40,7 +40,11 @@ public class TareasController {
     @FXML
     private TableColumn<Task, String> colEmpresa;
     @FXML
-    private TableColumn<Task, String> colReparacion;
+    private TableColumn<Task, String> colCliente;
+    @FXML
+    private TableColumn<Task, String> colVehiculo;
+    @FXML
+    private TableColumn<Task, String> colProductos;
     @FXML
     private TableColumn<Task, String> colDescripcion;
     @FXML
@@ -60,9 +64,11 @@ public class TareasController {
     @FXML
     private Button btnNuevaTarea;
     @FXML
-    private TextField filterReparacionField;
+    private TextField filterClienteField;
     @FXML
-    private TextField filterDescripcionField;
+    private TextField filterVehiculoField;
+    @FXML
+    private TextField filterProductosField;
     @FXML
     private TextField filterEmpleadoField;
     @FXML
@@ -114,7 +120,9 @@ public class TareasController {
             }
         }
 
-        colReparacion.setCellValueFactory(c -> new SimpleStringProperty(buildRepairLabel(c.getValue())));
+        colCliente.setCellValueFactory(c -> new SimpleStringProperty(safeRaw(c.getValue().getClienteNombre())));
+        colVehiculo.setCellValueFactory(c -> new SimpleStringProperty(safeRaw(c.getValue().getVehiculoMatricula())));
+        colProductos.setCellValueFactory(c -> new SimpleStringProperty(trimDescripcion(c.getValue().getRepairDescripcion())));
 
         colDescripcion.setCellValueFactory(c -> new SimpleStringProperty(trimDescripcion(c.getValue().getTitulo())));
         colDescripcion.setCellFactory(col -> new TableCell<>() {
@@ -286,12 +294,9 @@ public class TareasController {
             tblTareas.setMaxHeight(Region.USE_PREF_SIZE);
         });
 
-        smartTable.addColumnFilter(filterReparacionField, (t, text) -> safe(buildRepairLabel(t)).contains(text));
-        smartTable.addColumnFilter(filterDescripcionField, (t, text) -> {
-            String titulo = safe(t.getTitulo());
-            String descripcion = safe(t.getDescripcion());
-            return titulo.contains(text) || descripcion.contains(text);
-        });
+        smartTable.addColumnFilter(filterClienteField, (t, text) -> safe(t.getClienteNombre()).contains(text));
+        smartTable.addColumnFilter(filterVehiculoField, (t, text) -> safe(t.getVehiculoMatricula()).contains(text));
+        smartTable.addColumnFilter(filterProductosField, (t, text) -> safe(t.getRepairDescripcion()).contains(text));
         smartTable.addColumnFilter(filterEmpleadoField, (t, text) -> safe(employeeLabel(t)).contains(text));
 
         if (filterEstadoCombo != null) {
@@ -351,11 +356,14 @@ public class TareasController {
 
     @FXML
     private void onLimpiarFiltros() {
-        if (filterReparacionField != null) {
-            filterReparacionField.clear();
+        if (filterClienteField != null) {
+            filterClienteField.clear();
         }
-        if (filterDescripcionField != null) {
-            filterDescripcionField.clear();
+        if (filterVehiculoField != null) {
+            filterVehiculoField.clear();
+        }
+        if (filterProductosField != null) {
+            filterProductosField.clear();
         }
         if (filterEmpleadoField != null) {
             filterEmpleadoField.clear();
@@ -547,38 +555,6 @@ public class TareasController {
             return false;
         }
         return asignadoA.equals(AuthContext.getCurrentUser().getId());
-    }
-
-    private String buildRepairLabel(Task task) {
-        if (task == null) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        if (task.getOrdenTrabajoId() != null) {
-            sb.append("#").append(task.getOrdenTrabajoId());
-        }
-        String cliente = safeRaw(task.getClienteNombre());
-        String vehiculo = safeRaw(task.getVehiculoEtiqueta());
-        if (!cliente.isBlank()) {
-            if (sb.length() > 0) {
-                sb.append(" · ");
-            }
-            sb.append(cliente);
-        }
-        if (!vehiculo.isBlank()) {
-            if (sb.length() > 0) {
-                sb.append(" · ");
-            }
-            sb.append(vehiculo);
-        }
-        String desc = safeRaw(task.getRepairDescripcion());
-        if (!desc.isBlank()) {
-            if (sb.length() > 0) {
-                sb.append(" · ");
-            }
-            sb.append(desc);
-        }
-        return sb.toString();
     }
 
     private String trimDescripcion(String titulo) {

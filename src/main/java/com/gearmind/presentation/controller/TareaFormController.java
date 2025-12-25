@@ -5,7 +5,6 @@ import com.gearmind.application.task.SaveTaskRequest;
 import com.gearmind.application.task.SaveTaskUseCase;
 import com.gearmind.domain.repair.Repair;
 import com.gearmind.domain.task.Task;
-import com.gearmind.domain.task.TaskPriority;
 import com.gearmind.domain.task.TaskStatus;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRole;
@@ -39,8 +38,6 @@ public class TareaFormController {
     @FXML
     private ComboBox<EmployeeOption> cbEmpleado;
     @FXML
-    private ComboBox<String> cbPrioridad;
-    @FXML
     private TextField txtTitulo;
     @FXML
     private TextField txtFechaLimite;
@@ -69,7 +66,6 @@ public class TareaFormController {
         this.existingTask = existingTask;
 
         configureEmpresaCombo();
-        configurePrioridadCombo();
         configureRepairCombo();
         configureEmpleadoCombo();
 
@@ -77,9 +73,6 @@ public class TareaFormController {
             lblTitulo.setText("Editar tarea");
             txtTitulo.setText(existingTask.getTitulo());
             txtDescripcion.setText(existingTask.getDescripcion());
-            if (existingTask.getPrioridad() != null) {
-                cbPrioridad.getSelectionModel().select(mapPriorityToLabel(existingTask.getPrioridad()));
-            }
             if (existingTask.getFechaLimite() != null) {
                 txtFechaLimite.setText(formatFechaLimite(existingTask.getFechaLimite()));
             }
@@ -92,7 +85,6 @@ public class TareaFormController {
             selectEmployee(existingTask.getAsignadoA());
         } else {
             lblTitulo.setText("Nueva tarea");
-            cbPrioridad.getSelectionModel().select(mapPriorityToLabel(TaskPriority.MEDIA));
             if (AuthContext.isEmpleado()) {
                 selectSelfEmployee();
             }
@@ -142,7 +134,6 @@ public class TareaFormController {
         request.setTitulo(txtTitulo.getText());
         request.setDescripcion(txtDescripcion.getText());
         request.setEstado(existingTask != null ? existingTask.getEstado() : TaskStatus.PENDIENTE);
-        request.setPrioridad(mapLabelToPriority(cbPrioridad.getValue()));
         request.setFechaLimite(parseFechaLimite(txtFechaLimite.getText()));
         return request;
     }
@@ -404,13 +395,6 @@ public class TareaFormController {
         });
     }
 
-    private void configurePrioridadCombo() {
-        cbPrioridad.getItems().clear();
-        for (TaskPriority priority : TaskPriority.values()) {
-            cbPrioridad.getItems().add(mapPriorityToLabel(priority));
-        }
-    }
-
     private void loadRepairsAndEmployees(Long empresaId) {
         allRepairs.clear();
         allEmployees.clear();
@@ -541,36 +525,6 @@ public class TareaFormController {
             sb.append(repair.getDescripcion());
         }
         return sb.toString();
-    }
-
-    private String mapPriorityToLabel(TaskPriority priority) {
-        if (priority == null) {
-            return "Media";
-        }
-        return switch (priority) {
-            case BAJA ->
-                "Baja";
-            case MEDIA ->
-                "Media";
-            case ALTA ->
-                "Alta";
-        };
-    }
-
-    private TaskPriority mapLabelToPriority(String label) {
-        if (label == null) {
-            return TaskPriority.MEDIA;
-        }
-        return switch (label) {
-            case "Baja" ->
-                TaskPriority.BAJA;
-            case "Media" ->
-                TaskPriority.MEDIA;
-            case "Alta" ->
-                TaskPriority.ALTA;
-            default ->
-                TaskPriority.MEDIA;
-        };
     }
 
     private List<EmpresaOption> fetchEmpresas() {

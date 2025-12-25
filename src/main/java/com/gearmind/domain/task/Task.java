@@ -21,6 +21,7 @@ public class Task {
     private String repairDescripcion;
     private String clienteNombre;
     private String vehiculoEtiqueta;
+    private String vehiculoMatricula;
 
     public Task() {
     }
@@ -165,5 +166,13 @@ public class Task {
 
     public void setVehiculoEtiqueta(String vehiculoEtiqueta) {
         this.vehiculoEtiqueta = vehiculoEtiqueta;
+    }
+
+    public String getVehiculoMatricula() {
+        return vehiculoMatricula;
+    }
+
+    public void setVehiculoMatricula(String vehiculoMatricula) {
+        this.vehiculoMatricula = vehiculoMatricula;
     }
 }

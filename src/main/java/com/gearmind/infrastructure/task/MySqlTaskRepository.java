@@ -126,7 +126,11 @@ public class MySqlTaskRepository implements TaskRepository {
         try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             int i = 1;
             ps.setLong(i++, task.getEmpresaId());
-            ps.setLong(i++, task.getOrdenTrabajoId());
+            if (task.getOrdenTrabajoId() != null) {
+                ps.setLong(i++, task.getOrdenTrabajoId());
+            } else {
+                ps.setNull(i++, Types.BIGINT);
+            }
             if (task.getAsignadoA() != null) {
                 ps.setLong(i++, task.getAsignadoA());
             } else {
@@ -171,7 +175,11 @@ public class MySqlTaskRepository implements TaskRepository {
         try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
             int i = 1;
             ps.setLong(i++, task.getEmpresaId());
-            ps.setLong(i++, task.getOrdenTrabajoId());
+            if (task.getOrdenTrabajoId() != null) {
+                ps.setLong(i++, task.getOrdenTrabajoId());
+            } else {
+                ps.setNull(i++, Types.BIGINT);
+            }
             if (task.getAsignadoA() != null) {
                 ps.setLong(i++, task.getAsignadoA());
             } else {
@@ -244,6 +252,7 @@ public class MySqlTaskRepository implements TaskRepository {
         task.setRepairDescripcion(rs.getString("reparacion_descripcion"));
         task.setClienteNombre(rs.getString("cliente_nombre"));
         task.setEmpresaNombre(rs.getString("empresa_nombre"));
+        task.setVehiculoMatricula(rs.getString("vehiculo_matricula"));
         task.setVehiculoEtiqueta(buildVehicleLabel(rs.getString("vehiculo_matricula"), rs.getString("vehiculo_marca"), rs.getString("vehiculo_modelo")));
 
         return task;

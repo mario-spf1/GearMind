@@ -48,8 +48,9 @@
                                 <Label text="Empresa" styleClass="tfx-filter-label"/>
                                 <ComboBox fx:id="filterEmpresaCombo" prefWidth="170" styleClass="tfx-filter-field"/>
                             </HBox>
-                            <TextField fx:id="filterReparacionField" promptText="Reparación" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
-                            <TextField fx:id="filterDescripcionField" promptText="Título o descripción" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="filterClienteField" promptText="Cliente" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="filterVehiculoField" promptText="Vehículo (matrícula)" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="filterProductosField" promptText="Productos" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
                             <TextField fx:id="filterEmpleadoField" promptText="Empleado" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
                             <HBox spacing="8" alignment="CENTER_LEFT">
                                 <Label text="Estado" styleClass="tfx-filter-label"/>
@@ -75,7 +76,9 @@
                 <TableView fx:id="tblTareas" fixedCellSize="28">
                     <columns>
                         <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="160"/>
-                        <TableColumn fx:id="colReparacion" text="Reparación"/>
+                        <TableColumn fx:id="colCliente" text="Cliente"/>
+                        <TableColumn fx:id="colVehiculo" text="Vehículo"/>
+                        <TableColumn fx:id="colProductos" text="Productos"/>
                         <TableColumn fx:id="colDescripcion" text="Título"/>
                         <TableColumn fx:id="colEmpleado" text="Empleado" prefWidth="150"/>
                         <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>

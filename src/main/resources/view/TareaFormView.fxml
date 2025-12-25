@@ -31,14 +31,12 @@
                         <ComboBox fx:id="cbReparacion" editable="true" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Empleado:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                         <ComboBox fx:id="cbEmpleado" editable="true" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
-                        <Label text="Prioridad:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                        <ComboBox fx:id="cbPrioridad" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
-                        <Label text="Título:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtTitulo" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
-                        <Label text="Fecha límite (dd/MM/yyyy HH:mm):" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtFechaLimite" GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
-                        <Label text="Descripción:" GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.valignment="TOP"/>
-                        <TextArea fx:id="txtDescripcion" prefRowCount="4" GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                        <Label text="Título:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtTitulo" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                        <Label text="Fecha límite (dd/MM/yyyy HH:mm):" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtFechaLimite" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                        <Label text="Descripción:" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.valignment="TOP"/>
+                        <TextArea fx:id="txtDescripcion" prefRowCount="4" GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                     </children>
                 </GridPane>
                 <Region VBox.vgrow="ALWAYS"/>
