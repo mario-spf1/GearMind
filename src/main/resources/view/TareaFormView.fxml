@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.gearmind.presentation.controller.TareaFormController"
+            prefWidth="560" prefHeight="460"
+            styleClass="tfx-root">
+
+    <center>
+        <VBox spacing="12" styleClass="tfx-card">
+            <padding>
+                <Insets top="16" right="16" bottom="16" left="16"/>
+            </padding>
+            <children>
+                <Label fx:id="lblTitulo" text="Nueva tarea" styleClass="tfx-title"/>
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="140.0" prefWidth="150.0" halignment="RIGHT"/>
+                        <ColumnConstraints minWidth="280.0" hgrow="ALWAYS"/>
+                    </columnConstraints>
+                    <children>
+                        <HBox fx:id="boxEmpresa" spacing="6" alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                            <ComboBox fx:id="cmbEmpresa" editable="true" HBox.hgrow="ALWAYS"/>
+                        </HBox>
+                        <Label text="Empresa:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <Label text="Orden de trabajo:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cbReparacion" editable="true" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                        <Label text="Empleado:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cbEmpleado" editable="true" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                        <Label text="Prioridad:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cbPrioridad" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                        <Label text="Título:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtTitulo" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                        <Label text="Fecha límite (dd/MM/yyyy HH:mm):" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtFechaLimite" GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                        <Label text="Descripción:" GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.valignment="TOP"/>
+                        <TextArea fx:id="txtDescripcion" prefRowCount="4" GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                    </children>
+                </GridPane>
+                <Region VBox.vgrow="ALWAYS"/>
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <children>
+                        <Button text="Cancelar" onAction="#onCancelar" styleClass="button tfx-btn-ghost"/>
+                        <Button text="Guardar" onAction="#onGuardar" styleClass="button tfx-btn-primary"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </center>
+</BorderPane>
