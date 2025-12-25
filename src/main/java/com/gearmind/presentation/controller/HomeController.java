@@ -49,6 +49,8 @@ public class HomeController {
     private Button btnNavUsuarios;
     @FXML
     private Button btnNavEmpresas;
+    @FXML
+    private Button btnNavReparaciones;
 
     private javafx.scene.Node savedSidebar;
     private ContextMenu userMenu;
@@ -122,7 +124,7 @@ public class HomeController {
     }
 
     private void setAllSidebarButtonsVisible(boolean visible) {
-        for (Button b : List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas)) {
+        for (Button b : List.of(btnNavDashboard, btnNavCitas, btnNavReparaciones, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas)) {
             if (b != null) {
                 b.setVisible(visible);
                 b.setManaged(visible);
@@ -244,7 +246,7 @@ public class HomeController {
     }
 
     private void setActiveNavButton(Button activeButton) {
-        List<Button> buttons = List.of(btnNavDashboard, btnNavCitas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas);
+        List<Button> buttons = List.of(btnNavDashboard, btnNavCitas, btnNavReparaciones, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas);
 
         for (Button b : buttons) {
             if (b != null) {
@@ -276,6 +278,12 @@ public class HomeController {
     private void onNavCitas() {
         loadView("/view/CitasView.fxml");
         setActiveNavButton(btnNavCitas);
+    }
+
+    @FXML
+    private void onNavReparaciones() {
+        loadView("/view/ReparacionesView.fxml");
+        setActiveNavButton(btnNavReparaciones);
     }
 
     @FXML
