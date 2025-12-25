@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.ReparacionesController"
+      spacing="12"
+      styleClass="tfx-page">
+
+    <children>
+
+        <HBox spacing="8" styleClass="tfx-toolbar">
+            <children>
+
+                <VBox spacing="2">
+                    <children>
+                        <Label text="Reparaciones" styleClass="tfx-title-xl"/>
+                        <Label fx:id="lblHeaderInfo" text="Gestión de reparaciones" styleClass="tfx-subtitle"/>
+                    </children>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <HBox spacing="10" alignment="CENTER_RIGHT" styleClass="tfx-toolbar-pagesize">
+                    <Label text="Mostrar" styleClass="tfx-toolbar-label"/>
+                    <ComboBox fx:id="cmbPageSize" prefWidth="90"/>
+                    <Label text="por página" styleClass="tfx-toolbar-label"/>
+                </HBox>
+                <Button text="Recargar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
+                <Button fx:id="btnNuevaReparacion" text="Nueva reparación" styleClass="tfx-btn-primary" onAction="#onNuevaReparacion"/>
+            </children>
+        </HBox>
+
+        <VBox spacing="8" styleClass="tfx-card">
+            <padding>
+                <Insets top="8" right="8" bottom="8" left="8"/>
+            </padding>
+
+            <children>
+                <Label text="Filtros" styleClass="tfx-muted"/>
+                <GridPane hgap="8" vgap="6">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                        <ColumnConstraints percentWidth="20"/>
+                    </columnConstraints>
+                    <children>
+                        <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnSpan="5">
+                            <HBox fx:id="boxFilterEmpresa" spacing="8" alignment="CENTER_LEFT">
+                                <Label text="Empresa" styleClass="tfx-filter-label"/>
+                                <ComboBox fx:id="filterEmpresaCombo" prefWidth="170" styleClass="tfx-filter-field"/>
+                            </HBox>
+                            <TextField fx:id="filterClienteField" promptText="Cliente" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="filterVehiculoField" promptText="Vehículo" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="filterCitaField" promptText="Cita" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Label text="Estado" styleClass="tfx-filter-label"/>
+                                <ComboBox fx:id="filterEstadoCombo" prefWidth="170" styleClass="tfx-filter-field"/>
+                            </HBox>
+                        </HBox>
+                    </children>
+                </GridPane>
+                <GridPane hgap="8" vgap="6">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="100"/>
+                    </columnConstraints>
+                    <children>
+                        <TextField fx:id="filterDescripcionField" promptText="Descripción" styleClass="tfx-filter-field" GridPane.columnSpan="1"/>
+                    </children>
+                </GridPane>
+                <HBox spacing="8">
+                    <children>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Limpiar filtros" onAction="#onLimpiarFiltros" styleClass="tfx-btn-ghost"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+
+        <VBox spacing="6" styleClass="tfx-card">
+            <children>
+                <TableView fx:id="tblReparaciones" fixedCellSize="28">
+                    <columns>
+                        <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="160"/>
+                        <TableColumn fx:id="colCliente" text="Cliente"/>
+                        <TableColumn fx:id="colVehiculo" text="Vehículo"/>
+                        <TableColumn fx:id="colCita" text="Cita" prefWidth="90"/>
+                        <TableColumn fx:id="colDescripcion" text="Descripción"/>
+                        <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
+                        <TableColumn fx:id="colImporteEstimado" text="Estimado" prefWidth="110"/>
+                        <TableColumn fx:id="colImporteFinal" text="Final" prefWidth="110"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="170"/>
+                    </columns>
+                </TableView>
+                <HBox>
+                    <children>
+                        <Label fx:id="lblResumen" styleClass="tfx-muted"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+
+    </children>
+</VBox>
