@@ -482,7 +482,18 @@ public class TareasController {
             return;
         }
 
-        List<EmployeeOption> employees = fetchEmployees(task.getEmpresaId());
+        Long empresaId = resolveEmpresaForAssignment(task);
+        if (empresaId == null) {
+            new Alert(Alert.AlertType.WARNING, "Selecciona una empresa para asignar la tarea.").showAndWait();
+            return;
+        }
+
+        if (task.getEmpresaId() != null && !task.getEmpresaId().equals(empresaId)) {
+            new Alert(Alert.AlertType.WARNING, "La tarea pertenece a otra empresa.").showAndWait();
+            return;
+        }
+
+        List<EmployeeOption> employees = fetchEmployees(empresaId);
         if (employees.isEmpty()) {
             new Alert(Alert.AlertType.WARNING, "No hay empleados disponibles para asignar.").showAndWait();
             return;
@@ -506,7 +517,6 @@ public class TareasController {
                 return;
             }
             try {
-                long empresaId = task.getEmpresaId();
                 assignTaskUseCase.execute(task.getId(), empresaId, chosen.id);
                 loadTasksFromDb();
             } catch (Exception ex) {
@@ -656,18 +666,58 @@ public class TareasController {
         }
         MySqlUserRepository repo = new MySqlUserRepository();
         List<User> users = repo.findByEmpresaId(empresaId);
-        List<EmployeeOption> result = users.stream()
-                .filter(u -> u.getRol() == UserRole.EMPLEADO)
-                .map(u -> new EmployeeOption(u.getId(), u.getNombre() + " (ID " + u.getId() + ")"))
-                .toList();
-
+        List<EmployeeOption> result = users.stream().filter(u -> u.getRol() == UserRole.EMPLEADO || u.getRol() == UserRole.ADMIN).map(u -> new EmployeeOption(u.getId(), u.getNombre() + " (ID " + u.getId() + ")")).toList();
         List<EmployeeOption> output = FXCollections.observableArrayList();
         output.add(new EmployeeOption(null, "Sin asignar"));
         output.addAll(result);
         return output;
     }
 
-    private record EmployeeOption(Long id, String label) {
+    private Long resolveEmpresaForAssignment(Task task) {
+        Long empresaId = task != null ? task.getEmpresaId() : null;
+        if (!AuthContext.isSuperAdmin()) {
+            return empresaId != null ? empresaId : AuthContext.getEmpresaId();
+        }
 
+        Long empresaFromFilter = resolveEmpresaFromFilter();
+        if (empresaFromFilter != null) {
+            return empresaFromFilter;
+        }
+
+        List<EmpresaOption> empresas = fetchEmpresas();
+        if (empresas.isEmpty()) {
+            return empresaId;
+        }
+
+        EmpresaOption selected = empresas.stream().filter(e -> empresaId != null && e.id == empresaId).findFirst().orElse(empresas.get(0));
+        List<String> options = empresas.stream().map(EmpresaOption::label).toList();
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(selected.label(), options);
+        dialog.setTitle("Seleccionar empresa");
+        dialog.setHeaderText("Selecciona la empresa para filtrar empleados");
+        dialog.setContentText("Empresa:");
+
+        return dialog.showAndWait().flatMap(choice -> empresas.stream().filter(e -> e.label().equals(choice)).findFirst()).map(e -> e.id).orElse(empresaId);
+    }
+
+    private Long resolveEmpresaFromFilter() {
+        if (filterEmpresaCombo == null) {
+            return null;
+        }
+        String selected = filterEmpresaCombo.getSelectionModel().getSelectedItem();
+        if (selected == null || selected.isBlank() || "Todas".equalsIgnoreCase(selected)) {
+            return null;
+        }
+        return fetchEmpresas().stream().filter(e -> e.label().equalsIgnoreCase(selected)).map(e -> e.id).findFirst().orElse(null);
+    }
+
+    private List<EmpresaOption> fetchEmpresas() {
+        var repo = new com.gearmind.infrastructure.company.MySqlEmpresaRepository();
+        return repo.findAll().stream().map(c -> new EmpresaOption(c.getId(), c.getNombre())).toList();
+    }
+
+    private record EmpresaOption(long id, String label) {
+    }
+
+    private record EmployeeOption(Long id, String label) {
     }
 }
