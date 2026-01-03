@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.FacturaFormController"
+      spacing="12"
+      styleClass="tfx-page">
+
+    <children>
+        <Label fx:id="lblTitulo" text="Factura" styleClass="tfx-title-xl"/>
+
+        <VBox styleClass="tfx-card" spacing="12">
+            <children>
+                <GridPane hgap="10" vgap="10">
+                    <padding>
+                        <Insets top="5" right="5" bottom="5" left="5"/>
+                    </padding>
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="30"/>
+                        <ColumnConstraints percentWidth="70"/>
+                    </columnConstraints>
+                    <children>
+                        <Label fx:id="lblEmpresa" text="Empresa:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <HBox fx:id="boxEmpresa" spacing="10" alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                            <ComboBox fx:id="cmbEmpresa" prefWidth="260"/>
+                        </HBox>
+                        <Label text="Presupuesto:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cmbPresupuesto" prefWidth="260" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label text="Cliente:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cmbCliente" prefWidth="260" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Label text="Vehículo:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cmbVehiculo" prefWidth="260" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <Label text="Estado:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cmbEstado" prefWidth="180" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <Label text="IVA (%):" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtIva" prefWidth="120" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                        <Label text="Observaciones:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                        <TextArea fx:id="txtObservaciones" prefRowCount="3" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                    </children>
+                </GridPane>
+            </children>
+        </VBox>
+
+        <VBox styleClass="tfx-card" spacing="8">
+            <children>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="Líneas de la factura" styleClass="tfx-title"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="Añadir línea" onAction="#onAgregarLinea" styleClass="tfx-btn-ghost"/>
+                    <Button text="Eliminar línea" onAction="#onEliminarLinea" styleClass="tfx-btn-ghost"/>
+                </HBox>
+                <TableView fx:id="tblLineas" editable="true">
+                    <columns>
+                        <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="240"/>
+                        <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="100"/>
+                        <TableColumn fx:id="colPrecio" text="Precio" prefWidth="120"/>
+                        <TableColumn fx:id="colTotal" text="Total" prefWidth="120"/>
+                    </columns>
+                </TableView>
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <children>
+                        <Label text="Subtotal:" styleClass="tfx-muted"/>
+                        <Label fx:id="lblSubtotal" text="0,00" styleClass="tfx-title"/>
+                        <Label text="IVA:" styleClass="tfx-muted"/>
+                        <Label fx:id="lblIva" text="0,00" styleClass="tfx-title"/>
+                        <Label text="Total:" styleClass="tfx-muted"/>
+                        <Label fx:id="lblTotal" text="0,00" styleClass="tfx-title"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+
+        <HBox spacing="8">
+            <children>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Cancelar" onAction="#onCancelar" styleClass="tfx-btn-ghost"/>
+                <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="tfx-btn-primary"/>
+            </children>
+        </HBox>
+    </children>
+</VBox>
