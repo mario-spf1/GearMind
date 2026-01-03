@@ -82,7 +82,7 @@ public class PresupuestoFormController {
     private final ObservableList<VehiculoOption> vehiculos = FXCollections.observableArrayList();
     private final ObservableList<ReparacionOption> reparaciones = FXCollections.observableArrayList();
     private final ObservableList<BudgetLine> lineas = FXCollections.observableArrayList();
-
+    private final List<VehiculoOption> vehiculosEmpresa = new ArrayList<>();
     private Long editingId;
     private boolean saved = false;
 
@@ -149,6 +149,7 @@ public class PresupuestoFormController {
         ClienteOption cliente = clientes.stream().filter(c -> c.id == budget.getClienteId()).findFirst().orElse(null);
         if (cliente != null) {
             cmbCliente.getSelectionModel().select(cliente);
+            syncVehiculosFromCliente();
         }
 
         VehiculoOption vehiculo = vehiculos.stream().filter(v -> v.id == budget.getVehiculoId()).findFirst().orElse(null);
@@ -211,7 +212,7 @@ public class PresupuestoFormController {
         }
 
         if (cmbCliente != null) {
-            cmbCliente.setOnAction(e -> enableSaveIfReady());
+            cmbCliente.setOnAction(e -> syncVehiculosFromCliente());
         }
         if (cmbVehiculo != null) {
             cmbVehiculo.setOnAction(e -> enableSaveIfReady());
@@ -239,6 +240,9 @@ public class PresupuestoFormController {
     @FXML
     private void onGuardar() {
         try {
+            if (tblLineas != null) {
+                tblLineas.edit(-1, null);
+            }
             long empresaId = getEmpresaId();
             if (empresaId == 0L) {
                 new Alert(Alert.AlertType.WARNING, "Selecciona una empresa válida.").showAndWait();
@@ -323,13 +327,11 @@ public class PresupuestoFormController {
             boxEmpresa.setManaged(true);
         }
 
-        empresas.setAll(empresaRepository.findAll().stream()
-                .sorted(Comparator.comparing(Empresa::getNombre, String.CASE_INSENSITIVE_ORDER))
-                .map(e -> new EmpresaOption(e.getId(), e.getNombre()))
-                .toList());
+        empresas.setAll(empresaRepository.findAll().stream().sorted(Comparator.comparing(Empresa::getNombre, String.CASE_INSENSITIVE_ORDER)).map(e -> new EmpresaOption(e.getId(), e.getNombre())).toList());
         if (!empresas.isEmpty() && cmbEmpresa != null && cmbEmpresa.getValue() == null) {
             cmbEmpresa.getSelectionModel().selectFirst();
         }
+        loadDependentData(getEmpresaId());
     }
 
     private void loadDependentData(long empresaId) {
@@ -344,26 +346,18 @@ public class PresupuestoFormController {
                 .toList());
 
         List<Vehicle> vehicles = vehicleRepository.findByEmpresaId(empresaId);
-        vehiculos.setAll(vehicles.stream()
-                .sorted(Comparator.comparing(Vehicle::getMatricula, String.CASE_INSENSITIVE_ORDER))
-                .map(v -> new VehiculoOption(v.getId(), vehicleLabel(v), v.getClienteId()))
-                .toList());
-
+        vehiculosEmpresa.clear();
+        vehiculosEmpresa.addAll(vehicles.stream().sorted(Comparator.comparing(Vehicle::getMatricula, String.CASE_INSENSITIVE_ORDER)).map(v -> new VehiculoOption(v.getId(), vehicleLabel(v), v.getClienteId())).toList());
         List<Repair> repairs = repairRepository.findByEmpresa(empresaId);
         List<ReparacionOption> reparacionOptions = new ArrayList<>();
         reparacionOptions.add(new ReparacionOption(null, "Sin reparación", null, null));
-        reparacionOptions.addAll(repairs.stream()
-                .sorted(Comparator.comparing(Repair::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
-                .map(r -> new ReparacionOption(r.getId(), repairLabel(r), r.getClienteId(), r.getVehiculoId()))
-                .toList());
+        reparacionOptions.addAll(repairs.stream().sorted(Comparator.comparing(Repair::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()))).map(r -> new ReparacionOption(r.getId(), repairLabel(r), r.getClienteId(), r.getVehiculoId())).toList());
         reparaciones.setAll(reparacionOptions);
 
         if (cmbCliente != null && !clientes.isEmpty() && cmbCliente.getValue() == null) {
             cmbCliente.getSelectionModel().selectFirst();
         }
-        if (cmbVehiculo != null && !vehiculos.isEmpty() && cmbVehiculo.getValue() == null) {
-            cmbVehiculo.getSelectionModel().selectFirst();
-        }
+        syncVehiculosFromCliente();
 
         if (cmbReparacion != null) {
             cmbReparacion.getSelectionModel().selectFirst();
@@ -488,6 +482,25 @@ public class PresupuestoFormController {
         btnGuardar.setDisable(!(hasCliente && hasVehiculo && hasLine));
     }
 
+    private void syncVehiculosFromCliente() {
+        ClienteOption cliente = cmbCliente != null ? cmbCliente.getValue() : null;
+        Long clienteId = cliente != null ? cliente.id : null;
+        List<VehiculoOption> filtered = vehiculosEmpresa.stream().filter(v -> clienteId != null && clienteId.equals(v.clienteId)).toList();
+        vehiculos.setAll(filtered);
+        if (cmbVehiculo != null) {
+            if (!vehiculos.isEmpty()) {
+                VehiculoOption selected = cmbVehiculo.getValue();
+                boolean keep = selected != null && vehiculos.stream().anyMatch(v -> v.id == selected.id);
+                if (!keep) {
+                    cmbVehiculo.getSelectionModel().selectFirst();
+                }
+            } else {
+                cmbVehiculo.getSelectionModel().clearSelection();
+            }
+        }
+        enableSaveIfReady();
+    }
+
     private void syncClienteFromVehiculo() {
         VehiculoOption vehiculo = cmbVehiculo != null ? cmbVehiculo.getValue() : null;
         if (vehiculo == null || vehiculo.clienteId == null) {
@@ -497,6 +510,7 @@ public class PresupuestoFormController {
         if (cliente != null) {
             cmbCliente.getSelectionModel().select(cliente);
         }
+        enableSaveIfReady();
     }
 
     private void syncFromReparacion() {
@@ -504,16 +518,17 @@ public class PresupuestoFormController {
         if (reparacion == null || reparacion.id == null) {
             return;
         }
-        if (reparacion.vehiculoId != null) {
-            VehiculoOption vehiculo = vehiculos.stream().filter(v -> v.id == reparacion.vehiculoId).findFirst().orElse(null);
-            if (vehiculo != null) {
-                cmbVehiculo.getSelectionModel().select(vehiculo);
-            }
-        }
         if (reparacion.clienteId != null) {
             ClienteOption cliente = clientes.stream().filter(c -> c.id == reparacion.clienteId).findFirst().orElse(null);
             if (cliente != null) {
                 cmbCliente.getSelectionModel().select(cliente);
+                syncVehiculosFromCliente();
+            }
+        }
+        if (reparacion.vehiculoId != null) {
+            VehiculoOption vehiculo = vehiculos.stream().filter(v -> v.id == reparacion.vehiculoId).findFirst().orElse(null);
+            if (vehiculo != null) {
+                cmbVehiculo.getSelectionModel().select(vehiculo);
             }
         }
     }

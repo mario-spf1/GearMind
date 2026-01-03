@@ -32,6 +32,9 @@ public class SaveInvoiceUseCase {
         if (request.getVehiculoId() == null) {
             throw new IllegalArgumentException("El vehículo es obligatorio.");
         }
+        if (request.getPresupuestoId() == null) {
+            throw new IllegalArgumentException("El presupuesto es obligatorio.");
+        }
         if (request.getLineas() == null || request.getLineas().isEmpty()) {
             throw new IllegalArgumentException("La factura debe incluir al menos una línea.");
         }

@@ -88,6 +88,7 @@ public class FacturaFormController {
     private final ObservableList<ClienteOption> clientes = FXCollections.observableArrayList();
     private final ObservableList<VehiculoOption> vehiculos = FXCollections.observableArrayList();
     private final ObservableList<InvoiceLine> lineas = FXCollections.observableArrayList();
+    private final List<VehiculoOption> vehiculosEmpresa = new java.util.ArrayList<>();
 
     private Long editingId;
     private boolean saved = false;
@@ -170,6 +171,7 @@ public class FacturaFormController {
         ClienteOption cliente = clientes.stream().filter(c -> c.id == invoice.getClienteId()).findFirst().orElse(null);
         if (cliente != null) {
             cmbCliente.getSelectionModel().select(cliente);
+            syncVehiculosFromCliente();
         }
 
         VehiculoOption vehiculo = vehiculos.stream().filter(v -> v.id == invoice.getVehiculoId()).findFirst().orElse(null);
@@ -220,6 +222,9 @@ public class FacturaFormController {
         if (cmbPresupuesto != null) {
             cmbPresupuesto.setOnAction(e -> syncFromPresupuesto());
         }
+        if (cmbCliente != null) {
+            cmbCliente.setOnAction(e -> syncVehiculosFromCliente());
+        }
         if (txtIva != null) {
             txtIva.textProperty().addListener((obs, o, n) -> updateTotals());
         }
@@ -246,6 +251,9 @@ public class FacturaFormController {
     @FXML
     private void onGuardar() {
         try {
+            if (tblLineas != null) {
+                tblLineas.edit(-1, null);
+            }
             long empresaId = getEmpresaId();
             if (empresaId == 0L) {
                 new Alert(Alert.AlertType.WARNING, "Selecciona una empresa válida.").showAndWait();
@@ -360,22 +368,18 @@ public class FacturaFormController {
                 .toList());
 
         List<Customer> customers = customerRepository.findByEmpresaId(empresaId);
-        clientes.setAll(customers.stream()
-                .sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER))
-                .map(c -> new ClienteOption(c.getId(), c.getNombre()))
-                .toList());
+        clientes.setAll(customers.stream().sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER)).map(c -> new ClienteOption(c.getId(), c.getNombre())).toList());
 
         List<Vehicle> vehicles = vehicleRepository.findByEmpresaId(empresaId);
-        vehiculos.setAll(vehicles.stream()
-                .sorted(Comparator.comparing(Vehicle::getMatricula, String.CASE_INSENSITIVE_ORDER))
-                .map(v -> new VehiculoOption(v.getId(), vehicleLabel(v), v.getClienteId()))
-                .toList());
+        vehiculosEmpresa.clear();
+        vehiculosEmpresa.addAll(vehicles.stream().sorted(Comparator.comparing(Vehicle::getMatricula, String.CASE_INSENSITIVE_ORDER)).map(v -> new VehiculoOption(v.getId(), vehicleLabel(v), v.getClienteId())).toList());
 
         if (cmbPresupuesto != null && !presupuestos.isEmpty() && cmbPresupuesto.getValue() == null) {
             cmbPresupuesto.getSelectionModel().selectFirst();
             syncFromPresupuesto();
         }
 
+        syncVehiculosFromCliente();
         enableSaveIfReady();
     }
 
@@ -514,8 +518,29 @@ public class FacturaFormController {
             return;
         }
         boolean hasPresupuesto = cmbPresupuesto != null && cmbPresupuesto.getValue() != null;
+        boolean hasCliente = cmbCliente != null && cmbCliente.getValue() != null;
+        boolean hasVehiculo = cmbVehiculo != null && cmbVehiculo.getValue() != null;
         boolean hasLine = lineas.stream().anyMatch(l -> l.getDescripcion() != null && !l.getDescripcion().isBlank());
-        btnGuardar.setDisable(!(hasPresupuesto && hasLine));
+        btnGuardar.setDisable(!(hasPresupuesto && hasCliente && hasVehiculo && hasLine));
+    }
+
+    private void syncVehiculosFromCliente() {
+        ClienteOption cliente = cmbCliente != null ? cmbCliente.getValue() : null;
+        Long clienteId = cliente != null ? cliente.id : null;
+        List<VehiculoOption> filtered = vehiculosEmpresa.stream().filter(v -> clienteId != null && clienteId.equals(v.clienteId)).toList();
+        vehiculos.setAll(filtered);
+        if (cmbVehiculo != null) {
+            if (!vehiculos.isEmpty()) {
+                VehiculoOption selected = cmbVehiculo.getValue();
+                boolean keep = selected != null && vehiculos.stream().anyMatch(v -> v.id == selected.id);
+                if (!keep) {
+                    cmbVehiculo.getSelectionModel().selectFirst();
+                }
+            } else {
+                cmbVehiculo.getSelectionModel().clearSelection();
+            }
+        }
+        enableSaveIfReady();
     }
 
     private void syncFromPresupuesto() {
@@ -532,6 +557,7 @@ public class FacturaFormController {
         ClienteOption cliente = clientes.stream().filter(c -> c.id == budget.getClienteId()).findFirst().orElse(null);
         if (cliente != null) {
             cmbCliente.getSelectionModel().select(cliente);
+            syncVehiculosFromCliente();
         }
         VehiculoOption vehiculo = vehiculos.stream().filter(v -> v.id == budget.getVehiculoId()).findFirst().orElse(null);
         if (vehiculo != null) {
