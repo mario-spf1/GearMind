@@ -18,7 +18,6 @@ import com.gearmind.domain.vehicle.Vehicle;
 import com.gearmind.infrastructure.budget.MySqlBudgetRepository;
 import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
-import com.gearmind.infrastructure.invoice.InvoicePdfGenerator;
 import com.gearmind.infrastructure.invoice.InvoicePdfStorage;
 import com.gearmind.infrastructure.invoice.MySqlInvoiceRepository;
 import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
@@ -102,21 +101,19 @@ public class FacturaFormController {
     private final MySqlEmpresaRepository empresaRepository;
     private final MySqlCustomerRepository customerRepository;
     private final MySqlVehicleRepository vehicleRepository;
-    private final InvoicePdfGenerator pdfGenerator;
 
     private final java.text.DecimalFormat moneyFormat = new java.text.DecimalFormat("#,##0.00", new java.text.DecimalFormatSymbols(Locale.getDefault()));
 
     public FacturaFormController() {
         this.invoiceRepository = new MySqlInvoiceRepository();
-        this.saveInvoiceUseCase = new SaveInvoiceUseCase(invoiceRepository);
-        this.getInvoiceUseCase = new GetInvoiceUseCase(invoiceRepository);
         this.budgetRepository = new MySqlBudgetRepository();
         this.listBudgetsUseCase = new ListBudgetsUseCase(budgetRepository);
         this.getBudgetUseCase = new GetBudgetUseCase(budgetRepository);
         this.empresaRepository = new MySqlEmpresaRepository();
         this.customerRepository = new MySqlCustomerRepository();
         this.vehicleRepository = new MySqlVehicleRepository();
-        this.pdfGenerator = new InvoicePdfGenerator();
+        this.saveInvoiceUseCase = new SaveInvoiceUseCase(invoiceRepository, empresaRepository, customerRepository, vehicleRepository, new com.gearmind.infrastructure.invoice.InvoicePdfGenerator());
+        this.getInvoiceUseCase = new GetInvoiceUseCase(invoiceRepository);
     }
 
     public boolean isSaved() {
@@ -160,10 +157,7 @@ public class FacturaFormController {
             loadDependentData(getEmpresaId());
         }
 
-        PresupuestoOption presupuestoOption = presupuestos.stream()
-                .filter(p -> p.id != null && p.id.equals(invoice.getPresupuestoId()))
-                .findFirst()
-                .orElse(null);
+        PresupuestoOption presupuestoOption = presupuestos.stream().filter(p -> p.id != null && p.id.equals(invoice.getPresupuestoId())).findFirst().orElse(null);
         if (presupuestoOption != null) {
             cmbPresupuesto.getSelectionModel().select(presupuestoOption);
         }
@@ -276,9 +270,7 @@ public class FacturaFormController {
                 return;
             }
 
-            List<InvoiceLine> lines = lineas.stream()
-                    .filter(l -> l.getDescripcion() != null && !l.getDescripcion().isBlank())
-                    .toList();
+            List<InvoiceLine> lines = lineas.stream().filter(l -> l.getDescripcion() != null && !l.getDescripcion().isBlank()).toList();
 
             if (lines.isEmpty()) {
                 new Alert(Alert.AlertType.WARNING, "Añade al menos una línea con descripción.").showAndWait();
@@ -297,7 +289,6 @@ public class FacturaFormController {
             request.setIvaPercent(parseIvaPercent());
 
             Invoice savedInvoice = saveInvoiceUseCase.execute(request);
-            generatePdf(savedInvoice, lines);
 
             saved = true;
             new Alert(Alert.AlertType.INFORMATION, "Factura guardada y PDF generado en:\n" + InvoicePdfStorage.resolvePath(savedInvoice.getId())).showAndWait();
@@ -580,13 +571,6 @@ public class FacturaFormController {
         mapped.setPrecio(line.getPrecio());
         mapped.setTotal(line.getTotal());
         return mapped;
-    }
-
-    private void generatePdf(Invoice invoice, List<InvoiceLine> lines) {
-        Empresa empresa = empresaRepository.findById(invoice.getEmpresaId()).orElse(null);
-        Customer customer = customerRepository.findById(invoice.getClienteId()).orElse(null);
-        Vehicle vehicle = vehicleRepository.findById(invoice.getVehiculoId()).orElse(null);
-        pdfGenerator.generate(invoice, lines, empresa, customer, vehicle);
     }
 
     private String mapStatusToLabel(InvoiceStatus status) {

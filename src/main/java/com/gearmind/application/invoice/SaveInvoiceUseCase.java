@@ -4,7 +4,13 @@ import com.gearmind.domain.invoice.Invoice;
 import com.gearmind.domain.invoice.InvoiceLine;
 import com.gearmind.domain.invoice.InvoiceRepository;
 import com.gearmind.domain.invoice.InvoiceStatus;
-
+import com.gearmind.domain.company.Empresa;
+import com.gearmind.domain.company.EmpresaRepository;
+import com.gearmind.domain.customer.Customer;
+import com.gearmind.domain.customer.CustomerRepository;
+import com.gearmind.domain.vehicle.Vehicle;
+import com.gearmind.domain.vehicle.VehicleRepository;
+import com.gearmind.infrastructure.invoice.InvoicePdfGenerator;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -14,9 +20,17 @@ import java.util.List;
 public class SaveInvoiceUseCase {
 
     private final InvoiceRepository invoiceRepository;
+    private final EmpresaRepository empresaRepository;
+    private final CustomerRepository customerRepository;
+    private final VehicleRepository vehicleRepository;
+    private final InvoicePdfGenerator pdfGenerator;
 
-    public SaveInvoiceUseCase(InvoiceRepository invoiceRepository) {
+    public SaveInvoiceUseCase(InvoiceRepository invoiceRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, InvoicePdfGenerator pdfGenerator) {
         this.invoiceRepository = invoiceRepository;
+        this.empresaRepository = empresaRepository;
+        this.customerRepository = customerRepository;
+        this.vehicleRepository = vehicleRepository;
+        this.pdfGenerator = pdfGenerator;
     }
 
     public Invoice execute(SaveInvoiceRequest request) {
@@ -31,6 +45,9 @@ public class SaveInvoiceUseCase {
         }
         if (request.getVehiculoId() == null) {
             throw new IllegalArgumentException("El vehículo es obligatorio.");
+        }
+        if (request.getPresupuestoId() == null) {
+            throw new IllegalArgumentException("El presupuesto es obligatorio.");
         }
         if (request.getPresupuestoId() == null) {
             throw new IllegalArgumentException("El presupuesto es obligatorio.");
@@ -88,10 +105,19 @@ public class SaveInvoiceUseCase {
             invoice.setCreatedAt(LocalDateTime.now());
         }
 
-        return invoiceRepository.save(invoice, normalizedLines);
+        Invoice saved = invoiceRepository.save(invoice, normalizedLines);
+        generatePdf(saved, normalizedLines);
+        return saved;
     }
 
     private String generateNumber() {
         return "F-" + System.currentTimeMillis();
+    }
+
+    private void generatePdf(Invoice invoice, List<InvoiceLine> lines) {
+        Empresa empresa = empresaRepository.findById(invoice.getEmpresaId()).orElse(null);
+        Customer customer = customerRepository.findById(invoice.getClienteId()).orElse(null);
+        Vehicle vehicle = vehicleRepository.findById(invoice.getVehiculoId()).orElse(null);
+        pdfGenerator.generate(invoice, lines, empresa, customer, vehicle);
     }
 }

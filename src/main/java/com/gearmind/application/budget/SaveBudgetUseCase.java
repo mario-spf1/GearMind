@@ -4,7 +4,13 @@ import com.gearmind.domain.budget.Budget;
 import com.gearmind.domain.budget.BudgetLine;
 import com.gearmind.domain.budget.BudgetRepository;
 import com.gearmind.domain.budget.BudgetStatus;
-
+import com.gearmind.domain.company.Empresa;
+import com.gearmind.domain.company.EmpresaRepository;
+import com.gearmind.domain.customer.Customer;
+import com.gearmind.domain.customer.CustomerRepository;
+import com.gearmind.domain.vehicle.Vehicle;
+import com.gearmind.domain.vehicle.VehicleRepository;
+import com.gearmind.infrastructure.budget.BudgetPdfGenerator;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,9 +19,17 @@ import java.util.List;
 public class SaveBudgetUseCase {
 
     private final BudgetRepository budgetRepository;
+    private final EmpresaRepository empresaRepository;
+    private final CustomerRepository customerRepository;
+    private final VehicleRepository vehicleRepository;
+    private final BudgetPdfGenerator pdfGenerator;
 
-    public SaveBudgetUseCase(BudgetRepository budgetRepository) {
+    public SaveBudgetUseCase(BudgetRepository budgetRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, BudgetPdfGenerator pdfGenerator) {
         this.budgetRepository = budgetRepository;
+        this.empresaRepository = empresaRepository;
+        this.customerRepository = customerRepository;
+        this.vehicleRepository = vehicleRepository;
+        this.pdfGenerator = pdfGenerator;
     }
 
     public Budget execute(SaveBudgetRequest request) {
@@ -76,6 +90,15 @@ public class SaveBudgetUseCase {
             budget.setCreatedAt(LocalDateTime.now());
         }
 
-        return budgetRepository.save(budget, normalizedLines);
+        Budget saved = budgetRepository.save(budget, normalizedLines);
+        generatePdf(saved, normalizedLines);
+        return saved;
+    }
+    
+    private void generatePdf(Budget budget, List<BudgetLine> lines) {
+        Empresa empresa = empresaRepository.findById(budget.getEmpresaId()).orElse(null);
+        Customer customer = customerRepository.findById(budget.getClienteId()).orElse(null);
+        Vehicle vehicle = vehicleRepository.findById(budget.getVehiculoId()).orElse(null);
+        pdfGenerator.generate(budget, lines, empresa, customer, vehicle);
     }
 }

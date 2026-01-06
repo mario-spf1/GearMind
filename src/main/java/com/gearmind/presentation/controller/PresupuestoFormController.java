@@ -12,7 +12,6 @@ import com.gearmind.domain.company.Empresa;
 import com.gearmind.domain.customer.Customer;
 import com.gearmind.domain.repair.Repair;
 import com.gearmind.domain.vehicle.Vehicle;
-import com.gearmind.infrastructure.budget.BudgetPdfGenerator;
 import com.gearmind.infrastructure.budget.BudgetPdfStorage;
 import com.gearmind.infrastructure.budget.MySqlBudgetRepository;
 import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
@@ -29,9 +28,7 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-
 import java.math.BigDecimal;
-import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -61,7 +58,6 @@ public class PresupuestoFormController {
     private ComboBox<String> cmbEstado;
     @FXML
     private TextArea txtObservaciones;
-
     @FXML
     private TableView<BudgetLine> tblLineas;
     @FXML
@@ -85,7 +81,6 @@ public class PresupuestoFormController {
     private final List<VehiculoOption> vehiculosEmpresa = new ArrayList<>();
     private Long editingId;
     private boolean saved = false;
-
     private final MySqlBudgetRepository budgetRepository;
     private final SaveBudgetUseCase saveBudgetUseCase;
     private final GetBudgetUseCase getBudgetUseCase;
@@ -93,23 +88,20 @@ public class PresupuestoFormController {
     private final MySqlCustomerRepository customerRepository;
     private final MySqlVehicleRepository vehicleRepository;
     private final MySqlRepairRepository repairRepository;
-    private final BudgetPdfGenerator pdfGenerator;
-
     private final DecimalFormat moneyFormat = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.getDefault()));
 
     public PresupuestoFormController() {
         this.budgetRepository = new MySqlBudgetRepository();
-        this.saveBudgetUseCase = new SaveBudgetUseCase(budgetRepository);
-        this.getBudgetUseCase = new GetBudgetUseCase(budgetRepository);
         this.empresaRepository = new MySqlEmpresaRepository();
         this.customerRepository = new MySqlCustomerRepository();
         this.vehicleRepository = new MySqlVehicleRepository();
         this.repairRepository = new MySqlRepairRepository();
-        this.pdfGenerator = new BudgetPdfGenerator();
+        this.saveBudgetUseCase = new SaveBudgetUseCase(budgetRepository, empresaRepository, customerRepository, vehicleRepository, new com.gearmind.infrastructure.budget.BudgetPdfGenerator());
+        this.getBudgetUseCase = new GetBudgetUseCase(budgetRepository);
     }
 
     public boolean isSaved() {
-        return saved;
+        return saved; 
     }
 
     public void initForNew() {
@@ -283,7 +275,6 @@ public class PresupuestoFormController {
             request.setLineas(lines);
 
             Budget savedBudget = saveBudgetUseCase.execute(request);
-            generatePdf(savedBudget, lines);
 
             saved = true;
             new Alert(Alert.AlertType.INFORMATION, "Presupuesto guardado y PDF generado en:\n" + BudgetPdfStorage.resolvePath(savedBudget.getId())).showAndWait();
@@ -524,22 +515,6 @@ public class PresupuestoFormController {
                 cmbCliente.getSelectionModel().select(cliente);
                 syncVehiculosFromCliente();
             }
-        }
-        if (reparacion.vehiculoId != null) {
-            VehiculoOption vehiculo = vehiculos.stream().filter(v -> v.id == reparacion.vehiculoId).findFirst().orElse(null);
-            if (vehiculo != null) {
-                cmbVehiculo.getSelectionModel().select(vehiculo);
-            }
-        }
-    }
-
-    private void generatePdf(Budget budget, List<BudgetLine> lines) {
-        Empresa empresa = empresaRepository.findById(budget.getEmpresaId()).orElse(null);
-        Customer customer = customerRepository.findById(budget.getClienteId()).orElse(null);
-        Vehicle vehicle = vehicleRepository.findById(budget.getVehiculoId()).orElse(null);
-        Path output = pdfGenerator.generate(budget, lines, empresa, customer, vehicle);
-        if (output == null) {
-            throw new RuntimeException("No se pudo generar el PDF.");
         }
     }
 
