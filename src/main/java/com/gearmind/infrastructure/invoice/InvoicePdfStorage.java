@@ -13,6 +13,6 @@ public final class InvoicePdfStorage {
     }
 
     public static Path baseDir() {
-        return Paths.get(System.getProperty("user.home"), "GearMind", "facturas");
+        return Paths.get(System.getProperty("user.home"), "GearMind", "documentos", "facturas");
     }
 }

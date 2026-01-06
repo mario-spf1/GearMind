@@ -93,7 +93,7 @@
                         <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
                         <TableColumn fx:id="colImporteEstimado" text="Estimado" prefWidth="110"/>
                         <TableColumn fx:id="colImporteFinal" text="Final" prefWidth="110"/>
-                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="170"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="220"/>
                     </columns>
                 </TableView>
                 <HBox>

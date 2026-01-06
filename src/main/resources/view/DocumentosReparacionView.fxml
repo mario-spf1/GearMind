@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.DocumentosReparacionController"
+      spacing="12"
+      styleClass="tfx-page">
+
+    <children>
+        <Label fx:id="lblTitulo" text="Documentos" styleClass="tfx-title-xl"/>
+        <VBox spacing="8" styleClass="tfx-card">
+            <padding>
+                <Insets top="8" right="8" bottom="8" left="8"/>
+            </padding>
+            <children>
+                <ListView fx:id="lstDocumentos" prefHeight="280"/>
+                <HBox spacing="8" alignment="CENTER_RIGHT">
+                    <children>
+                        <Button text="Abrir" fx:id="btnAbrir" onAction="#onAbrirDocumento" styleClass="tfx-btn-secondary"/>
+                        <Button text="Añadir documento" onAction="#onAgregarDocumento" styleClass="tfx-btn-primary"/>
+                        <Button text="Cerrar" onAction="#onCerrar" styleClass="tfx-btn-ghost"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </children>
+</VBox>

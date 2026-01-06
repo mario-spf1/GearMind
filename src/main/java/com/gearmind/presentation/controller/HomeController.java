@@ -38,6 +38,8 @@ public class HomeController {
     @FXML
     private Button btnNavDashboard;
     @FXML
+    private Button btnNavReportes;
+    @FXML
     private Button btnNavCitas;
     @FXML
     private Button btnNavClientes;
@@ -126,11 +128,12 @@ public class HomeController {
         if (role == UserRole.EMPLEADO) {
             hideButton(btnNavEmpresas);
             hideButton(btnNavUsuarios);
+            hideButton(btnNavReportes);
         }
     }
 
     private void setAllSidebarButtonsVisible(boolean visible) {
-        for (Button b : List.of(btnNavDashboard, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas)) {
+        for (Button b : List.of(btnNavDashboard, btnNavReportes, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas)) {
             if (b != null) {
                 b.setVisible(visible);
                 b.setManaged(visible);
@@ -252,7 +255,7 @@ public class HomeController {
     }
 
     private void setActiveNavButton(Button activeButton) {
-        List<Button> buttons = List.of(btnNavDashboard, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas);
+        List<Button> buttons = List.of(btnNavDashboard, btnNavReportes, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas);
 
         for (Button b : buttons) {
             if (b != null) {
@@ -278,6 +281,12 @@ public class HomeController {
     private void onNavDashboard() {
         loadView("/view/DashboardView.fxml");
         setActiveNavButton(btnNavDashboard);
+    }
+
+    @FXML
+    private void onNavReportes() {
+        loadView("/view/ReportesView.fxml");
+        setActiveNavButton(btnNavReportes);
     }
 
     @FXML

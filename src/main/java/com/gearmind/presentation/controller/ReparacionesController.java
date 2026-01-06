@@ -176,11 +176,13 @@ public class ReparacionesController {
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnEditar = new Button("Editar");
             private final Button btnEstado = new Button("Estado");
-            private final HBox box = new HBox(8, btnEditar, btnEstado);
+            private final Button btnDocumentos = new Button("Docs");
+            private final HBox box = new HBox(8, btnEditar, btnEstado, btnDocumentos);
 
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
                 btnEstado.getStyleClass().add("tfx-icon-btn-secondary");
+                btnDocumentos.getStyleClass().add("tfx-icon-btn-secondary");
 
                 btnEditar.setOnAction(e -> {
                     Repair r = (getTableRow() != null) ? getTableRow().getItem() : null;
@@ -193,6 +195,13 @@ public class ReparacionesController {
                     Repair r = (getTableRow() != null) ? getTableRow().getItem() : null;
                     if (r != null) {
                         cambiarEstado(r);
+                    }
+                });
+
+                btnDocumentos.setOnAction(e -> {
+                    Repair r = (getTableRow() != null) ? getTableRow().getItem() : null;
+                    if (r != null) {
+                        openDocumentos(r);
                     }
                 });
             }
@@ -380,6 +389,30 @@ public class ReparacionesController {
                 new Alert(Alert.AlertType.ERROR, "No se pudo actualizar el estado: " + ex.getMessage()).showAndWait();
             }
         });
+    }
+
+    private void openDocumentos(Repair repair) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/DocumentosReparacionView.fxml"));
+            Parent root = loader.load();
+            DocumentosReparacionController controller = loader.getController();
+            controller.init(repair);
+
+            Stage stage = new Stage();
+            stage.setTitle("Documentos de reparación");
+            stage.initOwner(tblReparaciones.getScene().getWindow());
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.setResizable(false);
+
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+            stage.setScene(scene);
+            stage.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "No se pudieron abrir los documentos: " + ex.getMessage()).showAndWait();
+        }
     }
 
     private String mapStatusToLabel(RepairStatus status) {

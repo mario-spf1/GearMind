@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.ReportesController"
+      spacing="12"
+      styleClass="tfx-page">
+
+    <children>
+
+        <HBox spacing="8" styleClass="tfx-toolbar">
+            <children>
+                <VBox spacing="2">
+                    <children>
+                        <Label text="Reportes" styleClass="tfx-title-xl"/>
+                        <Label fx:id="lblHeaderInfo" text="Reportes personalizados" styleClass="tfx-subtitle"/>
+                    </children>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Generar reporte" onAction="#onGenerar" styleClass="tfx-btn-primary"/>
+                <Button text="Exportar PDF" onAction="#onExportarPdf" styleClass="tfx-btn-secondary"/>
+            </children>
+        </HBox>
+
+        <VBox spacing="8" styleClass="tfx-card">
+            <padding>
+                <Insets top="8" right="8" bottom="8" left="8"/>
+            </padding>
+            <children>
+                <Label text="Filtros" styleClass="tfx-muted"/>
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <Label text="Tipo" styleClass="tfx-filter-label"/>
+                    <ComboBox fx:id="cmbTipo" prefWidth="160" styleClass="tfx-filter-field"/>
+                    <Label text="Desde" styleClass="tfx-filter-label"/>
+                    <DatePicker fx:id="dpDesde" prefWidth="140"/>
+                    <Label text="Hasta" styleClass="tfx-filter-label"/>
+                    <DatePicker fx:id="dpHasta" prefWidth="140"/>
+                    <TextField fx:id="txtFiltro" promptText="Buscar" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                </HBox>
+            </children>
+        </VBox>
+
+        <VBox spacing="6" styleClass="tfx-card">
+            <children>
+                <TableView fx:id="tblReportes" fixedCellSize="28">
+                    <columns>
+                        <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="160"/>
+                        <TableColumn fx:id="colTipo" text="Tipo" prefWidth="120"/>
+                        <TableColumn fx:id="colDescripcion" text="Descripción"/>
+                        <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120"/>
+                        <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
+                        <TableColumn fx:id="colCantidad" text="Cantidad/Stock" prefWidth="130"/>
+                        <TableColumn fx:id="colTotal" text="Total" prefWidth="110"/>
+                    </columns>
+                </TableView>
+                <HBox>
+                    <children>
+                        <Label fx:id="lblResumen" styleClass="tfx-muted"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+
+    </children>
+</VBox>

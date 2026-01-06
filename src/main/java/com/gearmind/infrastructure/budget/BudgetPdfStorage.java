@@ -13,6 +13,6 @@ public final class BudgetPdfStorage {
     }
 
     public static Path baseDir() {
-        return Paths.get(System.getProperty("user.home"), "GearMind", "presupuestos");
+        return Paths.get(System.getProperty("user.home"), "GearMind", "documentos", "presupuestos");
     }
 }
