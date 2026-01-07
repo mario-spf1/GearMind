@@ -16,4 +16,6 @@ public interface UserRepository {
     User update(long id, long empresaId, String nombre, String email, String passwordHash, UserRole rol, boolean activo);
 
     void deactivate(long id, long empresaId);
+    
+    void delete(long id, long empresaId);
 }

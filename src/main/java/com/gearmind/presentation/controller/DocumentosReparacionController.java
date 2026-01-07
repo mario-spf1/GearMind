@@ -1,5 +1,6 @@
 package com.gearmind.presentation.controller;
 
+import com.gearmind.application.common.AuthContext;
 import com.gearmind.domain.repair.Repair;
 import com.gearmind.infrastructure.document.RepairDocumentStorage;
 import javafx.collections.FXCollections;
@@ -31,6 +32,8 @@ public class DocumentosReparacionController {
     private ListView<DocumentItem> lstDocumentos;
     @FXML
     private Button btnAbrir;
+    @FXML
+    private Button btnEliminar;
 
     private final ObservableList<DocumentItem> documentos = FXCollections.observableArrayList();
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -41,6 +44,11 @@ public class DocumentosReparacionController {
     private void initialize() {
         lstDocumentos.setItems(documentos);
         lstDocumentos.setPlaceholder(new Label("No hay documentos asociados."));
+        if (btnEliminar != null) {
+            boolean canDelete = AuthContext.isAdminOrSuperAdmin();
+            btnEliminar.setVisible(canDelete);
+            btnEliminar.setManaged(canDelete);
+        }
         lstDocumentos.setCellFactory(list -> new ListCell<>() {
             @Override
             protected void updateItem(DocumentItem item, boolean empty) {
@@ -94,6 +102,33 @@ public class DocumentosReparacionController {
     @FXML
     private void onAbrirDocumento() {
         abrirSeleccionado();
+    }
+
+    @FXML
+    private void onEliminarDocumento() {
+        if (!AuthContext.isAdminOrSuperAdmin()) {
+            return;
+        }
+        DocumentItem selected = lstDocumentos.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            new Alert(Alert.AlertType.WARNING, "Selecciona un documento para eliminar.").showAndWait();
+            return;
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Eliminar documento");
+        alert.setHeaderText("¿Eliminar documento?");
+        alert.setContentText("El documento \"" + selected.nombre + "\" se eliminará de forma permanente.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                try {
+                    Files.deleteIfExists(selected.path);
+                    loadDocuments();
+                } catch (IOException ex) {
+                    new Alert(Alert.AlertType.ERROR, "No se pudo eliminar el documento: " + ex.getMessage()).showAndWait();
+                }
+            }
+        });
     }
 
     @FXML

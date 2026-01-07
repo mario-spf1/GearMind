@@ -204,6 +204,22 @@ public class MySqlVehicleRepository implements VehicleRepository {
         }
     }
 
+    @Override
+    public void delete(long vehicleId, long empresaId) {
+        String sql = """
+            DELETE FROM vehiculo
+            WHERE id = ? AND empresa_id = ?
+            """;
+
+        try (Connection con = DataSourceFactory.getDataSource().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, vehicleId);
+            ps.setLong(2, empresaId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new InfrastructureException("Error al eliminar vehículo", e);
+        }
+    }
+
     private Vehicle mapRow(ResultSet rs) throws SQLException {
         Vehicle v = new Vehicle();
         v.setId(rs.getLong("id"));

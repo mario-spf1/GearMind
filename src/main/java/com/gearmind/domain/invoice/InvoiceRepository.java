@@ -14,4 +14,6 @@ public interface InvoiceRepository {
     List<InvoiceLine> findLinesByInvoiceId(long invoiceId);
 
     Invoice save(Invoice invoice, List<InvoiceLine> lines);
+
+    void delete(long invoiceId, long empresaId);
 }

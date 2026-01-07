@@ -2,6 +2,7 @@ package com.gearmind.presentation.controller;
 
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
+import com.gearmind.application.invoice.DeleteInvoiceUseCase;
 import com.gearmind.application.invoice.ListInvoicesUseCase;
 import com.gearmind.domain.invoice.Invoice;
 import com.gearmind.domain.invoice.InvoiceStatus;
@@ -75,10 +76,13 @@ public class FacturasController {
     private SmartTable<Invoice> smartTable;
 
     private final ListInvoicesUseCase listInvoicesUseCase;
+    private final DeleteInvoiceUseCase deleteInvoiceUseCase;
     private final DecimalFormat priceFormat = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.getDefault()));
 
     public FacturasController() {
-        this.listInvoicesUseCase = new ListInvoicesUseCase(new MySqlInvoiceRepository());
+        MySqlInvoiceRepository repo = new MySqlInvoiceRepository();
+        this.listInvoicesUseCase = new ListInvoicesUseCase(repo);
+        this.deleteInvoiceUseCase = new DeleteInvoiceUseCase(repo);
     }
 
     @FXML
@@ -136,11 +140,13 @@ public class FacturasController {
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnEditar = new Button("Editar");
             private final Button btnPdf = new Button("PDF");
-            private final HBox box = new HBox(8, btnEditar, btnPdf);
+            private final Button btnEliminar = new Button("Eliminar");
+            private final HBox box = new HBox(8, btnEditar, btnPdf, btnEliminar);
 
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
                 btnPdf.getStyleClass().add("tfx-icon-btn-secondary");
+                btnEliminar.getStyleClass().add("tfx-icon-btn-danger");
 
                 btnEditar.setOnAction(e -> {
                     Invoice invoice = getItem();
@@ -155,12 +161,25 @@ public class FacturasController {
                         openPdf(invoice.getId());
                     }
                 });
+
+                btnEliminar.setOnAction(e -> {
+                    Invoice invoice = getItem();
+                    if (invoice != null) {
+                        deleteInvoice(invoice);
+                    }
+                });
             }
 
             @Override
             protected void updateItem(Invoice invoice, boolean empty) {
                 super.updateItem(invoice, empty);
-                setGraphic(empty || invoice == null ? null : box);
+                if (empty || invoice == null) {
+                    setGraphic(null);
+                    return;
+                }
+                btnEliminar.setVisible(AuthContext.isAdminOrSuperAdmin());
+                btnEliminar.setManaged(AuthContext.isAdminOrSuperAdmin());
+                setGraphic(box);
             }
         });
         colAcciones.setSortable(false);
@@ -304,6 +323,24 @@ public class FacturasController {
             ex.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "No se pudo abrir el formulario de facturas: " + ex.getMessage()).showAndWait();
         }
+    }
+
+    private void deleteInvoice(Invoice invoice) {
+        if (!AuthContext.isAdminOrSuperAdmin()) {
+            return;
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Eliminar factura");
+        alert.setHeaderText("¿Eliminar factura?");
+        alert.setContentText("La factura \"" + invoice.getNumero() + "\" se eliminará de forma permanente.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                long empresaId = AuthContext.isSuperAdmin() ? invoice.getEmpresaId() : AuthContext.getEmpresaId();
+                deleteInvoiceUseCase.delete(invoice.getId(), empresaId);
+                loadInvoicesFromDb();
+            }
+        });
     }
 
     private void openPdf(long invoiceId) {

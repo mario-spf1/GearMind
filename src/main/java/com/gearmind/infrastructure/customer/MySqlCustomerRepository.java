@@ -16,7 +16,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
     public MySqlCustomerRepository() {
         this.dataSource = DataSourceFactory.getDataSource();
     }
-    
+
     @Override
     public List<Customer> findAll() {
         List<Customer> result = new ArrayList<>();
@@ -27,9 +27,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
                 ORDER BY nombre ASC
                 """;
 
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 result.add(mapRow(rs));
@@ -188,10 +186,26 @@ public class MySqlCustomerRepository implements CustomerRepository {
         }
     }
 
+    @Override
+    public void delete(long customerId, long empresaId) {
+        String sql = """
+                DELETE FROM cliente
+                WHERE id = ? AND empresa_id = ?
+                """;
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, customerId);
+            ps.setLong(2, empresaId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error eliminando cliente " + customerId, e);
+        }
+    }
+
     private Customer mapRow(ResultSet rs) throws SQLException {
         return new Customer(rs.getLong("id"), rs.getLong("empresa_id"), rs.getString("nombre"), rs.getString("email"), rs.getString("telefono"), rs.getString("notas"), rs.getBoolean("activo"));
     }
-    
+
     @Override
     public List<Customer> findAllWithEmpresa() {
         List<Customer> result = new ArrayList<>();
@@ -212,7 +226,8 @@ public class MySqlCustomerRepository implements CustomerRepository {
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                Customer c = new Customer(rs.getLong("id"), rs.getLong("empresa_id"), rs.getString("nombre"), rs.getString("email"), rs.getString("telefono"), rs.getString("notas"), rs.getBoolean("activo")); c.setEmpresaNombre(rs.getString("empresa_nombre"));
+                Customer c = new Customer(rs.getLong("id"), rs.getLong("empresa_id"), rs.getString("nombre"), rs.getString("email"), rs.getString("telefono"), rs.getString("notas"), rs.getBoolean("activo"));
+                c.setEmpresaNombre(rs.getString("empresa_nombre"));
                 result.add(c);
             }
 

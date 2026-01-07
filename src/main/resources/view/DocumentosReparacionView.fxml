@@ -20,6 +20,7 @@
                 <HBox spacing="8" alignment="CENTER_RIGHT">
                     <children>
                         <Button text="Abrir" fx:id="btnAbrir" onAction="#onAbrirDocumento" styleClass="tfx-btn-secondary"/>
+                        <Button text="Eliminar" fx:id="btnEliminar" onAction="#onEliminarDocumento" styleClass="tfx-btn-danger"/>
                         <Button text="Añadir documento" onAction="#onAgregarDocumento" styleClass="tfx-btn-primary"/>
                         <Button text="Cerrar" onAction="#onCerrar" styleClass="tfx-btn-ghost"/>
                     </children>

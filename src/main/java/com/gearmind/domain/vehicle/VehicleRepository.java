@@ -14,4 +14,6 @@ public interface VehicleRepository {
     Vehicle save(Vehicle vehicle);
 
     boolean existsMatriculaInEmpresa(Long empresaId, String matricula, Long excludeId);
+
+    void delete(long vehicleId, long empresaId);
 }

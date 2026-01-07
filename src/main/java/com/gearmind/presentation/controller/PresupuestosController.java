@@ -1,5 +1,6 @@
 package com.gearmind.presentation.controller;
 
+import com.gearmind.application.budget.DeleteBudgetUseCase;
 import com.gearmind.application.budget.ListBudgetsUseCase;
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
@@ -75,10 +76,13 @@ public class PresupuestosController {
     private SmartTable<Budget> smartTable;
 
     private final ListBudgetsUseCase listBudgetsUseCase;
+    private final DeleteBudgetUseCase deleteBudgetUseCase;
     private final DecimalFormat priceFormat = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.getDefault()));
 
     public PresupuestosController() {
-        this.listBudgetsUseCase = new ListBudgetsUseCase(new MySqlBudgetRepository());
+        MySqlBudgetRepository repo = new MySqlBudgetRepository();
+        this.listBudgetsUseCase = new ListBudgetsUseCase(repo);
+        this.deleteBudgetUseCase = new DeleteBudgetUseCase(repo);
     }
 
     @FXML
@@ -135,11 +139,13 @@ public class PresupuestosController {
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnEditar = new Button("Editar");
             private final Button btnPdf = new Button("PDF");
-            private final HBox box = new HBox(8, btnEditar, btnPdf);
+            private final Button btnEliminar = new Button("Eliminar");
+            private final HBox box = new HBox(8, btnEditar, btnPdf, btnEliminar);
 
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
                 btnPdf.getStyleClass().add("tfx-icon-btn-secondary");
+                btnEliminar.getStyleClass().add("tfx-icon-btn-danger");
 
                 btnEditar.setOnAction(e -> {
                     Budget budget = getItem();
@@ -154,12 +160,25 @@ public class PresupuestosController {
                         openPdf(budget.getId());
                     }
                 });
+
+                btnEliminar.setOnAction(e -> {
+                    Budget budget = getItem();
+                    if (budget != null) {
+                        deleteBudget(budget);
+                    }
+                });
             }
 
             @Override
             protected void updateItem(Budget budget, boolean empty) {
                 super.updateItem(budget, empty);
-                setGraphic(empty || budget == null ? null : box);
+                if (empty || budget == null) {
+                    setGraphic(null);
+                    return;
+                }
+                btnEliminar.setVisible(AuthContext.isAdminOrSuperAdmin());
+                btnEliminar.setManaged(AuthContext.isAdminOrSuperAdmin());
+                setGraphic(box);
             }
         });
         colAcciones.setSortable(false);
@@ -249,13 +268,7 @@ public class PresupuestosController {
         masterData.setAll(budgets);
 
         if (isSuperAdmin && filterEmpresaCombo != null) {
-            var empresas = budgets.stream()
-                    .map(Budget::getEmpresaNombre)
-                    .filter(s -> s != null && !s.isBlank())
-                    .distinct()
-                    .sorted(String.CASE_INSENSITIVE_ORDER)
-                    .toList();
-
+            var empresas = budgets.stream().map(Budget::getEmpresaNombre).filter(s -> s != null && !s.isBlank()).distinct().sorted(String.CASE_INSENSITIVE_ORDER).toList();
             filterEmpresaCombo.setItems(FXCollections.observableArrayList(empresas));
             filterEmpresaCombo.getItems().add(0, "Todas");
             filterEmpresaCombo.getSelectionModel().select("Todas");
@@ -309,6 +322,24 @@ public class PresupuestosController {
             ex.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "No se pudo abrir el formulario de presupuesto: " + ex.getMessage()).showAndWait();
         }
+    }
+
+    private void deleteBudget(Budget budget) {
+        if (!AuthContext.isAdminOrSuperAdmin()) {
+            return;
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Eliminar presupuesto");
+        alert.setHeaderText("¿Eliminar presupuesto?");
+        alert.setContentText("El presupuesto seleccionado se eliminará de forma permanente.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                long empresaId = AuthContext.isSuperAdmin() ? budget.getEmpresaId() : AuthContext.getEmpresaId();
+                deleteBudgetUseCase.delete(budget.getId(), empresaId);
+                loadBudgetsFromDb();
+            }
+        });
     }
 
     private void openPdf(long budgetId) {

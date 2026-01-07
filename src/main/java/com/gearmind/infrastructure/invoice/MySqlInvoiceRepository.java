@@ -203,6 +203,44 @@ public class MySqlInvoiceRepository implements InvoiceRepository {
         return invoice;
     }
 
+    @Override
+    public void delete(long invoiceId, long empresaId) {
+        String deleteInvoiceSql = """
+                DELETE FROM factura
+                WHERE id = ? AND empresa_id = ?
+                """;
+
+        Connection cn = null;
+        try {
+            cn = dataSource.getConnection();
+            cn.setAutoCommit(false);
+            deleteLines(invoiceId, cn);
+            try (PreparedStatement ps = cn.prepareStatement(deleteInvoiceSql)) {
+                ps.setLong(1, invoiceId);
+                ps.setLong(2, empresaId);
+                ps.executeUpdate();
+            }
+            cn.commit();
+        } catch (SQLException e) {
+            if (cn != null) {
+                try {
+                    cn.rollback();
+                } catch (SQLException rollbackEx) {
+                    e.addSuppressed(rollbackEx);
+                }
+            }
+            throw new RuntimeException("Error al eliminar factura", e);
+        } finally {
+            if (cn != null) {
+                try {
+                    cn.setAutoCommit(true);
+                    cn.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
+    }
+
     private long insertInvoice(Invoice invoice) {
         String sql = """
                 INSERT INTO factura
@@ -279,6 +317,14 @@ public class MySqlInvoiceRepository implements InvoiceRepository {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Error al limpiar líneas de la factura", e);
+        }
+    }
+
+    private void deleteLines(long invoiceId, Connection connection) throws SQLException {
+        String sql = "DELETE FROM factura_linea WHERE factura_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, invoiceId);
+            ps.executeUpdate();
         }
     }
 

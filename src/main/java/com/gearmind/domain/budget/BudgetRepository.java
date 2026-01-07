@@ -14,4 +14,6 @@ public interface BudgetRepository {
     List<BudgetLine> findLinesByBudgetId(long budgetId);
 
     Budget save(Budget budget, List<BudgetLine> lines);
+
+    void delete(long budgetId, long empresaId);
 }

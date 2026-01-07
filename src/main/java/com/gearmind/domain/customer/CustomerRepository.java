@@ -19,6 +19,8 @@ public interface CustomerRepository {
     void deactivate(long customerId, long empresaId);
 
     void activate(long customerId, long empresaId);
-    
+
     List<Customer> findAllWithEmpresa();
+
+    void delete(long customerId, long empresaId);
 }

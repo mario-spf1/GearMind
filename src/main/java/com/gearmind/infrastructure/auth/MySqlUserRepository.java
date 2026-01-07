@@ -177,6 +177,22 @@ public class MySqlUserRepository implements UserRepository {
         }
     }
 
+    @Override
+    public void delete(long id, long empresaId) {
+        String sql = """
+                DELETE FROM usuario
+                WHERE id = ? AND empresa_id = ?
+                """;
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            ps.setLong(2, empresaId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error eliminando usuario", e);
+        }
+    }
+
     private User mapRow(ResultSet rs) throws SQLException {
         long id = rs.getLong("id");
         long empresaId = rs.getLong("empresa_id");

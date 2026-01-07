@@ -3,6 +3,7 @@ package com.gearmind.presentation.controller;
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
 import com.gearmind.application.user.DeactivateUserUseCase;
+import com.gearmind.application.user.DeleteUserUseCase;
 import com.gearmind.application.user.ListUsersUseCase;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRole;
@@ -70,6 +71,7 @@ public class UsuariosController {
     private final MySqlUserRepository repo = new MySqlUserRepository();
     private final ListUsersUseCase listUsersUseCase = new ListUsersUseCase(repo);
     private final DeactivateUserUseCase deactivateUserUseCase = new DeactivateUserUseCase(repo);
+    private final DeleteUserUseCase deleteUserUseCase = new DeleteUserUseCase(repo);
     private final DataSource dataSource = DataSourceFactory.getDataSource();
     private final Map<Long, String> empresaNombreById = new HashMap<>();
     private final List<Long> empresaIdsOrdenadas = new ArrayList<>();
@@ -116,7 +118,7 @@ public class UsuariosController {
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         colRol.setCellValueFactory(u -> new SimpleStringProperty(u.getValue().getRol().name()));
-        colEstado.setCellValueFactory(u-> new ReadOnlyObjectWrapper<>(u.getValue().isActivo() ? "Activo" : "Inactivo"));
+        colEstado.setCellValueFactory(u -> new ReadOnlyObjectWrapper<>(u.getValue().isActivo() ? "Activo" : "Inactivo"));
         colEstado.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -213,7 +215,7 @@ public class UsuariosController {
         }
 
         if (isSuperAdmin && filterEmpresaCombo != null) {
-            
+
             List<String> nombres = empresaIdsOrdenadas.stream().map(id -> empresaNombreById.getOrDefault(id, "")).filter(s -> s != null && !s.isBlank()).distinct().sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
             List<String> items = new ArrayList<>();
             items.add("Todas");
@@ -241,14 +243,17 @@ public class UsuariosController {
 
             private final Button btnEditar = new Button("Editar");
             private final Button btnToggle = new Button();
-            private final HBox box = new HBox(8, btnEditar, btnToggle);
+            private final Button btnEliminar = new Button("Eliminar");
+            private final HBox box = new HBox(8, btnEditar, btnToggle, btnEliminar);
 
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
                 btnToggle.getStyleClass().add("tfx-icon-btn");
+                btnEliminar.getStyleClass().add("tfx-icon-btn-danger");
 
                 btnEditar.setTooltip(new Tooltip("Editar usuario"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
+                btnEliminar.setTooltip(new Tooltip("Eliminar usuario"));
 
                 btnEditar.setOnAction(e -> {
                     User u = getItem();
@@ -261,6 +266,13 @@ public class UsuariosController {
                     User u = getItem();
                     if (u != null) {
                         toggleActivo(u);
+                    }
+                });
+
+                btnEliminar.setOnAction(e -> {
+                    User u = getItem();
+                    if (u != null) {
+                        deleteUsuario(u);
                     }
                 });
             }
@@ -283,6 +295,8 @@ public class UsuariosController {
                     btnToggle.getStyleClass().add("tfx-icon-btn-success");
                 }
 
+                btnEliminar.setVisible(AuthContext.isAdminOrSuperAdmin());
+                btnEliminar.setManaged(AuthContext.isAdminOrSuperAdmin());
                 setGraphic(box);
             }
         });
@@ -353,6 +367,24 @@ public class UsuariosController {
             ex.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "No se pudo cambiar el estado: " + ex.getMessage()).showAndWait();
         }
+    }
+
+    private void deleteUsuario(User user) {
+        if (!AuthContext.isAdminOrSuperAdmin()) {
+            return;
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Eliminar usuario");
+        alert.setHeaderText("¿Eliminar usuario?");
+        alert.setContentText("El usuario \"" + user.getNombre() + "\" se eliminará de forma permanente.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                long empresaId = AuthContext.isSuperAdmin() ? user.getEmpresaId() : SessionManager.getInstance().getCurrentEmpresaId();
+                deleteUserUseCase.delete(user.getId(), empresaId);
+                cargarUsuarios();
+            }
+        });
     }
 
     private void openUsuarioForm(User user) {

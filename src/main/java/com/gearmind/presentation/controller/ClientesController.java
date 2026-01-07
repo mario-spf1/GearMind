@@ -4,6 +4,7 @@ import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
 import com.gearmind.application.customer.ActivateCustomerUseCase;
 import com.gearmind.application.customer.DeactivateCustomerUseCase;
+import com.gearmind.application.customer.DeleteCustomerUseCase;
 import com.gearmind.application.customer.ListCustomersUseCase;
 import com.gearmind.domain.customer.Customer;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
@@ -75,6 +76,7 @@ public class ClientesController {
     private final ListCustomersUseCase listCustomersUseCase;
     private final DeactivateCustomerUseCase deactivateCustomerUseCase;
     private final ActivateCustomerUseCase activateCustomerUseCase;
+    private final DeleteCustomerUseCase deleteCustomerUseCase;
 
     private final ObservableList<Customer> masterData = FXCollections.observableArrayList();
     private SmartTable<Customer> smartTable;
@@ -84,6 +86,7 @@ public class ClientesController {
         this.listCustomersUseCase = new ListCustomersUseCase(repo);
         this.deactivateCustomerUseCase = new DeactivateCustomerUseCase(repo);
         this.activateCustomerUseCase = new ActivateCustomerUseCase(repo);
+        this.deleteCustomerUseCase = new DeleteCustomerUseCase(repo);
     }
 
     @FXML
@@ -157,14 +160,17 @@ public class ClientesController {
 
             private final Button btnEditar = new Button("Editar");
             private final Button btnToggle = new Button();
-            private final HBox box = new HBox(8, btnEditar, btnToggle);
+            private final Button btnEliminar = new Button("Eliminar");
+            private final HBox box = new HBox(8, btnEditar, btnToggle, btnEliminar);
 
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
                 btnToggle.getStyleClass().add("tfx-icon-btn");
+                btnEliminar.getStyleClass().add("tfx-icon-btn-danger");
 
                 btnEditar.setTooltip(new Tooltip("Editar cliente"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
+                btnEliminar.setTooltip(new Tooltip("Eliminar cliente"));
 
                 btnEditar.setOnAction(e -> {
                     Customer c = getItem();
@@ -177,6 +183,13 @@ public class ClientesController {
                     Customer c = getItem();
                     if (c != null) {
                         toggleCustomerActive(c);
+                    }
+                });
+
+                btnEliminar.setOnAction(e -> {
+                    Customer c = getItem();
+                    if (c != null) {
+                        deleteCustomer(c);
                     }
                 });
             }
@@ -201,12 +214,13 @@ public class ClientesController {
                     btnToggle.setTooltip(new Tooltip("Activar cliente"));
                 }
 
+                btnEliminar.setVisible(AuthContext.isAdminOrSuperAdmin());
+                btnEliminar.setManaged(AuthContext.isAdminOrSuperAdmin());
                 setGraphic(box);
             }
         });
         colAcciones.setSortable(false);
 
-        // ===== Page Size =====
         if (cmbPageSize != null) {
             cmbPageSize.setItems(FXCollections.observableArrayList(5, 15, 25, 0));
             cmbPageSize.getSelectionModel().select(Integer.valueOf(15));
@@ -247,9 +261,7 @@ public class ClientesController {
             });
         }
 
-        // ===== SmartTable =====
         smartTable = new SmartTable<>(tblClientes, masterData, null, cmbPageSize, lblResumen, "clientes", null);
-
         tblClientes.setFixedCellSize(28);
         smartTable.setAfterRefreshCallback(() -> {
             int rows = Math.max(smartTable.getLastVisibleCount(), 1);
@@ -259,7 +271,6 @@ public class ClientesController {
             tblClientes.setMinHeight(Region.USE_PREF_SIZE);
         });
 
-        // ===== Filtros =====
         smartTable.addColumnFilter(filterNombreField, (c, text) -> safe(c.getNombre()).contains(text));
         smartTable.addColumnFilter(filterTelefonoField, (c, text) -> safe(c.getTelefono()).contains(text));
         smartTable.addColumnFilter(filterEmailField, (c, text) -> safe(c.getEmail()).contains(text));
@@ -277,7 +288,6 @@ public class ClientesController {
         }
 
         if (isSuperAdmin && filterEmpresaCombo != null) {
-            // OJO: el filtro se define UNA sola vez aquí
             smartTable.addColumnFilter(filterEmpresaCombo, (c, selected) -> {
                 if (selected == null || "Todas".equalsIgnoreCase(selected)) {
                     return true;
@@ -304,15 +314,8 @@ public class ClientesController {
         clientes.sort(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER));
         masterData.setAll(clientes);
 
-        // Cargar opciones de empresa SOLO para SuperAdmin (sin re-addColumnFilter)
         if (isSuperAdmin && filterEmpresaCombo != null) {
-            var empresas = clientes.stream()
-                    .map(Customer::getEmpresaNombre)
-                    .filter(s -> s != null && !s.isBlank())
-                    .distinct()
-                    .sorted(String.CASE_INSENSITIVE_ORDER)
-                    .toList();
-
+            var empresas = clientes.stream().map(Customer::getEmpresaNombre).filter(s -> s != null && !s.isBlank()).distinct().sorted(String.CASE_INSENSITIVE_ORDER).toList();
             filterEmpresaCombo.setItems(FXCollections.observableArrayList(empresas));
             filterEmpresaCombo.getItems().add(0, "Todas");
             filterEmpresaCombo.getSelectionModel().select("Todas");
@@ -368,6 +371,23 @@ public class ClientesController {
         alert.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
                 activateCustomerUseCase.activate(customer.getId(), customer.getEmpresaId());
+                loadClientesFromDb();
+            }
+        });
+    }
+
+    private void deleteCustomer(Customer customer) {
+        if (!AuthContext.isAdminOrSuperAdmin()) {
+            return;
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Eliminar cliente");
+        alert.setHeaderText("¿Eliminar cliente?");
+        alert.setContentText("El cliente \"" + customer.getNombre() + "\" se eliminará de forma permanente.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                deleteCustomerUseCase.delete(customer.getId(), customer.getEmpresaId());
                 loadClientesFromDb();
             }
         });

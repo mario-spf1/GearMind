@@ -200,6 +200,44 @@ public class MySqlBudgetRepository implements BudgetRepository {
         return budget;
     }
 
+    @Override
+    public void delete(long budgetId, long empresaId) {
+        String deleteBudgetSql = """
+                DELETE FROM presupuesto
+                WHERE id = ? AND empresa_id = ?
+                """;
+
+        Connection cn = null;
+        try {
+            cn = dataSource.getConnection();
+            cn.setAutoCommit(false);
+            deleteLines(budgetId, cn);
+            try (PreparedStatement ps = cn.prepareStatement(deleteBudgetSql)) {
+                ps.setLong(1, budgetId);
+                ps.setLong(2, empresaId);
+                ps.executeUpdate();
+            }
+            cn.commit();
+        } catch (SQLException e) {
+            if (cn != null) {
+                try {
+                    cn.rollback();
+                } catch (SQLException rollbackEx) {
+                    e.addSuppressed(rollbackEx);
+                }
+            }
+            throw new RuntimeException("Error al eliminar presupuesto", e);
+        } finally {
+            if (cn != null) {
+                try {
+                    cn.setAutoCommit(true);
+                    cn.close();
+                } catch (SQLException e) {
+                }
+            }
+        }
+    }
+
     private long insertBudget(Budget budget) {
         String sql = """
                 INSERT INTO presupuesto
@@ -271,6 +309,14 @@ public class MySqlBudgetRepository implements BudgetRepository {
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Error al limpiar líneas del presupuesto", e);
+        }
+    }
+
+    private void deleteLines(long budgetId, Connection connection) throws SQLException {
+        String sql = "DELETE FROM presupuesto_linea WHERE presupuesto_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, budgetId);
+            ps.executeUpdate();
         }
     }
 

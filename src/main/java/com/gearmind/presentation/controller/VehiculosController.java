@@ -1,6 +1,7 @@
 package com.gearmind.presentation.controller;
 
 import com.gearmind.application.common.AuthContext;
+import com.gearmind.application.vehicle.DeleteVehicleUseCase;
 import com.gearmind.application.vehicle.ListVehiclesUseCase;
 import com.gearmind.domain.vehicle.Vehicle;
 import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
@@ -72,9 +73,12 @@ public class VehiculosController {
     private SmartTable<Vehicle> smartTable;
 
     private final ListVehiclesUseCase listVehiclesUseCase;
+    private final DeleteVehicleUseCase deleteVehicleUseCase;
 
     public VehiculosController() {
-        this.listVehiclesUseCase = new ListVehiclesUseCase(new MySqlVehicleRepository());
+        MySqlVehicleRepository repo = new MySqlVehicleRepository();
+        this.listVehiclesUseCase = new ListVehiclesUseCase(repo);
+        this.deleteVehicleUseCase = new DeleteVehicleUseCase(repo);
     }
 
     @FXML
@@ -125,13 +129,24 @@ public class VehiculosController {
                     }
                 });
 
-                btnEliminar.setOnAction(e -> showWarning("Eliminar vehículo pendiente de implementación.\n\n" + "Más adelante se comprobará si tiene datos asociados antes de borrarlo."));
+                btnEliminar.setOnAction(e -> {
+                    Vehicle v = getItem();
+                    if (v != null) {
+                        deleteVehiculo(v);
+                    }
+                });
             }
 
             @Override
             protected void updateItem(Vehicle vehiculo, boolean empty) {
                 super.updateItem(vehiculo, empty);
-                setGraphic(empty || vehiculo == null ? null : box);
+                if (empty || vehiculo == null) {
+                    setGraphic(null);
+                    return;
+                }
+                btnEliminar.setVisible(AuthContext.isAdminOrSuperAdmin());
+                btnEliminar.setManaged(AuthContext.isAdminOrSuperAdmin());
+                setGraphic(box);
             }
         });
         colAcciones.setSortable(false);
@@ -340,16 +355,30 @@ public class VehiculosController {
         });
     }
 
+    private void deleteVehiculo(Vehicle vehicle) {
+        if (!AuthContext.isAdminOrSuperAdmin()) {
+            return;
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Eliminar vehículo");
+        alert.setHeaderText("¿Eliminar vehículo?");
+        alert.setContentText("El vehículo \"" + vehicle.getMatricula() + "\" se eliminará de forma permanente.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                long empresaId = AuthContext.isSuperAdmin() ? vehicle.getEmpresaId() : AuthContext.getEmpresaId();
+                deleteVehicleUseCase.delete(vehicle.getId(), empresaId);
+                loadVehiculosFromDb();
+            }
+        });
+    }
+
     private String safe(String s) {
         return s == null ? "" : s.toLowerCase(Locale.ROOT);
     }
 
     private String safeRaw(String s) {
         return s == null ? "" : s;
-    }
-
-    private void showWarning(String message) {
-        new Alert(Alert.AlertType.WARNING, message, ButtonType.OK).showAndWait();
     }
 
     private void showError(String message) {
