@@ -36,6 +36,8 @@ public class HomeController {
     @FXML
     private Button btnUserMenu;
     @FXML
+    private Button btnFichajes;
+    @FXML
     private Button btnNavDashboard;
     @FXML
     private Button btnNavReportes;
@@ -176,36 +178,14 @@ public class HomeController {
     }
 
     private void onManageAccount() {
-        try {
-            User current = AuthContext.getCurrentUser();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/UsuarioFormView.fxml"));
-            Parent rootForm = loader.load();
-            UsuarioFormController controller = loader.getController();
-            controller.initForSelfEdit(current);
-            Stage stage = new Stage();
-            stage.setTitle("Mi cuenta");
-            stage.initOwner(root.getScene().getWindow());
-            stage.initModality(javafx.stage.Modality.WINDOW_MODAL);
-            stage.setResizable(false);
-            Scene scene = new Scene(rootForm);
-            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
-            stage.setScene(scene);
-            stage.showAndWait();
+        loadView("/view/UsuarioPanelView.fxml");
+        setActiveNavButton(null);
+    }
 
-            if (controller.isSaved()) {
-                var repo = new com.gearmind.infrastructure.auth.MySqlUserRepository();
-                repo.findById(current.getId()).ifPresent(updated -> {
-                    String empresaNombre = SessionManager.getInstance().getCurrentEmpresaNombre();
-                    SessionManager.getInstance().startSession(updated, empresaNombre);
-                    setupFromAuthContext();
-                });
-            }
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            new Alert(Alert.AlertType.ERROR, "No se pudo abrir 'Mi cuenta': " + ex.getMessage()).showAndWait();
-        }
+    @FXML
+    private void onFichajes() {
+        loadView("/view/FichajesView.fxml");
+        setActiveNavButton(null);
     }
 
     private void onLogout() {
