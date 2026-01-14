@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.FichajesController"
+      spacing="12"
+      styleClass="tfx-page">
+
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <children>
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="Fichajes" styleClass="tfx-title-xl"/>
+                        <Label fx:id="lblSubtitulo" text="Registro de jornada laboral" styleClass="tfx-subtitle"/>
+                    </children>
+                </VBox>
+                <Label fx:id="lblTiempoActual" text="Tiempo: 00:00 h" styleClass="tfx-muted"/>
+                <Button fx:id="btnSesionLaboral" text="Comenzar sesión laboral" onAction="#onSesionLaboral" styleClass="button tfx-btn-primary"/>
+            </children>
+        </HBox>
+
+        <HBox fx:id="boxFiltros" spacing="10" alignment="CENTER_LEFT">
+            <children>
+                <Label fx:id="lblEmpresaFiltro" text="Empresa:"/>
+                <ComboBox fx:id="cmbEmpresa" prefWidth="220"/>
+                <Label fx:id="lblEmpleadoFiltro" text="Empleado:"/>
+                <ComboBox fx:id="cmbEmpleado" prefWidth="240"/>
+            </children>
+        </HBox>
+
+        <TableView fx:id="tblFichajes" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="160"/>
+                <TableColumn fx:id="colMovimiento" text="Movimiento" prefWidth="140"/>
+                <TableColumn fx:id="colEmpleado" text="Empleado" prefWidth="220"/>
+                <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="220"/>
+            </columns>
+        </TableView>
+    </children>
+
+    <padding>
+        <Insets top="12" right="12" bottom="12" left="12"/>
+    </padding>
+</VBox>

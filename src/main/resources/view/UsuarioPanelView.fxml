@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.UsuarioPanelController"
+      spacing="16"
+      styleClass="tfx-page">
+
+    <children>
+
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <children>
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="Mi panel" styleClass="tfx-title-xl"/>
+                        <Label fx:id="lblUsuarioNombre" text="Usuario" styleClass="tfx-subtitle"/>
+                    </children>
+                </VBox>
+                <Button fx:id="btnEditarUsuario" text="Editar usuario" onAction="#onEditarUsuario" styleClass="button tfx-btn-primary"/>
+            </children>
+        </HBox>
+
+        <HBox spacing="12">
+            <children>
+                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="Tareas asignadas" styleClass="tfx-kpi-title"/>
+                        <Label fx:id="lblTareasAsignadas" text="0" styleClass="tfx-kpi-number"/>
+                        <Label text="Tareas actuales asignadas a ti" styleClass="tfx-muted"/>
+                    </children>
+                </VBox>
+                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="Reparaciones" styleClass="tfx-kpi-title"/>
+                        <Label fx:id="lblReparaciones" text="0" styleClass="tfx-kpi-number"/>
+                        <Label text="Reparaciones activas de la empresa" styleClass="tfx-muted"/>
+                    </children>
+                </VBox>
+                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label text="Tiempo trabajado" styleClass="tfx-kpi-title"/>
+                        <Label fx:id="lblTiempoTrabajado" text="—" styleClass="tfx-kpi-number"/>
+                        <Label text="Calculado desde tu último fichaje" styleClass="tfx-muted"/>
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+
+        <VBox spacing="10" styleClass="tfx-card">
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="12"/>
+            </padding>
+            <children>
+                <Label text="Resumen de cuenta"/>
+                <Label fx:id="lblEmail" text="Email" styleClass="tfx-muted"/>
+                <Label fx:id="lblRol" text="Rol" styleClass="tfx-muted"/>
+                <Label fx:id="lblEmpresa" text="Empresa" styleClass="tfx-muted"/>
+            </children>
+        </VBox>
+
+    </children>
+</VBox>
