@@ -10,8 +10,11 @@ import com.gearmind.domain.message.InternalMessage;
 import com.gearmind.domain.message.MessageRepository;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRole;
+import com.gearmind.domain.user.UserRepository;
+import com.gearmind.infrastructure.auth.MySqlUserRepository;
 import com.gearmind.infrastructure.message.MySqlMessageRepository;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -82,11 +85,13 @@ public class HomeController {
     private ListView<InternalMessage> messageList;
     private TextField messageInput;
     private Button btnSendMessage;
+    private ComboBox<UserOption> cmbNewConversation;
     private ConversationSummary activeConversation;
     private final MessageRepository messageRepository = new MySqlMessageRepository();
     private final ListConversationsUseCase listConversationsUseCase = new ListConversationsUseCase(messageRepository);
     private final ListMessagesUseCase listMessagesUseCase = new ListMessagesUseCase(messageRepository);
     private final SendMessageUseCase sendMessageUseCase = new SendMessageUseCase(messageRepository);
+    private final UserRepository userRepository = new MySqlUserRepository();
 
     @FXML
     public void initialize() {
@@ -188,6 +193,33 @@ public class HomeController {
             return;
         }
 
+        cmbNewConversation = new ComboBox<>();
+        cmbNewConversation.getStyleClass().add("tfx-chat-combo");
+        cmbNewConversation.setPromptText("Nuevo chat...");
+        cmbNewConversation.setMaxWidth(Double.MAX_VALUE);
+        cmbNewConversation.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(UserOption item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.nombre);
+            }
+        });
+        cmbNewConversation.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(UserOption item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.nombre);
+            }
+        });
+        cmbNewConversation.valueProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null) {
+                return;
+            }
+            activeConversation = new ConversationSummary(newValue.id, newValue.nombre, null, null);
+            conversationList.getSelectionModel().clearSelection();
+            loadMessages(activeConversation);
+        });
+
         conversationList = new ListView<>();
         conversationList.getStyleClass().add("tfx-chat-list");
         conversationList.setPlaceholder(new Label("Sin conversaciones"));
@@ -256,14 +288,17 @@ public class HomeController {
         VBox chatPane = new VBox(8, messageList, inputBox);
         VBox.setVgrow(messageList, Priority.ALWAYS);
 
-        HBox content = new HBox(12, conversationList, chatPane);
+        VBox conversationPane = new VBox(8, cmbNewConversation, conversationList);
+        VBox.setVgrow(conversationList, Priority.ALWAYS);
+
+        HBox content = new HBox(12, conversationPane, chatPane);
         content.getStyleClass().add("tfx-chat-popup");
         HBox.setHgrow(chatPane, Priority.ALWAYS);
 
         CustomMenuItem item = new CustomMenuItem(content, false);
         item.setHideOnClick(false);
         messagesMenu = new ContextMenu(item);
-        messagesMenu.setAutoHide(true);
+        messagesMenu.setAutoHide(false);
 
         conversationList.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
             activeConversation = newValue;
@@ -323,12 +358,20 @@ public class HomeController {
             long userId = AuthContext.getCurrentUser().getId();
             List<ConversationSummary> conversations = listConversationsUseCase.execute(empresaId, userId);
             conversationList.setItems(FXCollections.observableArrayList(conversations));
+            cmbNewConversation.setItems(loadAvailableUsers(empresaId, userId));
 
             if (activeConversation != null) {
                 conversations.stream()
                         .filter(c -> c.getContactoId() == activeConversation.getContactoId())
                         .findFirst()
-                        .ifPresent(conversationList.getSelectionModel()::select);
+                        .ifPresentOrElse(conversationList.getSelectionModel()::select, () -> {
+                            UserOption option = cmbNewConversation.getItems()
+                                    .stream()
+                                    .filter(user -> user.id == activeConversation.getContactoId())
+                                    .findFirst()
+                                    .orElse(null);
+                            cmbNewConversation.getSelectionModel().select(option);
+                        });
             }
         } catch (RuntimeException ex) {
             showChatError("No se pudieron cargar las conversaciones", ex);
@@ -389,6 +432,22 @@ public class HomeController {
         alert.setHeaderText(header);
         alert.setContentText(ex.getMessage());
         alert.showAndWait();
+    }
+
+    private ObservableList<UserOption> loadAvailableUsers(long empresaId, long userId) {
+        List<UserOption> options = userRepository.findByEmpresaId(empresaId).stream().filter(User::isActivo).filter(user -> user.getId() != userId).map(user -> new UserOption(user.getId(), user.getNombre())).toList();
+        return FXCollections.observableArrayList(options);
+    }
+
+    private static class UserOption {
+
+        private final long id;
+        private final String nombre;
+
+        private UserOption(long id, String nombre) {
+            this.id = id;
+            this.nombre = nombre;
+        }
     }
 
     private void onManageAccount() {
