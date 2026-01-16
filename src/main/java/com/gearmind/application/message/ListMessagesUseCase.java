@@ -17,3 +17,4 @@ public class ListMessagesUseCase {
         return repository.findMessages(empresaId, userId, otherUserId);
     }
 }
+ 
