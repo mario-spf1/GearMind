@@ -382,3 +382,11 @@
     -fx-padding: 8 14;
 }
 
+.tfx-chat-combo {
+    -fx-background-color: #0f1116;
+    -fx-text-fill: -tfx-text;
+    -fx-background-radius: 10;
+    -fx-border-color: -tfx-border;
+    -fx-border-radius: 10;
+    -fx-padding: 4 8;
+}
