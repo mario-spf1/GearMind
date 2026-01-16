@@ -276,25 +276,19 @@ public class HomeController {
         messageInput.setPromptText("Escribe un mensaje...");
         messageInput.getStyleClass().add("tfx-chat-input-field");
         messageInput.setOnAction(e -> sendMessage());
-
         btnSendMessage = new Button("Enviar");
         btnSendMessage.getStyleClass().addAll("button", "tfx-btn-primary", "tfx-chat-send");
         btnSendMessage.setOnAction(e -> sendMessage());
-
         HBox inputBox = new HBox(8, messageInput, btnSendMessage);
         inputBox.getStyleClass().add("tfx-chat-input");
         HBox.setHgrow(messageInput, Priority.ALWAYS);
-
         VBox chatPane = new VBox(8, messageList, inputBox);
         VBox.setVgrow(messageList, Priority.ALWAYS);
-
         VBox conversationPane = new VBox(8, cmbNewConversation, conversationList);
         VBox.setVgrow(conversationList, Priority.ALWAYS);
-
         HBox content = new HBox(12, conversationPane, chatPane);
         content.getStyleClass().add("tfx-chat-popup");
         HBox.setHgrow(chatPane, Priority.ALWAYS);
-
         CustomMenuItem item = new CustomMenuItem(content, false);
         item.setHideOnClick(false);
         messagesMenu = new ContextMenu(item);
@@ -361,17 +355,10 @@ public class HomeController {
             cmbNewConversation.setItems(loadAvailableUsers(empresaId, userId));
 
             if (activeConversation != null) {
-                conversations.stream()
-                        .filter(c -> c.getContactoId() == activeConversation.getContactoId())
-                        .findFirst()
-                        .ifPresentOrElse(conversationList.getSelectionModel()::select, () -> {
-                            UserOption option = cmbNewConversation.getItems()
-                                    .stream()
-                                    .filter(user -> user.id == activeConversation.getContactoId())
-                                    .findFirst()
-                                    .orElse(null);
-                            cmbNewConversation.getSelectionModel().select(option);
-                        });
+                conversations.stream().filter(c -> c.getContactoId() == activeConversation.getContactoId()).findFirst().ifPresentOrElse(conversationList.getSelectionModel()::select, () -> {
+                    UserOption option = cmbNewConversation.getItems().stream().filter(user -> user.id == activeConversation.getContactoId()).findFirst().orElse(null);
+                    cmbNewConversation.getSelectionModel().select(option);
+                });
             }
         } catch (RuntimeException ex) {
             showChatError("No se pudieron cargar las conversaciones", ex);

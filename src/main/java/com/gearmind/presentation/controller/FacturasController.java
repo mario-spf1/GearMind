@@ -2,12 +2,20 @@ package com.gearmind.presentation.controller;
 
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
+import com.gearmind.application.email.SendInvoiceEmailRequest;
+import com.gearmind.application.email.SendInvoiceEmailUseCase;
 import com.gearmind.application.invoice.DeleteInvoiceUseCase;
 import com.gearmind.application.invoice.ListInvoicesUseCase;
 import com.gearmind.domain.invoice.Invoice;
 import com.gearmind.domain.invoice.InvoiceStatus;
 import com.gearmind.infrastructure.invoice.InvoicePdfStorage;
+import com.gearmind.infrastructure.invoice.InvoicePdfGenerator;
 import com.gearmind.infrastructure.invoice.MySqlInvoiceRepository;
+import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
+import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
+import com.gearmind.infrastructure.email.EmailConfig;
+import com.gearmind.infrastructure.email.SmtpEmailSender;
+import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
 import com.gearmind.presentation.table.SmartTable;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -77,12 +85,23 @@ public class FacturasController {
 
     private final ListInvoicesUseCase listInvoicesUseCase;
     private final DeleteInvoiceUseCase deleteInvoiceUseCase;
+    private final SendInvoiceEmailUseCase sendInvoiceEmailUseCase;
+    private final EmailConfig emailConfig;
     private final DecimalFormat priceFormat = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.getDefault()));
 
     public FacturasController() {
         MySqlInvoiceRepository repo = new MySqlInvoiceRepository();
         this.listInvoicesUseCase = new ListInvoicesUseCase(repo);
         this.deleteInvoiceUseCase = new DeleteInvoiceUseCase(repo);
+        this.emailConfig = EmailConfig.fromEnv();
+        this.sendInvoiceEmailUseCase = new SendInvoiceEmailUseCase(
+                repo,
+                new MySqlEmpresaRepository(),
+                new MySqlCustomerRepository(),
+                new MySqlVehicleRepository(),
+                new InvoicePdfGenerator(),
+                new SmtpEmailSender(emailConfig)
+        );
     }
 
     @FXML
@@ -140,12 +159,14 @@ public class FacturasController {
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnEditar = new Button("Editar");
             private final Button btnPdf = new Button("PDF");
+            private final Button btnEnviar = new Button("Enviar");
             private final Button btnEliminar = new Button("Eliminar");
-            private final HBox box = new HBox(8, btnEditar, btnPdf, btnEliminar);
+            private final HBox box = new HBox(8, btnEditar, btnPdf, btnEnviar, btnEliminar);
 
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
                 btnPdf.getStyleClass().add("tfx-icon-btn-secondary");
+                btnEnviar.getStyleClass().add("tfx-icon-btn");
                 btnEliminar.getStyleClass().add("tfx-icon-btn-danger");
 
                 btnEditar.setOnAction(e -> {
@@ -159,6 +180,13 @@ public class FacturasController {
                     Invoice invoice = getItem();
                     if (invoice != null) {
                         openPdf(invoice.getId());
+                    }
+                });
+
+                btnEnviar.setOnAction(e -> {
+                    Invoice invoice = getItem();
+                    if (invoice != null) {
+                        sendInvoiceEmail(invoice);
                     }
                 });
 
@@ -343,6 +371,26 @@ public class FacturasController {
         });
     }
 
+    private void sendInvoiceEmail(Invoice invoice) {
+        if (!isEmailConfigured()) {
+            new Alert(Alert.AlertType.WARNING, "No se ha configurado el envío de correo (SMTP).").showAndWait();
+            return;
+        }
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Enviar factura");
+        dialog.setHeaderText("Se enviará la factura al email del cliente.");
+        dialog.setContentText("Mensaje adicional (opcional):");
+        dialog.showAndWait().ifPresent(message -> {
+            try {
+                sendInvoiceEmailUseCase.execute(new SendInvoiceEmailRequest(invoice.getId(), null, message));
+                new Alert(Alert.AlertType.INFORMATION, "Factura enviada correctamente.").showAndWait();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                new Alert(Alert.AlertType.ERROR, "No se pudo enviar la factura: " + ex.getMessage()).showAndWait();
+            }
+        });
+    }
+
     private void openPdf(long invoiceId) {
         Path path = InvoicePdfStorage.resolvePath(invoiceId);
         if (!Files.exists(path)) {
@@ -396,5 +444,9 @@ public class FacturasController {
 
     private String safeRaw(String value) {
         return value == null ? "" : value;
+    }
+
+    private boolean isEmailConfigured() {
+        return emailConfig != null && emailConfig.getHost() != null && !emailConfig.getHost().isBlank();
     }
 }
