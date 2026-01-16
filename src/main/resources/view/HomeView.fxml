@@ -14,6 +14,7 @@
                 <Button fx:id="btnToggleSidebar" text="☰" onAction="#onToggleSidebar" mnemonicParsing="false" styleClass="tfx-icon-btn"/>
                 <Label text="GearMind" styleClass="tfx-toolbar-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnMensajes" text="💬" onAction="#onMessagesMenu" mnemonicParsing="false" styleClass="tfx-icon-btn"/>
                 <HBox fx:id="userBox" alignment="CENTER_RIGHT" spacing="8" styleClass="tfx-userbox">
                     <children>
                         <Button fx:id="btnFichajes" text="Fichajes" onAction="#onFichajes" styleClass="button tfx-btn-primary"/>
