@@ -311,3 +311,74 @@
 .tfx-toolbar-pagesize {
     -fx-padding: 0 14 0 0;
 }
+
+.tfx-chat-popup {
+    -fx-background-color: -tfx-surface;
+    -fx-padding: 12;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: -tfx-border;
+    -fx-border-width: 1;
+}
+
+.tfx-chat-list, .tfx-chat-thread {
+    -fx-background-color: transparent;
+    -fx-control-inner-background: transparent;
+    -fx-border-color: -tfx-border;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+}
+
+.tfx-chat-list .list-cell, .tfx-chat-thread .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -tfx-text;
+    -fx-padding: 6 8;
+}
+
+.tfx-chat-list .list-cell:selected {
+    -fx-background-color: rgba(59,130,246,0.2);
+}
+
+.tfx-chat-contact-name {
+    -fx-font-weight: 700;
+    -fx-text-fill: -tfx-text;
+}
+
+.tfx-chat-contact-snippet {
+    -fx-text-fill: -tfx-muted;
+    -fx-font-size: 11px;
+}
+
+.tfx-chat-bubble {
+    -fx-padding: 8 10;
+    -fx-background-radius: 12;
+    -fx-font-size: 12px;
+}
+
+.tfx-chat-bubble-in {
+    -fx-background-color: #111827;
+    -fx-text-fill: -tfx-text;
+}
+
+.tfx-chat-bubble-out {
+    -fx-background-color: rgba(59,130,246,0.35);
+    -fx-text-fill: white;
+}
+
+.tfx-chat-input {
+    -fx-padding: 4 0 0 0;
+}
+
+.tfx-chat-input-field {
+    -fx-background-color: #0f1116;
+    -fx-text-fill: -tfx-text;
+    -fx-background-radius: 10;
+    -fx-border-color: -tfx-border;
+    -fx-border-radius: 10;
+    -fx-padding: 8 10;
+}
+
+.tfx-chat-send {
+    -fx-padding: 8 14;
+}
+
