@@ -62,7 +62,8 @@ public class SmtpEmailSender implements EmailSender {
         Properties props = new Properties();
         props.put("mail.smtp.host", config.getHost());
         props.put("mail.smtp.port", Integer.toString(config.getPort()));
-        props.put("mail.smtp.auth", config.getUsername() != null && !config.getUsername().isBlank());
+        boolean auth = config.getUsername() != null && !config.getUsername().isBlank();
+        props.put("mail.smtp.auth", Boolean.toString(auth));
         if (config.isStartTls()) {
             props.put("mail.smtp.starttls.enable", "true");
         }
