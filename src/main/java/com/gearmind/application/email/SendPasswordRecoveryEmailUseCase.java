@@ -4,7 +4,6 @@ import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRepository;
 import com.gearmind.domain.email.EmailMessage;
 import com.gearmind.domain.email.EmailSender;
-import com.gearmind.domain.user.UserRepository;
 
 public class SendPasswordRecoveryEmailUseCase {
 
@@ -29,8 +28,7 @@ public class SendPasswordRecoveryEmailUseCase {
             throw new IllegalArgumentException("Debes indicar un código o un enlace de recuperación.");
         }
 
-        User user = userRepository.findByEmail(email.toLowerCase())
-                .orElseThrow(() -> new IllegalArgumentException("No existe un usuario con ese email."));
+        User user = userRepository.findByEmail(email.toLowerCase()).orElseThrow(() -> new IllegalArgumentException("No existe un usuario con ese email."));
 
         StringBuilder body = new StringBuilder();
         body.append("Hola ").append(user.getNombre()).append(",\n\n");

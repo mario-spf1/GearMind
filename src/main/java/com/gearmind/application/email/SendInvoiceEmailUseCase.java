@@ -27,9 +27,7 @@ public class SendInvoiceEmailUseCase {
     private final InvoicePdfGenerator pdfGenerator;
     private final EmailSender emailSender;
 
-    public SendInvoiceEmailUseCase(InvoiceRepository invoiceRepository, EmpresaRepository empresaRepository,
-            CustomerRepository customerRepository, VehicleRepository vehicleRepository,
-            InvoicePdfGenerator pdfGenerator, EmailSender emailSender) {
+    public SendInvoiceEmailUseCase(InvoiceRepository invoiceRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, InvoicePdfGenerator pdfGenerator, EmailSender emailSender) {
         this.invoiceRepository = invoiceRepository;
         this.empresaRepository = empresaRepository;
         this.customerRepository = customerRepository;
@@ -42,10 +40,8 @@ public class SendInvoiceEmailUseCase {
         if (request == null) {
             throw new IllegalArgumentException("La solicitud de envío de factura no puede ser nula.");
         }
-        Invoice invoice = invoiceRepository.findById(request.invoiceId())
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró la factura indicada."));
-        Customer customer = customerRepository.findById(invoice.getClienteId())
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró el cliente de la factura."));
+        Invoice invoice = invoiceRepository.findById(request.invoiceId()).orElseThrow(() -> new IllegalArgumentException("No se encontró la factura indicada."));
+        Customer customer = customerRepository.findById(invoice.getClienteId()).orElseThrow(() -> new IllegalArgumentException("No se encontró el cliente de la factura."));
         Empresa empresa = empresaRepository.findById(invoice.getEmpresaId()).orElse(null);
         Vehicle vehicle = vehicleRepository.findById(invoice.getVehiculoId()).orElse(null);
 

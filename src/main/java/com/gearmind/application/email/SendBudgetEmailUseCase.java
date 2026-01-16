@@ -27,9 +27,7 @@ public class SendBudgetEmailUseCase {
     private final BudgetPdfGenerator pdfGenerator;
     private final EmailSender emailSender;
 
-    public SendBudgetEmailUseCase(BudgetRepository budgetRepository, EmpresaRepository empresaRepository,
-            CustomerRepository customerRepository, VehicleRepository vehicleRepository,
-            BudgetPdfGenerator pdfGenerator, EmailSender emailSender) {
+    public SendBudgetEmailUseCase(BudgetRepository budgetRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, BudgetPdfGenerator pdfGenerator, EmailSender emailSender) {
         this.budgetRepository = budgetRepository;
         this.empresaRepository = empresaRepository;
         this.customerRepository = customerRepository;
@@ -42,10 +40,8 @@ public class SendBudgetEmailUseCase {
         if (request == null) {
             throw new IllegalArgumentException("La solicitud de envío de presupuesto no puede ser nula.");
         }
-        Budget budget = budgetRepository.findById(request.budgetId())
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró el presupuesto indicado."));
-        Customer customer = customerRepository.findById(budget.getClienteId())
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró el cliente del presupuesto."));
+        Budget budget = budgetRepository.findById(request.budgetId()).orElseThrow(() -> new IllegalArgumentException("No se encontró el presupuesto indicado."));
+        Customer customer = customerRepository.findById(budget.getClienteId()).orElseThrow(() -> new IllegalArgumentException("No se encontró el cliente del presupuesto."));
         Empresa empresa = empresaRepository.findById(budget.getEmpresaId()).orElse(null);
         Vehicle vehicle = vehicleRepository.findById(budget.getVehiculoId()).orElse(null);
 
@@ -59,7 +55,6 @@ public class SendBudgetEmailUseCase {
 
         List<BudgetLine> lines = budgetRepository.findLinesByBudgetId(budget.getId());
         Path pdfPath = ensurePdfExists(budget, lines, empresa, customer, vehicle);
-
         String subject = "Presupuesto " + budget.getId() + " - " + (empresa != null ? empresa.getNombre() : "GearMind");
         StringBuilder body = new StringBuilder();
         body.append("Hola ").append(customer.getNombre()).append(",\n\n");
