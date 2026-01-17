@@ -54,10 +54,17 @@ public class SendBudgetEmailUseCase {
 
         List<BudgetLine> lines = budgetRepository.findLinesByBudgetId(budget.getId());
         Path pdfPath = ensurePdfExists(budget, lines, empresa, customer, vehicle);
-        String subject = "Presupuesto " + budget.getId() + " - " + (empresa != null ? empresa.getNombre() : "GearMind");
+        String subject = "Presupuesto #" + budget.getId() + " - " + (empresa != null ? empresa.getNombre() : "GearMind");
         StringBuilder body = new StringBuilder();
         body.append("Hola ").append(customer.getNombre()).append(",\n\n");
-        body.append("Adjuntamos el presupuesto solicitado para su aprobación.");
+        body.append("Adjuntamos el presupuesto solicitado en formato PDF.");
+        if (vehicle != null) {
+            body.append("\nVehículo: ").append(vehicle.getMarca()).append(" ").append(vehicle.getModelo());
+            if (vehicle.getMatricula() != null && !vehicle.getMatricula().isBlank()) {
+                body.append(" (").append(vehicle.getMatricula()).append(")");
+            }
+            body.append(".");
+        }
         if (request.message() != null && !request.message().isBlank()) {
             body.append("\n\nMensaje adicional:\n").append(request.message().trim());
         }

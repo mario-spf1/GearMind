@@ -23,7 +23,6 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
-import java.security.SecureRandom;
 
 public class LoginController {
 
@@ -41,13 +40,13 @@ public class LoginController {
 
     private final LoginUseCase loginUseCase;
     private final SendPasswordRecoveryEmailUseCase sendPasswordRecoveryEmailUseCase;
-    private final SecureRandom secureRandom = new SecureRandom();
 
     public LoginController() {
         MySqlUserRepository userRepository = new MySqlUserRepository();
-        this.loginUseCase = new LoginUseCase(userRepository, new BCryptPasswordHasher(), new MySqlEmpresaRepository());
+        BCryptPasswordHasher passwordHasher = new BCryptPasswordHasher();
+        this.loginUseCase = new LoginUseCase(userRepository, passwordHasher, new MySqlEmpresaRepository());
         EnviarEmailEmpresaUseCase enviarEmailEmpresaUseCase = new EnviarEmailEmpresaUseCase(new JdbcSmtpConfigRepository(), new SmtpEmailSenderFactory());
-        this.sendPasswordRecoveryEmailUseCase = new SendPasswordRecoveryEmailUseCase(userRepository, enviarEmailEmpresaUseCase);
+        this.sendPasswordRecoveryEmailUseCase = new SendPasswordRecoveryEmailUseCase(userRepository, enviarEmailEmpresaUseCase, passwordHasher);
     }
 
     @FXML
@@ -99,7 +98,7 @@ public class LoginController {
     private void onForgotPassword() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Recuperar contraseña");
-        dialog.setHeaderText("Introduce tu email para recibir el código de recuperación.");
+        dialog.setHeaderText("Introduce tu email para recibir una contraseña temporal.");
         dialog.setContentText("Email:");
 
         dialog.showAndWait().ifPresent(emailInput -> {
@@ -113,9 +112,8 @@ public class LoginController {
                 return;
             }
             try {
-                String recoveryCode = generateRecoveryCode();
-                sendPasswordRecoveryEmailUseCase.execute(new SendPasswordRecoveryEmailRequest(email, recoveryCode, null));
-                new Alert(Alert.AlertType.INFORMATION, "Se ha enviado un correo de recuperación a " + email + ".").showAndWait();
+                sendPasswordRecoveryEmailUseCase.execute(new SendPasswordRecoveryEmailRequest(email));
+                new Alert(Alert.AlertType.INFORMATION, "Se ha enviado una contraseña temporal a " + email + ".").showAndWait();
             } catch (Exception ex) {
                 ex.printStackTrace();
                 showError("No se pudo enviar el correo de recuperación: " + ex.getMessage());
@@ -157,10 +155,4 @@ public class LoginController {
         alert.setContentText(message);
         alert.showAndWait();
     }
-
-    private String generateRecoveryCode() {
-        int code = secureRandom.nextInt(900000) + 100000;
-        return Integer.toString(code);
-    }
-
 }

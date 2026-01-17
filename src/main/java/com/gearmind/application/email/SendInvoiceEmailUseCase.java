@@ -54,11 +54,17 @@ public class SendInvoiceEmailUseCase {
 
         List<InvoiceLine> lines = invoiceRepository.findLinesByInvoiceId(invoice.getId());
         Path pdfPath = ensurePdfExists(invoice, lines, empresa, customer, vehicle);
-
-        String subject = "Factura " + invoice.getNumero() + " - " + (empresa != null ? empresa.getNombre() : "GearMind");
+        String subject = "Factura #" + invoice.getNumero() + " - " + (empresa != null ? empresa.getNombre() : "GearMind");
         StringBuilder body = new StringBuilder();
         body.append("Hola ").append(customer.getNombre()).append(",\n\n");
-        body.append("Adjuntamos la factura correspondiente a los servicios prestados.");
+        body.append("Adjuntamos la factura en formato PDF correspondiente a los servicios prestados.");
+        if (vehicle != null) {
+            body.append("\nVehículo: ").append(vehicle.getMarca()).append(" ").append(vehicle.getModelo());
+            if (vehicle.getMatricula() != null && !vehicle.getMatricula().isBlank()) {
+                body.append(" (").append(vehicle.getMatricula()).append(")");
+            }
+            body.append(".");
+        }
         if (request.message() != null && !request.message().isBlank()) {
             body.append("\n\nMensaje adicional:\n").append(request.message().trim());
         }

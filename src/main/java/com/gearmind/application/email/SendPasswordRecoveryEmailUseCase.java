@@ -1,17 +1,22 @@
 package com.gearmind.application.email;
 
+import com.gearmind.domain.email.EmailMessage;
+import com.gearmind.domain.security.PasswordHasher;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRepository;
-import com.gearmind.domain.email.EmailMessage;
+import java.security.SecureRandom;
 
 public class SendPasswordRecoveryEmailUseCase {
 
     private final UserRepository userRepository;
     private final EnviarEmailEmpresaUseCase enviarEmailEmpresaUseCase;
+    private final PasswordHasher passwordHasher;
+    private final SecureRandom secureRandom = new SecureRandom();
 
-    public SendPasswordRecoveryEmailUseCase(UserRepository userRepository, EnviarEmailEmpresaUseCase enviarEmailEmpresaUseCase) {
+    public SendPasswordRecoveryEmailUseCase(UserRepository userRepository, EnviarEmailEmpresaUseCase enviarEmailEmpresaUseCase, PasswordHasher passwordHasher) {
         this.userRepository = userRepository;
         this.enviarEmailEmpresaUseCase = enviarEmailEmpresaUseCase;
+        this.passwordHasher = passwordHasher;
     }
 
     public void execute(SendPasswordRecoveryEmailRequest request) {
@@ -22,29 +27,35 @@ public class SendPasswordRecoveryEmailUseCase {
         if (email.isBlank()) {
             throw new IllegalArgumentException("El email es obligatorio.");
         }
-        if ((request.recoveryCode() == null || request.recoveryCode().isBlank())
-                && (request.recoveryUrl() == null || request.recoveryUrl().isBlank())) {
-            throw new IllegalArgumentException("Debes indicar un código o un enlace de recuperación.");
-        }
 
         User user = userRepository.findByEmail(email.toLowerCase()).orElseThrow(() -> new IllegalArgumentException("No existe un usuario con ese email."));
+        String temporaryPassword = generateTemporaryPassword();
+        String hashedPassword = passwordHasher.hash(temporaryPassword);
+        userRepository.update(user.getId(), user.getEmpresaId(), user.getNombre(), user.getEmail(), hashedPassword, user.getRol(), user.isActivo());
 
         StringBuilder body = new StringBuilder();
         body.append("Hola ").append(user.getNombre()).append(",\n\n");
         body.append("Hemos recibido una solicitud para recuperar tu contraseña en GearMind.\n\n");
-        if (request.recoveryCode() != null && !request.recoveryCode().isBlank()) {
-            body.append("Código de recuperación: ").append(request.recoveryCode().trim()).append("\n");
-        }
-        if (request.recoveryUrl() != null && !request.recoveryUrl().isBlank()) {
-            body.append("Enlace para restablecer la contraseña: ").append(request.recoveryUrl().trim()).append("\n");
-        }
-        body.append("\nSi no solicitaste este cambio, ignora este correo.\n");
+        body.append("Se ha generado una contraseña temporal para que puedas acceder:\n");
+        body.append(temporaryPassword).append("\n\n");
+        body.append("Por seguridad, cambia la contraseña en cuanto accedas al sistema.\n");
+        body.append("Si no solicitaste este cambio, ignora este correo y contacta con el administrador.\n");
 
-        EmailMessage message = new EmailMessage(user.getEmail(), "Recuperación de contraseña", body.toString());
+        EmailMessage message = new EmailMessage(user.getEmail(), "Recuperación de contraseña - contraseña temporal", body.toString());
         enviarEmailEmpresaUseCase.execute(user.getEmpresaId(), message);
     }
 
     private String safeTrim(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private String generateTemporaryPassword() {
+        String charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+        int length = 10;
+        StringBuilder builder = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            builder.append(charset.charAt(secureRandom.nextInt(charset.length())));
+        }
+        return builder.toString();
     }
 }
