@@ -7,4 +7,6 @@ public interface TelegramClientLinkRepository {
     Optional<TelegramClientLink> findByChatId(long empresaId, long chatId);
 
     Optional<TelegramClientLink> findByClienteId(long empresaId, long clienteId);
+    
+    TelegramClientLink saveLink(long empresaId, long clienteId, long chatId, String username);
 }

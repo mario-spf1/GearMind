@@ -5,6 +5,7 @@ public class Customer {
     private final long id;
     private final long empresaId;
     private final String nombre;
+    private final String dni;
     private final String email;
     private final String telefono;
     private final String notas;
@@ -12,10 +13,11 @@ public class Customer {
 
     private String empresaNombre;
 
-    public Customer(long id, long empresaId, String nombre, String email, String telefono, String notas, boolean activo) {
+    public Customer(long id, long empresaId, String nombre, String dni, String email, String telefono, String notas, boolean activo) {
         this.id = id;
         this.empresaId = empresaId;
         this.nombre = nombre;
+        this.dni = dni;
         this.email = email;
         this.telefono = telefono;
         this.notas = notas;
@@ -32,6 +34,10 @@ public class Customer {
 
     public String getNombre() {
         return nombre;
+    }
+
+    public String getDni() {
+        return dni;
     }
 
     public String getEmail() {

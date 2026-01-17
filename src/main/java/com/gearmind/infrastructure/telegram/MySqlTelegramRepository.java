@@ -71,6 +71,32 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
     }
 
     @Override
+    public TelegramClientLink saveLink(long empresaId, long clienteId, long chatId, String username) {
+        String sql = """
+                INSERT INTO telegram_cliente
+                    (empresa_id, cliente_id, telegram_chat_id, telegram_username, created_at)
+                VALUES (?, ?, ?, ?, NOW())
+                ON DUPLICATE KEY UPDATE
+                    cliente_id = VALUES(cliente_id),
+                    telegram_username = VALUES(telegram_username),
+                    created_at = VALUES(created_at)
+                """;
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, empresaId);
+            ps.setLong(2, clienteId);
+            ps.setLong(3, chatId);
+            ps.setString(4, username);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al guardar vínculo Telegram", e);
+        }
+
+        return findByChatId(empresaId, chatId)
+                .orElse(new TelegramClientLink(0L, empresaId, clienteId, chatId, username, LocalDateTime.now()));
+    }
+
+    @Override
     public Optional<TelegramConversationState> findConversationByChatId(long empresaId, long chatId) {
         String sql = """
                 SELECT id, empresa_id, telegram_chat_id, estado, payload, updated_at
@@ -276,7 +302,7 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Date fecha = rs.getDate("fecha");
-                    result.add(new TelegramInvoiceSummary( rs.getLong("id"), rs.getString("numero"), fecha != null ? fecha.toLocalDate() : LocalDate.now(), rs.getString("estado"), rs.getBigDecimal("total")));
+                    result.add(new TelegramInvoiceSummary(rs.getLong("id"), rs.getString("numero"), fecha != null ? fecha.toLocalDate() : LocalDate.now(), rs.getString("estado"), rs.getBigDecimal("total")));
                 }
             }
         } catch (SQLException e) {

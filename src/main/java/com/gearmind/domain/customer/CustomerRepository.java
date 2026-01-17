@@ -12,9 +12,11 @@ public interface CustomerRepository {
 
     Optional<Customer> findById(long id);
 
-    Customer create(long empresaId, String nombre, String email, String telefono, String notas);
+    Optional<Customer> findByDni(long empresaId, String dni);
+    
+    Customer create(long empresaId, String nombre, String dni, String email, String telefono, String notas);
 
-    Customer update(long id, long empresaId, String nombre, String email, String telefono, String notas);
+    Customer update(long id, long empresaId, String nombre, String dni, String email, String telefono, String notas);
 
     void deactivate(long customerId, long empresaId);
 

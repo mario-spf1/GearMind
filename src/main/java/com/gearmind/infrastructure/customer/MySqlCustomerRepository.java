@@ -22,7 +22,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
         List<Customer> result = new ArrayList<>();
 
         String sql = """
-                SELECT id, empresa_id, nombre, email, telefono, notas, activo
+                SELECT id, empresa_id, nombre, dni, email, telefono, notas, activo
                 FROM cliente
                 ORDER BY nombre ASC
                 """;
@@ -45,7 +45,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
         List<Customer> result = new ArrayList<>();
 
         String sql = """
-                SELECT id, empresa_id, nombre, email, telefono, notas, activo
+                SELECT id, empresa_id, nombre, dni, email, telefono, notas, activo
                 FROM cliente
                 WHERE empresa_id = ?
                 ORDER BY nombre ASC
@@ -70,7 +70,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
     @Override
     public Optional<Customer> findById(long id) {
         String sql = """
-                SELECT id, empresa_id, nombre, email, telefono, notas, activo
+                SELECT id, empresa_id, nombre, dni, email, telefono, notas, activo
                 FROM cliente
                 WHERE id = ?
                 """;
@@ -93,26 +93,27 @@ public class MySqlCustomerRepository implements CustomerRepository {
     }
 
     @Override
-    public Customer create(long empresaId, String nombre, String email, String telefono, String notas) {
+    public Customer create(long empresaId, String nombre, String dni, String email, String telefono, String notas) {
         String sql = """
-                INSERT INTO cliente (empresa_id, nombre, email, telefono, notas, activo)
-                VALUES (?, ?, ?, ?, ?, 1)
+                INSERT INTO cliente (empresa_id, nombre, dni, email, telefono, notas, activo)
+                VALUES (?, ?, ?, ?, ?, ?, 1)
                 """;
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setLong(1, empresaId);
             ps.setString(2, nombre);
-            ps.setString(3, email);
-            ps.setString(4, telefono);
-            ps.setString(5, notas);
+            ps.setString(3, dni);
+            ps.setString(4, email);
+            ps.setString(5, telefono);
+            ps.setString(6, notas);
 
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
                     long id = keys.getLong(1);
-                    return new Customer(id, empresaId, nombre, email, telefono, notas, true);
+                    return new Customer(id, empresaId, nombre, dni, email, telefono, notas, true);
                 }
             }
 
@@ -120,25 +121,26 @@ public class MySqlCustomerRepository implements CustomerRepository {
             e.printStackTrace();
         }
 
-        return new Customer(0L, empresaId, nombre, email, telefono, notas, true);
+        return new Customer(0L, empresaId, nombre, dni, email, telefono, notas, true);
     }
 
     @Override
-    public Customer update(long id, long empresaId, String nombre, String email, String telefono, String notas) {
+    public Customer update(long id, long empresaId, String nombre, String dni, String email, String telefono, String notas) {
         String sql = """
                 UPDATE cliente
-                SET nombre = ?, email = ?, telefono = ?, notas = ?
+                SET nombre = ?, dni = ?, email = ?, telefono = ?, notas = ?
                 WHERE id = ? AND empresa_id = ?
                 """;
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, nombre);
-            ps.setString(2, email);
-            ps.setString(3, telefono);
-            ps.setString(4, notas);
-            ps.setLong(5, id);
-            ps.setLong(6, empresaId);
+            ps.setString(2, dni);
+            ps.setString(3, email);
+            ps.setString(4, telefono);
+            ps.setString(5, notas);
+            ps.setLong(6, id);
+            ps.setLong(7, empresaId);
 
             ps.executeUpdate();
 
@@ -146,7 +148,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
             e.printStackTrace();
         }
 
-        return new Customer(id, empresaId, nombre, email, telefono, notas, true);
+        return new Customer(id, empresaId, nombre, dni, email, telefono, notas, true);
     }
 
     @Override
@@ -203,7 +205,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
     }
 
     private Customer mapRow(ResultSet rs) throws SQLException {
-        return new Customer(rs.getLong("id"), rs.getLong("empresa_id"), rs.getString("nombre"), rs.getString("email"), rs.getString("telefono"), rs.getString("notas"), rs.getBoolean("activo"));
+        return new Customer(rs.getLong("id"), rs.getLong("empresa_id"), rs.getString("nombre"), rs.getString("dni"), rs.getString("email"), rs.getString("telefono"), rs.getString("notas"), rs.getBoolean("activo"));
     }
 
     @Override
@@ -226,7 +228,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                Customer c = new Customer(rs.getLong("id"), rs.getLong("empresa_id"), rs.getString("nombre"), rs.getString("email"), rs.getString("telefono"), rs.getString("notas"), rs.getBoolean("activo"));
+                Customer c = new Customer(rs.getLong("id"), rs.getLong("empresa_id"), rs.getString("nombre"), rs.getString("dni"), rs.getString("email"), rs.getString("telefono"), rs.getString("notas"), rs.getBoolean("activo"));
                 c.setEmpresaNombre(rs.getString("empresa_nombre"));
                 result.add(c);
             }
@@ -236,5 +238,30 @@ public class MySqlCustomerRepository implements CustomerRepository {
         }
 
         return result;
+    }
+
+    @Override
+    public Optional<Customer> findByDni(long empresaId, String dni) {
+        String sql = """
+                SELECT id, empresa_id, nombre, dni, email, telefono, notas, activo
+                FROM cliente
+                WHERE empresa_id = ? AND dni = ?
+                LIMIT 1
+                """;
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, empresaId);
+            ps.setString(2, dni);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error buscando cliente por DNI", e);
+        }
+
+        return Optional.empty();
     }
 }

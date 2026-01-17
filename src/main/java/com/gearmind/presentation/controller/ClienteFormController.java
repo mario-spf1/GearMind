@@ -30,6 +30,8 @@ public class ClienteFormController {
     @FXML
     private TextField txtNombre;
     @FXML
+    private TextField txtDni;
+    @FXML
     private TextField txtEmail;
     @FXML
     private TextField txtTelefono;
@@ -83,6 +85,7 @@ public class ClienteFormController {
         }
 
         txtNombre.setText(customer.getNombre());
+        txtDni.setText(customer.getDni());
         txtEmail.setText(customer.getEmail());
         txtTelefono.setText(customer.getTelefono());
         txtNotas.setText(customer.getNotas());
@@ -115,11 +118,19 @@ public class ClienteFormController {
         if (btnGuardar != null) {
             btnGuardar.setDisable(true);
         }
-        txtNombre.textProperty().addListener((obs, oldV, newV) -> {
-            if (btnGuardar != null) {
-                btnGuardar.setDisable(newV == null || newV.trim().isEmpty());
+        Runnable syncSaveState = () -> {
+            if (btnGuardar == null) {
+                return;
             }
-        });
+            String nombre = txtNombre.getText();
+            String dni = txtDni != null ? txtDni.getText() : null;
+            boolean invalid = nombre == null || nombre.trim().isEmpty() || dni == null || dni.trim().isEmpty();
+            btnGuardar.setDisable(invalid);
+        };
+        txtNombre.textProperty().addListener((obs, oldV, newV) -> syncSaveState.run());
+        if (txtDni != null) {
+            txtDni.textProperty().addListener((obs, oldV, newV) -> syncSaveState.run());
+        }
 
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
 
@@ -184,6 +195,12 @@ public class ClienteFormController {
                 return;
             }
 
+            String dni = txtDni.getText() != null ? txtDni.getText().trim() : "";
+            if (dni.isBlank()) {
+                new Alert(Alert.AlertType.WARNING, "El DNI es obligatorio.").showAndWait();
+                return;
+            }
+
             String email = txtEmail.getText() != null ? txtEmail.getText().trim() : "";
             if (!email.isBlank() && !email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
                 new Alert(Alert.AlertType.WARNING, "El email no tiene un formato válido.").showAndWait();
@@ -196,9 +213,8 @@ public class ClienteFormController {
 
             String notas = txtNotas.getText() != null ? txtNotas.getText().trim() : "";
 
-            SaveCustomerRequest request = new SaveCustomerRequest(editingId, empresaId, nombre, email, telefono, notas);
+            SaveCustomerRequest request = new SaveCustomerRequest(editingId, empresaId, nombre, dni, email, telefono, notas);
             saveCustomerUseCase.save(request);
-
             saved = true;
             closeWindow();
 

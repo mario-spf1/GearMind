@@ -17,10 +17,10 @@ public class SaveCustomerUseCase {
         validate(request);
 
         if (request.id() == null) {
-            return repository.create(request.empresaId(), request.nombre().trim(), normalize(request.email()), normalize(request.telefono()), normalize(request.notas()));
+            return repository.create(request.empresaId(), request.nombre().trim(), normalize(request.dni()), normalize(request.email()), normalize(request.telefono()), normalize(request.notas()));
         }
 
-        return repository.update(request.id(), request.empresaId(), request.nombre().trim(), normalize(request.email()), normalize(request.telefono()), normalize(request.notas()));
+        return repository.update(request.id(), request.empresaId(), request.nombre().trim(), normalize(request.dni()), normalize(request.email()), normalize(request.telefono()), normalize(request.notas()));
     }
 
     private String normalize(String s) {
@@ -38,6 +38,15 @@ public class SaveCustomerUseCase {
 
         if (r.nombre().trim().length() > 150) {
             throw new IllegalArgumentException("El nombre no puede superar 150 caracteres.");
+        }
+
+        if (r.dni() == null || r.dni().trim().isEmpty()) {
+            throw new IllegalArgumentException("El DNI es obligatorio.");
+        }
+
+        String dni = r.dni().trim();
+        if (dni.length() > 20) {
+            throw new IllegalArgumentException("El DNI no puede superar 20 caracteres.");
         }
 
         if (r.email() != null && !r.email().trim().isEmpty()) {
