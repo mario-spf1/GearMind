@@ -1,6 +1,7 @@
 package com.gearmind.infrastructure.email;
 
 import com.gearmind.domain.email.EmailAttachment;
+import com.gearmind.domain.email.EmailConfig;
 import com.gearmind.domain.email.EmailMessage;
 import com.gearmind.domain.email.EmailSender;
 import jakarta.mail.Authenticator;

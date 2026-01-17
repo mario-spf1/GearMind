@@ -3,16 +3,15 @@ package com.gearmind.application.email;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRepository;
 import com.gearmind.domain.email.EmailMessage;
-import com.gearmind.domain.email.EmailSender;
 
 public class SendPasswordRecoveryEmailUseCase {
 
     private final UserRepository userRepository;
-    private final EmailSender emailSender;
+    private final EnviarEmailEmpresaUseCase enviarEmailEmpresaUseCase;
 
-    public SendPasswordRecoveryEmailUseCase(UserRepository userRepository, EmailSender emailSender) {
+    public SendPasswordRecoveryEmailUseCase(UserRepository userRepository, EnviarEmailEmpresaUseCase enviarEmailEmpresaUseCase) {
         this.userRepository = userRepository;
-        this.emailSender = emailSender;
+        this.enviarEmailEmpresaUseCase = enviarEmailEmpresaUseCase;
     }
 
     public void execute(SendPasswordRecoveryEmailRequest request) {
@@ -42,7 +41,7 @@ public class SendPasswordRecoveryEmailUseCase {
         body.append("\nSi no solicitaste este cambio, ignora este correo.\n");
 
         EmailMessage message = new EmailMessage(user.getEmail(), "Recuperación de contraseña", body.toString());
-        emailSender.send(message);
+        enviarEmailEmpresaUseCase.execute(user.getEmpresaId(), message);
     }
 
     private String safeTrim(String value) {

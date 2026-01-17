@@ -2,19 +2,21 @@ package com.gearmind.presentation.controller;
 
 import com.gearmind.application.budget.DeleteBudgetUseCase;
 import com.gearmind.application.budget.ListBudgetsUseCase;
+import com.gearmind.application.email.EnviarEmailEmpresaUseCase;
 import com.gearmind.application.email.SendBudgetEmailRequest;
 import com.gearmind.application.email.SendBudgetEmailUseCase;
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
 import com.gearmind.domain.budget.Budget;
 import com.gearmind.domain.budget.BudgetStatus;
+import com.gearmind.domain.email.EmailConfig;
 import com.gearmind.infrastructure.budget.BudgetPdfStorage;
 import com.gearmind.infrastructure.budget.BudgetPdfGenerator;
 import com.gearmind.infrastructure.budget.MySqlBudgetRepository;
 import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
-import com.gearmind.infrastructure.email.EmailConfig;
-import com.gearmind.infrastructure.email.SmtpEmailSender;
+import com.gearmind.infrastructure.email.JdbcSmtpConfigRepository;
+import com.gearmind.infrastructure.email.SmtpEmailSenderFactory;
 import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
 import com.gearmind.presentation.table.SmartTable;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -86,22 +88,14 @@ public class PresupuestosController {
     private final ListBudgetsUseCase listBudgetsUseCase;
     private final DeleteBudgetUseCase deleteBudgetUseCase;
     private final SendBudgetEmailUseCase sendBudgetEmailUseCase;
-    private final EmailConfig emailConfig;
     private final DecimalFormat priceFormat = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.getDefault()));
 
     public PresupuestosController() {
         MySqlBudgetRepository repo = new MySqlBudgetRepository();
         this.listBudgetsUseCase = new ListBudgetsUseCase(repo);
         this.deleteBudgetUseCase = new DeleteBudgetUseCase(repo);
-        this.emailConfig = EmailConfig.fromEnv();
-        this.sendBudgetEmailUseCase = new SendBudgetEmailUseCase(
-            repo,
-            new MySqlEmpresaRepository(),
-            new MySqlCustomerRepository(),
-            new MySqlVehicleRepository(),
-            new BudgetPdfGenerator(),
-            new SmtpEmailSender(emailConfig)
-        );
+        EnviarEmailEmpresaUseCase enviarEmailEmpresaUseCase = new EnviarEmailEmpresaUseCase(new JdbcSmtpConfigRepository(), new SmtpEmailSenderFactory());
+        this.sendBudgetEmailUseCase = new SendBudgetEmailUseCase(repo, new MySqlEmpresaRepository(), new MySqlCustomerRepository(), new MySqlVehicleRepository(), new BudgetPdfGenerator(), enviarEmailEmpresaUseCase);
     }
 
     @FXML
@@ -161,6 +155,7 @@ public class PresupuestosController {
             private final Button btnEnviar = new Button("Enviar");
             private final Button btnEliminar = new Button("Eliminar");
             private final HBox box = new HBox(8, btnEditar, btnPdf, btnEnviar, btnEliminar);
+
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
                 btnPdf.getStyleClass().add("tfx-icon-btn-secondary");
@@ -180,7 +175,7 @@ public class PresupuestosController {
                         openPdf(budget.getId());
                     }
                 });
-                
+
                 btnEnviar.setOnAction(e -> {
                     Budget budget = getItem();
                     if (budget != null) {
@@ -370,10 +365,6 @@ public class PresupuestosController {
     }
 
     private void sendBudgetEmail(Budget budget) {
-        if (!isEmailConfigured()) {
-            new Alert(Alert.AlertType.WARNING, "No se ha configurado el envío de correo (SMTP).").showAndWait();
-            return;
-        }
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Enviar presupuesto");
         dialog.setHeaderText("Se enviará el presupuesto al email del cliente.");
@@ -388,7 +379,7 @@ public class PresupuestosController {
             }
         });
     }
-    
+
     private void openPdf(long budgetId) {
         Path path = BudgetPdfStorage.resolvePath(budgetId);
         if (!Files.exists(path)) {
@@ -442,9 +433,5 @@ public class PresupuestosController {
 
     private String safeRaw(String value) {
         return value == null ? "" : value;
-    }
-    
-    private boolean isEmailConfigured() {
-        return emailConfig != null && emailConfig.getHost() != null && !emailConfig.getHost().isBlank();
     }
 }

@@ -9,7 +9,6 @@ import com.gearmind.domain.customer.Customer;
 import com.gearmind.domain.customer.CustomerRepository;
 import com.gearmind.domain.email.EmailAttachment;
 import com.gearmind.domain.email.EmailMessage;
-import com.gearmind.domain.email.EmailSender;
 import com.gearmind.domain.vehicle.Vehicle;
 import com.gearmind.domain.vehicle.VehicleRepository;
 import com.gearmind.infrastructure.budget.BudgetPdfGenerator;
@@ -25,15 +24,15 @@ public class SendBudgetEmailUseCase {
     private final CustomerRepository customerRepository;
     private final VehicleRepository vehicleRepository;
     private final BudgetPdfGenerator pdfGenerator;
-    private final EmailSender emailSender;
+    private final EnviarEmailEmpresaUseCase enviarEmailEmpresaUseCase;
 
-    public SendBudgetEmailUseCase(BudgetRepository budgetRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, BudgetPdfGenerator pdfGenerator, EmailSender emailSender) {
+    public SendBudgetEmailUseCase(BudgetRepository budgetRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, BudgetPdfGenerator pdfGenerator, EnviarEmailEmpresaUseCase enviarEmailEmpresaUseCase) {
         this.budgetRepository = budgetRepository;
         this.empresaRepository = empresaRepository;
         this.customerRepository = customerRepository;
         this.vehicleRepository = vehicleRepository;
         this.pdfGenerator = pdfGenerator;
-        this.emailSender = emailSender;
+        this.enviarEmailEmpresaUseCase = enviarEmailEmpresaUseCase;
     }
 
     public void execute(SendBudgetEmailRequest request) {
@@ -66,7 +65,7 @@ public class SendBudgetEmailUseCase {
 
         EmailAttachment attachment = new EmailAttachment(pdfPath.getFileName().toString(), pdfPath, "application/pdf");
         EmailMessage message = new EmailMessage(recipient, subject, body.toString(), false, List.of(attachment));
-        emailSender.send(message);
+        enviarEmailEmpresaUseCase.execute(budget.getEmpresaId(), message);
     }
 
     private Path ensurePdfExists(Budget budget, List<BudgetLine> lines, Empresa empresa, Customer customer, Vehicle vehicle) {

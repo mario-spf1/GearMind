@@ -1,6 +1,4 @@
-package com.gearmind.infrastructure.email;
-
-import io.github.cdimascio.dotenv.Dotenv;
+package com.gearmind.domain.email;
 
 public class EmailConfig {
 
@@ -20,18 +18,6 @@ public class EmailConfig {
         this.from = from;
         this.startTls = startTls;
         this.ssl = ssl;
-    }
-
-    public static EmailConfig fromEnv() {
-        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-        String host = dotenv.get("SMTP_HOST", "");
-        int port = Integer.parseInt(dotenv.get("SMTP_PORT", "587"));
-        String username = dotenv.get("SMTP_USER");
-        String password = dotenv.get("SMTP_PASS");
-        String from = dotenv.get("SMTP_FROM", username != null ? username : "no-reply@gearmind.local");
-        boolean startTls = Boolean.parseBoolean(dotenv.get("SMTP_TLS", "true"));
-        boolean ssl = Boolean.parseBoolean(dotenv.get("SMTP_SSL", "false"));
-        return new EmailConfig(host, port, username, password, from, startTls, ssl);
     }
 
     public String getHost() {

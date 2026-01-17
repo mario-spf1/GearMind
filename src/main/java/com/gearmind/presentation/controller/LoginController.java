@@ -5,6 +5,7 @@ import com.gearmind.application.auth.InvalidCredentialsException;
 import com.gearmind.application.auth.LoginRequest;
 import com.gearmind.application.auth.LoginResponse;
 import com.gearmind.application.auth.LoginUseCase;
+import com.gearmind.application.email.EnviarEmailEmpresaUseCase;
 import com.gearmind.application.email.SendPasswordRecoveryEmailRequest;
 import com.gearmind.application.email.SendPasswordRecoveryEmailUseCase;
 import com.gearmind.application.common.SessionManager;
@@ -12,8 +13,8 @@ import com.gearmind.domain.user.User;
 import com.gearmind.infrastructure.auth.BCryptPasswordHasher;
 import com.gearmind.infrastructure.auth.MySqlUserRepository;
 import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
-import com.gearmind.infrastructure.email.EmailConfig;
-import com.gearmind.infrastructure.email.SmtpEmailSender;
+import com.gearmind.infrastructure.email.JdbcSmtpConfigRepository;
+import com.gearmind.infrastructure.email.SmtpEmailSenderFactory;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -40,14 +41,13 @@ public class LoginController {
 
     private final LoginUseCase loginUseCase;
     private final SendPasswordRecoveryEmailUseCase sendPasswordRecoveryEmailUseCase;
-    private final EmailConfig emailConfig;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public LoginController() {
         MySqlUserRepository userRepository = new MySqlUserRepository();
         this.loginUseCase = new LoginUseCase(userRepository, new BCryptPasswordHasher(), new MySqlEmpresaRepository());
-        this.emailConfig = EmailConfig.fromEnv();
-        this.sendPasswordRecoveryEmailUseCase = new SendPasswordRecoveryEmailUseCase(userRepository, new SmtpEmailSender(emailConfig));
+        EnviarEmailEmpresaUseCase enviarEmailEmpresaUseCase = new EnviarEmailEmpresaUseCase(new JdbcSmtpConfigRepository(), new SmtpEmailSenderFactory());
+        this.sendPasswordRecoveryEmailUseCase = new SendPasswordRecoveryEmailUseCase(userRepository, enviarEmailEmpresaUseCase);
     }
 
     @FXML
@@ -112,10 +112,6 @@ public class LoginController {
                 showWarning("El email no tiene un formato válido.");
                 return;
             }
-            if (!isEmailConfigured()) {
-                showWarning("No se ha configurado el envío de correo (SMTP).");
-                return;
-            }
             try {
                 String recoveryCode = generateRecoveryCode();
                 sendPasswordRecoveryEmailUseCase.execute(new SendPasswordRecoveryEmailRequest(email, recoveryCode, null));
@@ -160,10 +156,6 @@ public class LoginController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    private boolean isEmailConfigured() {
-        return emailConfig != null && emailConfig.getHost() != null && !emailConfig.getHost().isBlank();
     }
 
     private String generateRecoveryCode() {
