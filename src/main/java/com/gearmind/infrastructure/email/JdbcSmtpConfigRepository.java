@@ -27,7 +27,7 @@ public class JdbcSmtpConfigRepository implements SmtpConfigRepository {
     @Override
     public EmailConfig findByEmpresaId(long empresaId) {
         String sql = """
-            SELECT host, port, username, password_encrypted, from_address, starttls, ssl
+            SELECT host, port, username, password_encrypted, from_address, starttls, `ssl`
             FROM smtp_config
             WHERE empresa_id = ?
             """;
@@ -36,15 +36,7 @@ public class JdbcSmtpConfigRepository implements SmtpConfigRepository {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     String password = cipher.decrypt(rs.getString("password_encrypted"));
-                    return new EmailConfig(
-                            rs.getString("host"),
-                            rs.getInt("port"),
-                            rs.getString("username"),
-                            password,
-                            rs.getString("from_address"),
-                            rs.getBoolean("starttls"),
-                            rs.getBoolean("ssl")
-                    );
+                    return new EmailConfig(rs.getString("host"), rs.getInt("port"), rs.getString("username"), password, rs.getString("from_address"), rs.getBoolean("starttls"),rs.getBoolean("ssl"));
                 }
             }
             throw new IllegalArgumentException("No hay configuración SMTP para la empresa.");
@@ -56,7 +48,7 @@ public class JdbcSmtpConfigRepository implements SmtpConfigRepository {
     @Override
     public void save(long empresaId, EmailConfig config) {
         String sql = """
-            INSERT INTO smtp_config (empresa_id, host, port, username, password_encrypted, from_address, starttls, ssl, updated_at)
+            INSERT INTO smtp_config (empresa_id, host, port, username, password_encrypted, from_address, starttls, `ssl`, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
             """;
         executeUpsert(sql, empresaId, config);
@@ -66,7 +58,7 @@ public class JdbcSmtpConfigRepository implements SmtpConfigRepository {
     public void update(long empresaId, EmailConfig config) {
         String sql = """
             UPDATE smtp_config
-            SET host = ?, port = ?, username = ?, password_encrypted = ?, from_address = ?, starttls = ?, ssl = ?, updated_at = NOW()
+            SET host = ?, port = ?, username = ?, password_encrypted = ?, from_address = ?, starttls = ?, `ssl` = ?, updated_at = NOW()
             WHERE empresa_id = ?
             """;
         try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {

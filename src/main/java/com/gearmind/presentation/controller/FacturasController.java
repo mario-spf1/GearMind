@@ -7,7 +7,6 @@ import com.gearmind.application.email.SendInvoiceEmailRequest;
 import com.gearmind.application.email.SendInvoiceEmailUseCase;
 import com.gearmind.application.invoice.DeleteInvoiceUseCase;
 import com.gearmind.application.invoice.ListInvoicesUseCase;
-import com.gearmind.domain.email.EmailConfig;
 import com.gearmind.domain.invoice.Invoice;
 import com.gearmind.domain.invoice.InvoiceStatus;
 import com.gearmind.infrastructure.invoice.InvoicePdfStorage;
@@ -156,7 +155,7 @@ public class FacturasController {
             private final Button btnEnviar = new Button("Enviar");
             private final Button btnEliminar = new Button("Eliminar");
             private final HBox box = new HBox(8, btnEditar, btnPdf, btnEnviar, btnEliminar);
-            
+
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
                 btnPdf.getStyleClass().add("tfx-icon-btn-secondary");

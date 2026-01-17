@@ -9,7 +9,6 @@ import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
 import com.gearmind.domain.budget.Budget;
 import com.gearmind.domain.budget.BudgetStatus;
-import com.gearmind.domain.email.EmailConfig;
 import com.gearmind.infrastructure.budget.BudgetPdfStorage;
 import com.gearmind.infrastructure.budget.BudgetPdfGenerator;
 import com.gearmind.infrastructure.budget.MySqlBudgetRepository;
