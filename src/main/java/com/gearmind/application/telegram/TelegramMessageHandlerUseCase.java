@@ -133,6 +133,14 @@ public class TelegramMessageHandlerUseCase {
             return;
         }
 
+        if (text.startsWith("/cita")) {
+            if (!ensureLinked(chatId, "/cita")) {
+                return;
+            }
+            startAppointmentConversation(chatId);
+            return;
+        }
+
         if (text.startsWith("/facturas")) {
             if (!ensureLinked(chatId, "/facturas")) {
                 return;
@@ -348,16 +356,15 @@ public class TelegramMessageHandlerUseCase {
             sb.append("Fecha solicitada: N/D\n");
         }
         Optional<TelegramClientLink> link = clientLinkRepository.findByChatId(config.getEmpresaId(), chatId);
-        link.flatMap(item -> customerRepository.findById(item.getClienteId()))
-                .ifPresent(customer -> {
-                    sb.append("Cliente: ").append(customer.getNombre()).append("\n");
-                    if (customer.getTelefono() != null && !customer.getTelefono().isBlank()) {
-                        sb.append("Teléfono: ").append(customer.getTelefono()).append("\n");
-                    }
-                    if (customer.getEmail() != null && !customer.getEmail().isBlank()) {
-                        sb.append("Email: ").append(customer.getEmail()).append("\n");
-                    }
-                });
+        link.flatMap(item -> customerRepository.findById(item.getClienteId())).ifPresent(customer -> {
+            sb.append("Cliente: ").append(customer.getNombre()).append("\n");
+            if (customer.getTelefono() != null && !customer.getTelefono().isBlank()) {
+                sb.append("Teléfono: ").append(customer.getTelefono()).append("\n");
+            }
+            if (customer.getEmail() != null && !customer.getEmail().isBlank()) {
+                sb.append("Email: ").append(customer.getEmail()).append("\n");
+            }
+        });
         sb.append("Vehículo: Por confirmar\n");
         if (username != null && !username.isBlank()) {
             sb.append("Telegram: @").append(username);
@@ -676,11 +683,9 @@ public class TelegramMessageHandlerUseCase {
     private void sendHelp(long chatId) {
         Optional<TelegramClientLink> link = clientLinkRepository.findByChatId(config.getEmpresaId(), chatId);
         if (link.isPresent()) {
-            String name = customerRepository.findById(link.get().getClienteId())
-                    .map(Customer::getNombre)
-                    .orElse("cliente #" + link.get().getClienteId());
+            String name = customerRepository.findById(link.get().getClienteId()).map(Customer::getNombre).orElse("cliente #" + link.get().getClienteId());
             String message = """
-                👋 Hola, soy el bot de GearMind.
+                Hola, soy el bot de GearMind.
                 Ahora mismo estás identificado como %s.
                 Usa los botones para solicitar una cita o consultar tu información.
                 Si no eres tú, pulsa "Cambiar cliente".

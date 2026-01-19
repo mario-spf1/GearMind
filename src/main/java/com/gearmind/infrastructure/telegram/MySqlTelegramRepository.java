@@ -269,9 +269,15 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
     @Override
     public List<TelegramRepairSummary> findRecentRepairs(long empresaId, long clienteId, int limit) {
         String sql = """
-                SELECT id, descripcion, estado
-                FROM reparacion
-                WHERE empresa_id = ? AND cliente_id = ? AND estado <> 'FINALIZADA'
+                SELECT r.id,
+                    r.descripcion,
+                    r.estado,
+                    v.matricula,
+                    v.marca,
+                    v.modelo
+                FROM reparacion r
+                JOIN vehiculo v ON v.id = r.vehiculo_id
+                WHERE r.empresa_id = ? AND r.cliente_id = ? AND r.estado <> 'FINALIZADA'
                 ORDER BY created_at DESC
                 LIMIT ?
                 """;
@@ -285,7 +291,8 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    result.add(new TelegramRepairSummary(rs.getLong("id"), rs.getString("descripcion"), rs.getString("estado")));
+                    String vehiculo = formatVehicle(rs.getString("matricula"), rs.getString("marca"), rs.getString("modelo"));
+                    result.add(new TelegramRepairSummary(rs.getLong("id"), rs.getString("descripcion"), rs.getString("estado"), vehiculo));
                 }
             }
         } catch (SQLException e) {
@@ -293,6 +300,26 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
         }
 
         return result;
+    }
+
+    private String formatVehicle(String matricula, String marca, String modelo) {
+        StringBuilder sb = new StringBuilder();
+        if (matricula != null && !matricula.isBlank()) {
+            sb.append(matricula);
+        }
+        if (marca != null && !marca.isBlank()) {
+            if (!sb.isEmpty()) {
+                sb.append(" - ");
+            }
+            sb.append(marca);
+        }
+        if (modelo != null && !modelo.isBlank()) {
+            if (!sb.isEmpty()) {
+                sb.append(" ");
+            }
+            sb.append(modelo);
+        }
+        return sb.isEmpty() ? "Vehículo N/D" : sb.toString();
     }
 
     @Override
