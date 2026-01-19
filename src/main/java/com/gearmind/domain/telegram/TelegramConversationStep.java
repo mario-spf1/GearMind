@@ -3,7 +3,9 @@ package com.gearmind.domain.telegram;
 public enum TelegramConversationStep {
     ASK_DNI,
     CONFIRM_IDENTITY,
-    ASK_CONTACT,
-    ASK_AVAILABILITY,
-    ASK_VEHICLE
+    ASK_DATE_YEAR,
+    ASK_DATE_MONTH,
+    ASK_DATE_DAY,
+    ASK_TIME_SLOT,
+    CONFIRM_APPOINTMENT
 }

@@ -5,10 +5,15 @@ import com.gearmind.application.common.SessionManager;
 import com.gearmind.application.repair.ChangeRepairStatusUseCase;
 import com.gearmind.application.repair.ListRepairsUseCase;
 import com.gearmind.application.repair.SaveRepairUseCase;
+import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
 import com.gearmind.domain.repair.Repair;
 import com.gearmind.domain.repair.RepairStatus;
 import com.gearmind.infrastructure.repair.MySqlRepairRepository;
+import com.gearmind.infrastructure.telegram.MySqlTelegramRepository;
+import com.gearmind.infrastructure.telegram.TelegramBotClient;
+import com.gearmind.infrastructure.telegram.TelegramConfig;
 import com.gearmind.presentation.table.SmartTable;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -89,7 +94,11 @@ public class ReparacionesController {
         MySqlRepairRepository repo = new MySqlRepairRepository();
         this.listRepairsUseCase = new ListRepairsUseCase(repo);
         this.saveRepairUseCase = new SaveRepairUseCase(repo);
-        this.changeRepairStatusUseCase = new ChangeRepairStatusUseCase(repo);
+        TelegramConfig telegramConfig = new TelegramConfig();
+        TelegramBotClient botClient = new TelegramBotClient(telegramConfig, new ObjectMapper());
+        MySqlTelegramRepository telegramRepository = new MySqlTelegramRepository();
+        SendTelegramNotificationUseCase notificationUseCase = new SendTelegramNotificationUseCase(telegramConfig, botClient, telegramRepository, telegramRepository);
+        this.changeRepairStatusUseCase = new ChangeRepairStatusUseCase(repo, notificationUseCase);
     }
 
     @FXML

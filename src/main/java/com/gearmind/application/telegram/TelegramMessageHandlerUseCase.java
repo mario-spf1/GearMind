@@ -8,7 +8,11 @@ import com.gearmind.domain.telegram.*;
 import com.gearmind.infrastructure.telegram.TelegramBotClient;
 import com.gearmind.infrastructure.telegram.TelegramConfig;
 import com.gearmind.infrastructure.telegram.dto.TelegramUpdate;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.YearMonth;
+import java.time.format.TextStyle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -23,15 +27,21 @@ public class TelegramMessageHandlerUseCase {
     private static final String OPTION_ESTADO = "Estado de reparaciones";
     private static final String OPTION_CITAS = "Próximas citas";
     private static final String OPTION_FACTURAS = "Facturas recientes";
-    private static final String OPTION_IDENTIFICAR = "Identificarme";
     private static final String OPTION_CAMBIAR = "Cambiar cliente";
     private static final String OPTION_CANCELAR = "Cancelar";
     private static final String OPTION_SI = "Sí";
     private static final String OPTION_NO = "No";
     private static final String OPTION_REINTENTAR = "Reintentar";
+    private static final String OPTION_CONFIRMAR_CITA = "Confirmar cita";
+    private static final String OPTION_CAMBIAR_DIA = "Cambiar día";
     private static final String PAYLOAD_PENDING_ACTION = "pendingAction";
     private static final String PAYLOAD_CANDIDATE_ID = "candidateClienteId";
     private static final String PAYLOAD_CANDIDATE_NOMBRE = "candidateNombre";
+    private static final String PAYLOAD_APPOINTMENT_YEAR = "appointmentYear";
+    private static final String PAYLOAD_APPOINTMENT_MONTH = "appointmentMonth";
+    private static final String PAYLOAD_APPOINTMENT_DAY = "appointmentDay";
+    private static final String PAYLOAD_APPOINTMENT_HOUR = "appointmentHour";
+    private static final List<Integer> APPOINTMENT_HOURS = List.of(9, 10, 11, 12, 13, 14, 15, 16, 17, 18);
     private final TelegramConfig config;
     private final TelegramBotClient botClient;
     private final TelegramClientLinkRepository clientLinkRepository;
@@ -74,9 +84,6 @@ public class TelegramMessageHandlerUseCase {
 
         if (text.equals("/start") || text.equals("/ayuda")) {
             sendHelp(chatId);
-            if (clientLinkRepository.findByChatId(config.getEmpresaId(), chatId).isEmpty()) {
-                startIdentityConversation(chatId, null);
-            }
             return;
         }
 
@@ -91,8 +98,14 @@ public class TelegramMessageHandlerUseCase {
             return;
         }
 
-        if (text.startsWith("/identificar") || text.startsWith("/cambiar")) {
-            startIdentityConversation(chatId, null);
+        if (text.startsWith("/identificar")) {
+            startIdentityConversation(chatId, null, "Necesitamos identificarte para continuar.");
+            return;
+        }
+
+        if (text.startsWith("/cambiar")) {
+            resetLinkedCustomer(chatId);
+            startIdentityConversation(chatId, null, "Vamos a cambiar de cliente. Indícanos tu DNI.");
             return;
         }
 
@@ -136,26 +149,26 @@ public class TelegramMessageHandlerUseCase {
             return true;
         }
 
-        startIdentityConversation(chatId, pendingAction);
+        startIdentityConversation(chatId, pendingAction, "Necesitamos identificarte para continuar.");
         return false;
     }
 
-    private void startIdentityConversation(long chatId, String pendingAction) {
+    private void startIdentityConversation(long chatId, String pendingAction, String promptMessage) {
         Map<String, String> payload = new HashMap<>();
         if (pendingAction != null && !pendingAction.isBlank()) {
             payload.put(PAYLOAD_PENDING_ACTION, pendingAction);
         }
 
-        botClient.sendMessage(chatId, "No te he entendido. Usa /ayuda para ver opciones.");
         TelegramConversationState state = new TelegramConversationState(null, config.getEmpresaId(), chatId, TelegramConversationStep.ASK_DNI, toJson(payload), LocalDateTime.now());
         conversationRepository.save(state);
-        botClient.sendMessageWithKeyboard(chatId, "Para continuar, indícanos tu DNI.", List.of(List.of(OPTION_CANCELAR)), true);
+        String prompt = promptMessage != null && !promptMessage.isBlank() ? promptMessage : "Para continuar, indícanos tu DNI.";
+        botClient.sendMessageWithKeyboard(chatId, prompt, List.of(List.of(OPTION_CANCELAR)), true);
     }
 
     private void startAppointmentConversation(long chatId) {
-        TelegramConversationState state = new TelegramConversationState(null, config.getEmpresaId(), chatId, TelegramConversationStep.ASK_CONTACT, "{}", LocalDateTime.now());
+        TelegramConversationState state = new TelegramConversationState(null, config.getEmpresaId(), chatId, TelegramConversationStep.ASK_DATE_YEAR, "{}", LocalDateTime.now());
         conversationRepository.save(state);
-        botClient.sendMessageWithKeyboard(chatId, "Perfecto. ¿Cuál es tu nombre y un teléfono de contacto?", List.of(List.of(OPTION_CANCELAR)), true);
+        sendYearOptions(chatId);
     }
 
     private void handleConversationStep(TelegramConversationState state, TelegramUpdate update, String text) {
@@ -205,23 +218,83 @@ public class TelegramMessageHandlerUseCase {
                 return;
             }
 
-            case ASK_CONTACT -> {
-                payload.put("contacto", text);
-                nextStep = TelegramConversationStep.ASK_AVAILABILITY;
-                botClient.sendMessageWithKeyboard(state.getChatId(), "Genial. Indica tu disponibilidad (fechas y horas aproximadas).", List.of(List.of(OPTION_CANCELAR)), true);
+            case ASK_DATE_YEAR -> {
+                Integer year = parseYear(text);
+                if (year == null) {
+                    botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona un año válido.", buildYearKeyboard(), true);
+                    return;
+                }
+                payload.put(PAYLOAD_APPOINTMENT_YEAR, String.valueOf(year));
+                nextStep = TelegramConversationStep.ASK_DATE_MONTH;
+                botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona el mes.", buildMonthKeyboard(year), true);
             }
-            case ASK_AVAILABILITY -> {
-                payload.put("disponibilidad", text);
-                nextStep = TelegramConversationStep.ASK_VEHICLE;
-                botClient.sendMessageWithKeyboard(state.getChatId(), "Gracias. Indica vehículo (matrícula, marca y modelo).", List.of(List.of(OPTION_CANCELAR)), true);
+
+            case ASK_DATE_MONTH -> {
+                Integer month = parseMonth(text);
+                Integer year = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_YEAR));
+                if (month == null || year == null) {
+                    botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona un mes válido.", buildMonthKeyboard(year != null ? year : LocalDate.now().getYear()), true);
+                    return;
+                }
+                payload.put(PAYLOAD_APPOINTMENT_MONTH, String.valueOf(month));
+                nextStep = TelegramConversationStep.ASK_DATE_DAY;
+                botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona el día.", buildDayKeyboard(year, month), true);
             }
-            case ASK_VEHICLE -> {
-                payload.put("vehiculo", text);
-                persistAppointmentRequest(update, payload);
-                conversationRepository.delete(state.getId());
-                botClient.sendMessageWithKeyboard(state.getChatId(), "Solicitud de cita registrada. Te contactaremos para confirmarla.", buildMainMenu(), true);
+
+            case ASK_DATE_DAY -> {
+                Integer year = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_YEAR));
+                Integer month = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_MONTH));
+                Integer day = parseDay(text, year, month);
+                if (year == null || month == null || day == null) {
+                    botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona un día válido.", buildDayKeyboard(year != null ? year : LocalDate.now().getYear(), month != null ? month : LocalDate.now().getMonthValue()), true);
+                    return;
+                }
+                payload.put(PAYLOAD_APPOINTMENT_DAY, String.valueOf(day));
+                List<String> hourOptions = buildAvailableHourOptions(year, month, day);
+                if (hourOptions.isEmpty()) {
+                    botClient.sendMessageWithKeyboard(state.getChatId(), "No hay horas disponibles para ese día. Elige otro día.", buildDayKeyboard(year, month), true);
+                    return;
+                }
+                nextStep = TelegramConversationStep.ASK_TIME_SLOT;
+                botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona una hora disponible.", buildKeyboard(hourOptions, 3), true);
+            }
+            case ASK_TIME_SLOT -> {
+                Integer year = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_YEAR));
+                Integer month = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_MONTH));
+                Integer day = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_DAY));
+                Integer hour = parseHour(text);
+                if (year == null || month == null || day == null || hour == null) {
+                    List<String> hourOptions = buildAvailableHourOptions(year != null ? year : LocalDate.now().getYear(), month != null ? month : LocalDate.now().getMonthValue(), day != null ? day : LocalDate.now().getDayOfMonth());
+                    if (hourOptions.isEmpty()) {
+                        botClient.sendMessageWithKeyboard(state.getChatId(), "No hay horas disponibles para ese día. Selecciona otra fecha.", buildDayKeyboard(year != null ? year : LocalDate.now().getYear(), month != null ? month : LocalDate.now().getMonthValue()), true);
+                        return;
+                    }
+                    botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona una hora válida.", buildKeyboard(hourOptions, 3), true);
+                    return;
+                }
+                payload.put(PAYLOAD_APPOINTMENT_HOUR, String.valueOf(hour));
+                nextStep = TelegramConversationStep.CONFIRM_APPOINTMENT;
+                botClient.sendMessageWithKeyboard(state.getChatId(), appointmentConfirmationMessage(year, month, day, hour), buildConfirmAppointmentKeyboard(), true);
+            }
+            case CONFIRM_APPOINTMENT -> {
+                if (OPTION_CONFIRMAR_CITA.equalsIgnoreCase(text)) {
+                    persistAppointmentRequest(update, payload);
+                    conversationRepository.delete(state.getId());
+                    botClient.sendMessageWithKeyboard(state.getChatId(), "Solicitud de cita registrada. Te contactaremos para confirmarla.", buildMainMenu(), true);
+                    return;
+                }
+                if (OPTION_CAMBIAR_DIA.equalsIgnoreCase(text)) {
+                    nextStep = TelegramConversationStep.ASK_DATE_DAY;
+                    Integer year = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_YEAR));
+                    Integer month = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_MONTH));
+                    payload.remove(PAYLOAD_APPOINTMENT_DAY);
+                    payload.remove(PAYLOAD_APPOINTMENT_HOUR);
+                    botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona un nuevo día.", buildDayKeyboard(year != null ? year : LocalDate.now().getYear(), month != null ? month : LocalDate.now().getMonthValue()), true);
+                }
+                botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona una opción.", buildConfirmAppointmentKeyboard(), true);
                 return;
             }
+
             default -> {
                 conversationRepository.delete(state.getId());
                 botClient.sendMessageWithKeyboard(state.getChatId(), "Conversación reiniciada. Usa el menú para continuar.", buildMainMenu(), true);
@@ -263,15 +336,34 @@ public class TelegramMessageHandlerUseCase {
     private void persistAppointmentRequest(TelegramUpdate update, Map<String, String> payload) {
         long chatId = update.getMessage().getChat().getId();
         String username = update.getMessage().getFrom() != null ? update.getMessage().getFrom().getUsername() : null;
+        Integer year = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_YEAR));
+        Integer month = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_MONTH));
+        Integer day = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_DAY));
+        Integer hour = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_HOUR));
+        LocalDate date = (year != null && month != null && day != null) ? LocalDate.of(year, month, day) : null;
         StringBuilder sb = new StringBuilder();
-        sb.append("Contacto: ").append(payload.getOrDefault("contacto", "N/D")).append("\n");
-        sb.append("Disponibilidad: ").append(payload.getOrDefault("disponibilidad", "N/D")).append("\n");
-        sb.append("Vehículo: ").append(payload.getOrDefault("vehiculo", "N/D")).append("\n");
+        if (date != null && hour != null) {
+            sb.append("Fecha solicitada: ").append(date).append(" ").append(String.format("%02d:00", hour)).append("\n");
+        } else {
+            sb.append("Fecha solicitada: N/D\n");
+        }
+        Optional<TelegramClientLink> link = clientLinkRepository.findByChatId(config.getEmpresaId(), chatId);
+        link.flatMap(item -> customerRepository.findById(item.getClienteId()))
+                .ifPresent(customer -> {
+                    sb.append("Cliente: ").append(customer.getNombre()).append("\n");
+                    if (customer.getTelefono() != null && !customer.getTelefono().isBlank()) {
+                        sb.append("Teléfono: ").append(customer.getTelefono()).append("\n");
+                    }
+                    if (customer.getEmail() != null && !customer.getEmail().isBlank()) {
+                        sb.append("Email: ").append(customer.getEmail()).append("\n");
+                    }
+                });
+        sb.append("Vehículo: Por confirmar\n");
         if (username != null && !username.isBlank()) {
             sb.append("Telegram: @").append(username);
         }
 
-        Long clienteId = clientLinkRepository.findByChatId(config.getEmpresaId(), chatId).map(TelegramClientLink::getClienteId).orElse(null);
+        Long clienteId = link.map(TelegramClientLink::getClienteId).orElse(null);
         TelegramAppointmentRequest request = new TelegramAppointmentRequest(null, config.getEmpresaId(), clienteId, null, chatId, sb.toString(), LocalDateTime.now(), TelegramAppointmentRequestStatus.PENDIENTE);
         appointmentRequestRepository.save(request);
     }
@@ -279,7 +371,7 @@ public class TelegramMessageHandlerUseCase {
     private void sendRepairStatus(long chatId) {
         Optional<TelegramClientLink> link = clientLinkRepository.findByChatId(config.getEmpresaId(), chatId);
         if (link.isEmpty()) {
-            botClient.sendMessageWithKeyboard(chatId, "No tenemos tu cuenta vinculada. Usa \"Identificarme\" para asociar tu DNI.", buildMainMenu(), true);
+            botClient.sendMessageWithKeyboard(chatId, "No tenemos tu cuenta vinculada. Usa /ayuda para identificarte.", buildMainMenu(), true);
             return;
         }
 
@@ -290,6 +382,7 @@ public class TelegramMessageHandlerUseCase {
         }
 
         StringBuilder sb = new StringBuilder("Estado de reparaciones:\n");
+        appendCustomerHeader(sb, link.get().getClienteId());
         for (TelegramRepairSummary repair : repairs) {
             sb.append("• #").append(repair.getId()).append(" - ").append(repair.getDescripcion()).append(" (").append(repair.getEstado()).append(")\n");
         }
@@ -299,7 +392,7 @@ public class TelegramMessageHandlerUseCase {
     private void sendUpcomingAppointments(long chatId) {
         Optional<TelegramClientLink> link = clientLinkRepository.findByChatId(config.getEmpresaId(), chatId);
         if (link.isEmpty()) {
-            botClient.sendMessageWithKeyboard(chatId, "No tenemos tu cuenta vinculada. Usa \"Identificarme\" para asociar tu DNI.", buildMainMenu(), true);
+            botClient.sendMessageWithKeyboard(chatId, "No tenemos tu cuenta vinculada. Usa /ayuda para identificarte.", buildMainMenu(), true);
             return;
         }
 
@@ -310,6 +403,7 @@ public class TelegramMessageHandlerUseCase {
         }
 
         StringBuilder sb = new StringBuilder("Próximas citas:\n");
+        appendCustomerHeader(sb, link.get().getClienteId());
         for (TelegramAppointmentSummary appointment : appointments) {
             sb.append("• #").append(appointment.getId()).append(" - ").append(appointment.getFechaHora()).append(" (").append(appointment.getEstado()).append(")\n");
         }
@@ -319,7 +413,7 @@ public class TelegramMessageHandlerUseCase {
     private void sendInvoices(long chatId) {
         Optional<TelegramClientLink> link = clientLinkRepository.findByChatId(config.getEmpresaId(), chatId);
         if (link.isEmpty()) {
-            botClient.sendMessageWithKeyboard(chatId, "No tenemos tu cuenta vinculada. Usa \"Identificarme\" para asociar tu DNI.", buildMainMenu(), true);
+            botClient.sendMessageWithKeyboard(chatId, "No tenemos tu cuenta vinculada. Usa /ayuda para identificarte.", buildMainMenu(), true);
             return;
         }
 
@@ -330,10 +424,181 @@ public class TelegramMessageHandlerUseCase {
         }
 
         StringBuilder sb = new StringBuilder("Facturas recientes:\n");
+        appendCustomerHeader(sb, link.get().getClienteId());
         for (TelegramInvoiceSummary invoice : invoices) {
-            sb.append("• ").append(invoice.getNumero() != null ? invoice.getNumero() : ("#" + invoice.getId())).append(" - ").append(invoice.getFecha()).append(" (").append(invoice.getEstado()).append(") ").append("Total: ").append(invoice.getTotal()).append("\n");
+            sb.append("• ").append(invoice.getNumero() != null ? invoice.getNumero() : ("#" + invoice.getId())).append(" - ").append(invoice.getTotal()).append("\n");
         }
         botClient.sendMessageWithKeyboard(chatId, sb.toString().trim(), buildMainMenu(), true);
+    }
+
+    private void sendYearOptions(long chatId) {
+        String prefix = customerLabel(chatId);
+        botClient.sendMessageWithKeyboard(chatId, (prefix != null ? prefix + "\n" : "") + "Selecciona el año.", buildYearKeyboard(), true);
+    }
+
+    private List<List<String>> buildYearKeyboard() {
+        int currentYear = LocalDate.now().getYear();
+        List<String> options = List.of(String.valueOf(currentYear), String.valueOf(currentYear + 1));
+        return buildKeyboard(options, 2);
+    }
+
+    private List<List<String>> buildMonthKeyboard(Integer year) {
+        int currentYear = LocalDate.now().getYear();
+        int startMonth = (year != null && year == currentYear) ? LocalDate.now().getMonthValue() : 1;
+        List<String> options = new java.util.ArrayList<>();
+        for (int month = startMonth; month <= 12; month++) {
+            options.add(monthLabel(month));
+        }
+        return buildKeyboard(options, 3);
+    }
+
+    private List<List<String>> buildDayKeyboard(int year, int month) {
+        LocalDate today = LocalDate.now();
+        YearMonth yearMonth = YearMonth.of(year, month);
+        int startDay = (year == today.getYear() && month == today.getMonthValue()) ? today.getDayOfMonth() : 1;
+        List<String> options = new java.util.ArrayList<>();
+        for (int day = startDay; day <= yearMonth.lengthOfMonth(); day++) {
+            options.add(String.valueOf(day));
+        }
+        return buildKeyboard(options, 7);
+    }
+
+    private List<String> buildAvailableHourOptions(int year, int month, int day) {
+        LocalDate date = LocalDate.of(year, month, day);
+        List<Integer> bookedHours = queryRepository.findBookedAppointmentHours(config.getEmpresaId(), date);
+        LocalDateTime now = LocalDateTime.now();
+        List<String> options = new java.util.ArrayList<>();
+        for (Integer hour : APPOINTMENT_HOURS) {
+            if (bookedHours.contains(hour)) {
+                continue;
+            }
+            if (date.equals(now.toLocalDate()) && hour <= now.getHour()) {
+                continue;
+            }
+            options.add(String.format("%02d:00", hour));
+        }
+        return options;
+    }
+
+    private String appointmentConfirmationMessage(int year, int month, int day, int hour) {
+        LocalDate date = LocalDate.of(year, month, day);
+        return "Has seleccionado " + date + " a las " + String.format("%02d:00", hour) + ". ¿Confirmas la solicitud?";
+    }
+
+    private List<List<String>> buildConfirmAppointmentKeyboard() {
+        return List.of(List.of(OPTION_CONFIRMAR_CITA), List.of(OPTION_CAMBIAR_DIA, OPTION_CANCELAR));
+    }
+
+    private List<List<String>> buildKeyboard(List<String> options, int columns) {
+        List<List<String>> rows = new java.util.ArrayList<>();
+        List<String> current = new java.util.ArrayList<>();
+        for (String option : options) {
+            current.add(option);
+            if (current.size() == columns) {
+                rows.add(current);
+                current = new java.util.ArrayList<>();
+            }
+        }
+        if (!current.isEmpty()) {
+            rows.add(current);
+        }
+        rows.add(List.of(OPTION_CANCELAR));
+        return rows;
+    }
+
+    private Integer parseYear(String text) {
+        Integer value = parseInteger(text);
+        if (value == null) {
+            return null;
+        }
+        int currentYear = LocalDate.now().getYear();
+        if (value < currentYear || value > currentYear + 1) {
+            return null;
+        }
+        return value;
+    }
+
+    private Integer parseMonth(String text) {
+        Integer numeric = parseInteger(text);
+        if (numeric != null && numeric >= 1 && numeric <= 12) {
+            return numeric;
+        }
+        if (text == null) {
+            return null;
+        }
+        String normalized = text.trim().toLowerCase(new Locale("es", "ES"));
+        for (int month = 1; month <= 12; month++) {
+            if (monthLabel(month).toLowerCase(new Locale("es", "ES")).equals(normalized)) {
+                return month;
+            }
+        }
+        return null;
+    }
+
+    private Integer parseDay(String text, Integer year, Integer month) {
+        if (year == null || month == null) {
+            return null;
+        }
+        Integer day = parseInteger(text);
+        if (day == null) {
+            return null;
+        }
+        YearMonth yearMonth = YearMonth.of(year, month);
+        if (day < 1 || day > yearMonth.lengthOfMonth()) {
+            return null;
+        }
+        LocalDate date = LocalDate.of(year, month, day);
+        if (date.isBefore(LocalDate.now())) {
+            return null;
+        }
+        return day;
+    }
+
+    private Integer parseHour(String text) {
+        if (text == null) {
+            return null;
+        }
+        String normalized = text.trim();
+        if (normalized.endsWith(":00")) {
+            normalized = normalized.substring(0, normalized.length() - 3);
+        }
+        Integer value = parseInteger(normalized);
+        if (value == null) {
+            return null;
+        }
+        return APPOINTMENT_HOURS.contains(value) ? value : null;
+    }
+
+    private Integer parsePayloadInteger(String raw) {
+        return parseInteger(raw);
+    }
+
+    private Integer parseInteger(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(raw.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private String monthLabel(int month) {
+        return Month.of(month).getDisplayName(TextStyle.FULL_STANDALONE, new Locale("es", "ES"));
+    }
+
+    private void appendCustomerHeader(StringBuilder sb, long clienteId) {
+        customerRepository.findById(clienteId).ifPresent(customer -> sb.append("Cliente: ").append(customer.getNombre()).append("\n"));
+    }
+
+    private String customerLabel(long chatId) {
+        return clientLinkRepository.findByChatId(config.getEmpresaId(), chatId).flatMap(link -> customerRepository.findById(link.getClienteId())).map(customer -> "Cliente: " + customer.getNombre()).orElse(null);
+    }
+
+    private void resetLinkedCustomer(long chatId) {
+        clientLinkRepository.deleteByChatId(config.getEmpresaId(), chatId);
+        conversationRepository.findConversationByChatId(config.getEmpresaId(), chatId).ifPresent(state -> conversationRepository.delete(state.getId()));
     }
 
     private Map<String, String> parsePayload(String payload) {
@@ -393,8 +658,6 @@ public class TelegramMessageHandlerUseCase {
                 "/citas";
             case OPTION_FACTURAS ->
                 "/facturas";
-            case OPTION_IDENTIFICAR ->
-                "/identificar";
             case OPTION_CAMBIAR ->
                 "/cambiar";
             default ->
@@ -406,15 +669,30 @@ public class TelegramMessageHandlerUseCase {
         return List.of(
                 List.of(OPTION_CITA, OPTION_ESTADO),
                 List.of(OPTION_CITAS, OPTION_FACTURAS),
-                List.of(OPTION_IDENTIFICAR, OPTION_CAMBIAR)
+                List.of(OPTION_CAMBIAR)
         );
     }
 
     private void sendHelp(long chatId) {
+        Optional<TelegramClientLink> link = clientLinkRepository.findByChatId(config.getEmpresaId(), chatId);
+        if (link.isPresent()) {
+            String name = customerRepository.findById(link.get().getClienteId())
+                    .map(Customer::getNombre)
+                    .orElse("cliente #" + link.get().getClienteId());
+            String message = """
+                👋 Hola, soy el bot de GearMind.
+                Ahora mismo estás identificado como %s.
+                Usa los botones para solicitar una cita o consultar tu información.
+                Si no eres tú, pulsa "Cambiar cliente".
+                """.formatted(name).trim();
+            botClient.sendMessageWithKeyboard(chatId, message, buildMainMenu(), true);
+            return;
+        }
         String message = """
-            👋 Hola, soy el bot de GearMind.
-            Puedes usar los botones para solicitar una cita, consultar estado o vincular tu cuenta.
-            """.trim();  
-        botClient.sendMessageWithKeyboard(chatId, message, buildMainMenu(), true);          
+            Hola, soy el bot de GearMind.
+            Necesitamos identificarte para continuar.
+            """.trim();
+        botClient.sendMessageWithKeyboard(chatId, message, buildMainMenu(), true);
+        startIdentityConversation(chatId, null, "Indícanos tu DNI para identificarte.");
     }
 }

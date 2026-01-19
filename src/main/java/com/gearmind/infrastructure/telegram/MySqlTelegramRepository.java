@@ -97,6 +97,19 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
     }
 
     @Override
+    public void deleteByChatId(long empresaId, long chatId) {
+        String sql = "DELETE FROM telegram_cliente WHERE empresa_id = ? AND telegram_chat_id = ?";
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, empresaId);
+            ps.setLong(2, chatId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al eliminar vínculo Telegram", e);
+        }
+    }
+
+    @Override
     public Optional<TelegramConversationState> findConversationByChatId(long empresaId, long chatId) {
         String sql = """
                 SELECT id, empresa_id, telegram_chat_id, estado, payload, updated_at
@@ -258,7 +271,7 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
         String sql = """
                 SELECT id, descripcion, estado
                 FROM reparacion
-                WHERE empresa_id = ? AND cliente_id = ?
+                WHERE empresa_id = ? AND cliente_id = ? AND estado <> 'FINALIZADA'
                 ORDER BY created_at DESC
                 LIMIT ?
                 """;
@@ -307,6 +320,35 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al consultar facturas Telegram", e);
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<Integer> findBookedAppointmentHours(long empresaId, LocalDate date) {
+        String sql = """
+                SELECT fecha_hora
+                FROM cita
+                WHERE empresa_id = ? AND DATE(fecha_hora) = ? AND estado <> 'CANCELADA'
+                """;
+
+        List<Integer> result = new ArrayList<>();
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, empresaId);
+            ps.setDate(2, Date.valueOf(date));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Timestamp ts = rs.getTimestamp("fecha_hora");
+                    if (ts != null) {
+                        result.add(ts.toLocalDateTime().getHour());
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al consultar disponibilidad de citas Telegram", e);
         }
 
         return result;
