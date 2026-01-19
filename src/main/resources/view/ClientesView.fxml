@@ -58,6 +58,7 @@
                             </HBox>
 
                             <TextField fx:id="filterNombreField" promptText="Nombre" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="filterDniField" promptText="DNI" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
                             <TextField fx:id="filterTelefonoField" promptText="Teléfono" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
                             <TextField fx:id="filterEmailField" promptText="Email" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
 
@@ -84,6 +85,7 @@
                     <columns>
                         <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="160"/>
                         <TableColumn fx:id="colNombre" text="Nombre"/>
+                        <TableColumn fx:id="colDni" text="DNI" prefWidth="120"/>
                         <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="120"/>
                         <TableColumn fx:id="colEmail" text="Email"/>
                         <TableColumn fx:id="colNotas" text="Notas"/>

@@ -62,6 +62,7 @@
                     <TableView fx:id="tblUltimosClientes" prefHeight="260">
                         <columns>
                             <TableColumn fx:id="colCliNombre" text="Nombre" prefWidth="180"/>
+                            <TableColumn fx:id="colCliDni" text="DNI" prefWidth="120"/>
                             <TableColumn fx:id="colCliTelefono" text="Teléfono" prefWidth="120"/>
                             <TableColumn fx:id="colCliEmail" text="Email" prefWidth="220"/>
                         </columns>

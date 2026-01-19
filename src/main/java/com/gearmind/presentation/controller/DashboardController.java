@@ -21,31 +21,41 @@ import java.util.stream.Collectors;
 
 public class DashboardController {
 
-    // Labels métricas principales
-    @FXML private Label lblEmpresaTitulo;
-    @FXML private Label lblTotalClientes;
-    @FXML private Label lblTotalVehiculos;
-    @FXML private Label lblReparacionesAbiertas;
-    @FXML private Label lblTareasPendientes;
+    @FXML
+    private Label lblEmpresaTitulo;
+    @FXML
+    private Label lblTotalClientes;
+    @FXML
+    private Label lblTotalVehiculos;
+    @FXML
+    private Label lblReparacionesAbiertas;
+    @FXML
+    private Label lblTareasPendientes;
 
-    // Tabla últimos clientes
-    @FXML private TableView<Customer> tblUltimosClientes;
-    @FXML private TableColumn<Customer, String> colCliNombre;
-    @FXML private TableColumn<Customer, String> colCliTelefono;
-    @FXML private TableColumn<Customer, String> colCliEmail;
-    @FXML private Label lblUltimosClientesInfo;
+    @FXML
+    private TableView<Customer> tblUltimosClientes;
+    @FXML
+    private TableColumn<Customer, String> colCliNombre;
+    @FXML
+    private TableColumn<Customer, String> colCliDni;
+    @FXML
+    private TableColumn<Customer, String> colCliTelefono;
+    @FXML
+    private TableColumn<Customer, String> colCliEmail;
+    @FXML
+    private Label lblUltimosClientesInfo;
 
-    // Resumen de sesión
-    @FXML private Label lblUsuarioInfo;
-    @FXML private Label lblRolInfo;
-    @FXML private Label lblEmpresaInfo;
+    @FXML
+    private Label lblUsuarioInfo;
+    @FXML
+    private Label lblRolInfo;
+    @FXML
+    private Label lblEmpresaInfo;
 
     private final ListCustomersUseCase listCustomersUseCase;
 
     public DashboardController() {
-        this.listCustomersUseCase = new ListCustomersUseCase(
-                new MySqlCustomerRepository()
-        );
+        this.listCustomersUseCase = new ListCustomersUseCase(new MySqlCustomerRepository());
     }
 
     @FXML
@@ -85,9 +95,12 @@ public class DashboardController {
 
         if (lblRolInfo != null) {
             String rolTexto = switch (role) {
-                case SUPER_ADMIN -> "Super administrador";
-                case ADMIN       -> "Administrador";
-                case EMPLEADO    -> "Empleado";
+                case SUPER_ADMIN ->
+                    "Super administrador";
+                case ADMIN ->
+                    "Administrador";
+                case EMPLEADO ->
+                    "Empleado";
             };
             lblRolInfo.setText("Rol: " + rolTexto);
         }
@@ -107,6 +120,7 @@ public class DashboardController {
         }
 
         colCliNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        colCliDni.setCellValueFactory(new PropertyValueFactory<>("dni"));
         colCliTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colCliEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
 
@@ -117,20 +131,10 @@ public class DashboardController {
         try {
             long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
             List<Customer> all = listCustomersUseCase.listByEmpresa(empresaId);
-
-            // Conteo real de clientes
             if (lblTotalClientes != null) {
                 lblTotalClientes.setText(String.valueOf(all.size()));
             }
-
-            // Elegimos hasta 5 clientes "más recientes"
-            // De momento los ordenamos alfabéticamente como placeholder,
-            // cuando tengas fecha de creación, sustituyes el criterio.
-            List<Customer> ultimos = all.stream()
-                    .sorted(Comparator.comparing(Customer::getNombre,
-                            String.CASE_INSENSITIVE_ORDER))
-                    .limit(5)
-                    .collect(Collectors.toList());
+            List<Customer> ultimos = all.stream().sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER)).limit(5).collect(Collectors.toList());
 
             if (tblUltimosClientes != null) {
                 tblUltimosClientes.setItems(FXCollections.observableArrayList(ultimos));

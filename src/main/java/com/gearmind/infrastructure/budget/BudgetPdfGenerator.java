@@ -89,6 +89,10 @@ public class BudgetPdfGenerator {
         clienteCell.addElement(new Paragraph("Cliente", labelFont));
         if (customer != null) {
             clienteCell.addElement(new Paragraph(customer.getNombre(), textFont));
+            if (customer.getDni() != null && !customer.getDni().isBlank()) {
+                clienteCell.addElement(new Paragraph("DNI: " + customer.getDni(), textFont));
+            }
+
             if (customer.getEmail() != null) {
                 clienteCell.addElement(new Paragraph(customer.getEmail(), textFont));
             }

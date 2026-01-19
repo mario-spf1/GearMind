@@ -82,8 +82,7 @@ public class VehiculoFormController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    String tel = item.getTelefono() != null ? item.getTelefono() : "";
-                    setText(item.getNombre() + (tel.isBlank() ? "" : " (" + tel + ")"));
+                    setText(customerDisplayLabel(item));
                 }
             }
         });
@@ -94,8 +93,7 @@ public class VehiculoFormController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    String tel = item.getTelefono() != null ? item.getTelefono() : "";
-                    setText(item.getNombre() + (tel.isBlank() ? "" : " (" + tel + ")"));
+                    setText(customerDisplayLabel(item));
                 }
             }
         });
@@ -220,6 +218,24 @@ public class VehiculoFormController {
                 break;
             }
         }
+    }
+
+    private String customerDisplayLabel(Customer customer) {
+        if (customer == null) {
+            return "";
+        }
+        StringBuilder label = new StringBuilder();
+        if (customer.getNombre() != null) {
+            label.append(customer.getNombre());
+        }
+        if (customer.getDni() != null && !customer.getDni().isBlank()) {
+            label.append(" · DNI ").append(customer.getDni());
+        }
+        String tel = customer.getTelefono() != null ? customer.getTelefono() : "";
+        if (!tel.isBlank()) {
+            label.append(" (").append(tel).append(")");
+        }
+        return label.toString();
     }
 
     @FXML

@@ -37,6 +37,8 @@ public class ClientesController {
     @FXML
     private TableColumn<Customer, String> colNombre;
     @FXML
+    private TableColumn<Customer, String> colDni;
+    @FXML
     private TableColumn<Customer, String> colTelefono;
     @FXML
     private TableColumn<Customer, String> colEmail;
@@ -56,6 +58,8 @@ public class ClientesController {
 
     @FXML
     private TextField filterNombreField;
+    @FXML
+    private TextField filterDniField;
     @FXML
     private TextField filterTelefonoField;
     @FXML
@@ -116,6 +120,7 @@ public class ClientesController {
 
         // ===== Columnas base =====
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        colDni.setCellValueFactory(new PropertyValueFactory<>("dni"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
 
@@ -272,6 +277,7 @@ public class ClientesController {
         });
 
         smartTable.addColumnFilter(filterNombreField, (c, text) -> safe(c.getNombre()).contains(text));
+        smartTable.addColumnFilter(filterDniField, (c, text) -> safe(c.getDni()).contains(text));
         smartTable.addColumnFilter(filterTelefonoField, (c, text) -> safe(c.getTelefono()).contains(text));
         smartTable.addColumnFilter(filterEmailField, (c, text) -> safe(c.getEmail()).contains(text));
 
@@ -440,6 +446,9 @@ public class ClientesController {
     private void onLimpiarFiltros() {
         if (filterNombreField != null) {
             filterNombreField.clear();
+        }
+        if (filterDniField != null) {
+            filterDniField.clear();
         }
         if (filterTelefonoField != null) {
             filterTelefonoField.clear();

@@ -359,7 +359,7 @@ public class FacturaFormController {
                 .toList());
 
         List<Customer> customers = customerRepository.findByEmpresaId(empresaId);
-        clientes.setAll(customers.stream().sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER)).map(c -> new ClienteOption(c.getId(), c.getNombre())).toList());
+        clientes.setAll(customers.stream().sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER)).map(c -> new ClienteOption(c.getId(), customerLabel(c))).toList());
 
         List<Vehicle> vehicles = vehicleRepository.findByEmpresaId(empresaId);
         vehiculosEmpresa.clear();
@@ -627,6 +627,20 @@ public class FacturaFormController {
 
     private String safe(String value) {
         return value == null ? "" : value;
+    }
+
+    private String customerLabel(Customer customer) {
+        if (customer == null) {
+            return "";
+        }
+        StringBuilder label = new StringBuilder();
+        if (customer.getNombre() != null) {
+            label.append(customer.getNombre());
+        }
+        if (customer.getDni() != null && !customer.getDni().isBlank()) {
+            label.append(" · DNI ").append(customer.getDni());
+        }
+        return label.toString();
     }
 
     private static class EmpresaOption {

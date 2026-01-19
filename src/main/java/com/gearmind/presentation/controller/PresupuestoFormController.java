@@ -101,7 +101,7 @@ public class PresupuestoFormController {
     }
 
     public boolean isSaved() {
-        return saved; 
+        return saved;
     }
 
     public void initForNew() {
@@ -331,10 +331,7 @@ public class PresupuestoFormController {
         }
 
         List<Customer> customers = customerRepository.findByEmpresaId(empresaId);
-        clientes.setAll(customers.stream()
-                .sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER))
-                .map(c -> new ClienteOption(c.getId(), c.getNombre()))
-                .toList());
+        clientes.setAll(customers.stream().sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER)).map(c -> new ClienteOption(c.getId(), customerLabel(c))).toList());
 
         List<Vehicle> vehicles = vehicleRepository.findByEmpresaId(empresaId);
         vehiculosEmpresa.clear();
@@ -569,6 +566,20 @@ public class PresupuestoFormController {
         String cliente = repair.getClienteNombre() != null ? repair.getClienteNombre() : "";
         String desc = repair.getDescripcion() != null ? repair.getDescripcion() : "";
         return String.format("#%d | %s | %s | %s", repair.getId(), vehiculo, cliente, desc);
+    }
+
+    private String customerLabel(Customer customer) {
+        if (customer == null) {
+            return "";
+        }
+        StringBuilder label = new StringBuilder();
+        if (customer.getNombre() != null) {
+            label.append(customer.getNombre());
+        }
+        if (customer.getDni() != null && !customer.getDni().isBlank()) {
+            label.append(" · DNI ").append(customer.getDni());
+        }
+        return label.toString();
     }
 
     private String safe(String value) {

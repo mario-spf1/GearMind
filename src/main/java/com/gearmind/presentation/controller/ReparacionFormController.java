@@ -102,8 +102,7 @@ public class ReparacionFormController {
 
         allCustomers.clear();
         for (Customer c : customers) {
-            String label = c.getNombre() + " (ID " + c.getId() + ")";
-            allCustomers.add(new CustomerOption(c.getId(), label));
+            allCustomers.add(new CustomerOption(c.getId(), customerLabel(c)));
         }
 
         FilteredList<CustomerOption> filteredCustomers = new FilteredList<>(allCustomers, opt -> true);
@@ -260,6 +259,21 @@ public class ReparacionFormController {
                 setText(empty || item == null ? "" : item.getLabel());
             }
         });
+    }
+
+    private String customerLabel(Customer customer) {
+        if (customer == null) {
+            return "";
+        }
+        StringBuilder label = new StringBuilder();
+        if (customer.getNombre() != null) {
+            label.append(customer.getNombre());
+        }
+        if (customer.getDni() != null && !customer.getDni().isBlank()) {
+            label.append(" · DNI ").append(customer.getDni());
+        }
+        label.append(" (ID ").append(customer.getId()).append(")");
+        return label.toString();
     }
 
     private void updateVehicleFilter(Long clienteId) {
