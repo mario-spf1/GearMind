@@ -11,11 +11,13 @@ import com.gearmind.domain.customer.CustomerRepository;
 import com.gearmind.domain.vehicle.Vehicle;
 import com.gearmind.domain.vehicle.VehicleRepository;
 import com.gearmind.infrastructure.invoice.InvoicePdfGenerator;
+import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class SaveInvoiceUseCase {
 
@@ -24,6 +26,7 @@ public class SaveInvoiceUseCase {
     private final CustomerRepository customerRepository;
     private final VehicleRepository vehicleRepository;
     private final InvoicePdfGenerator pdfGenerator;
+    private final SendTelegramNotificationUseCase notificationUseCase;
 
     public SaveInvoiceUseCase(InvoiceRepository invoiceRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, InvoicePdfGenerator pdfGenerator) {
         this.invoiceRepository = invoiceRepository;
@@ -31,6 +34,16 @@ public class SaveInvoiceUseCase {
         this.customerRepository = customerRepository;
         this.vehicleRepository = vehicleRepository;
         this.pdfGenerator = pdfGenerator;
+        this.notificationUseCase = null;
+    }
+
+    public SaveInvoiceUseCase(InvoiceRepository invoiceRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, InvoicePdfGenerator pdfGenerator, SendTelegramNotificationUseCase notificationUseCase) {
+        this.invoiceRepository = invoiceRepository;
+        this.empresaRepository = empresaRepository;
+        this.customerRepository = customerRepository;
+        this.vehicleRepository = vehicleRepository;
+        this.pdfGenerator = pdfGenerator;
+        this.notificationUseCase = notificationUseCase;
     }
 
     public Invoice execute(SaveInvoiceRequest request) {
@@ -87,6 +100,14 @@ public class SaveInvoiceUseCase {
         BigDecimal iva = subtotal.multiply(BigDecimal.valueOf(ivaPercent)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(iva);
 
+        InvoiceStatus previousStatus = null;
+        if (request.getId() != null) {
+            Optional<Invoice> existing = invoiceRepository.findById(request.getId());
+            if (existing.isPresent()) {
+                previousStatus = existing.get().getEstado();
+            }
+        }
+
         Invoice invoice = new Invoice();
         invoice.setId(request.getId());
         invoice.setEmpresaId(request.getEmpresaId());
@@ -107,6 +128,7 @@ public class SaveInvoiceUseCase {
 
         Invoice saved = invoiceRepository.save(invoice, normalizedLines);
         generatePdf(saved, normalizedLines);
+        notifyEmission(saved, previousStatus, request.getId() == null);
         return saved;
     }
 
@@ -119,5 +141,20 @@ public class SaveInvoiceUseCase {
         Customer customer = customerRepository.findById(invoice.getClienteId()).orElse(null);
         Vehicle vehicle = vehicleRepository.findById(invoice.getVehiculoId()).orElse(null);
         pdfGenerator.generate(invoice, lines, empresa, customer, vehicle);
+    }
+
+    private void notifyEmission(Invoice invoice, InvoiceStatus previousStatus, boolean isNew) {
+        if (notificationUseCase == null || invoice.getClienteId() == null) {
+            return;
+        }
+        if (invoice.getEstado() != InvoiceStatus.PENDIENTE) {
+            return;
+        }
+        if (!isNew && previousStatus == InvoiceStatus.PENDIENTE) {
+            return;
+        }
+        String message = "Se ha emitido tu factura " + invoice.getNumero() + " por un total de " + invoice.getTotal() + ".";
+        String payload = "invoiceId=" + invoice.getId() + ";status=" + invoice.getEstado().name();
+        notificationUseCase.execute(invoice.getClienteId(), "FACTURA_EMITIDA", message, payload);
     }
 }

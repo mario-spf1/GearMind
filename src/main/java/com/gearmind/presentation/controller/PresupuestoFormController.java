@@ -17,6 +17,9 @@ import com.gearmind.infrastructure.budget.MySqlBudgetRepository;
 import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
 import com.gearmind.infrastructure.repair.MySqlRepairRepository;
+import com.gearmind.infrastructure.telegram.MySqlTelegramRepository;
+import com.gearmind.infrastructure.telegram.TelegramBotClient;
+import com.gearmind.infrastructure.telegram.TelegramConfig;
 import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -28,6 +31,8 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -47,7 +52,6 @@ public class PresupuestoFormController {
     private ComboBox<EmpresaOption> cmbEmpresa;
     @FXML
     private HBox boxEmpresa;
-
     @FXML
     private ComboBox<ClienteOption> cmbCliente;
     @FXML
@@ -96,7 +100,11 @@ public class PresupuestoFormController {
         this.customerRepository = new MySqlCustomerRepository();
         this.vehicleRepository = new MySqlVehicleRepository();
         this.repairRepository = new MySqlRepairRepository();
-        this.saveBudgetUseCase = new SaveBudgetUseCase(budgetRepository, empresaRepository, customerRepository, vehicleRepository, new com.gearmind.infrastructure.budget.BudgetPdfGenerator());
+        TelegramConfig telegramConfig = new TelegramConfig();
+        TelegramBotClient botClient = new TelegramBotClient(telegramConfig, new ObjectMapper());
+        MySqlTelegramRepository telegramRepository = new MySqlTelegramRepository();
+        SendTelegramNotificationUseCase notificationUseCase = new SendTelegramNotificationUseCase(telegramConfig, botClient, telegramRepository, telegramRepository);
+        this.saveBudgetUseCase = new SaveBudgetUseCase(budgetRepository, empresaRepository, customerRepository, vehicleRepository, new com.gearmind.infrastructure.budget.BudgetPdfGenerator(), notificationUseCase);
         this.getBudgetUseCase = new GetBudgetUseCase(budgetRepository);
     }
 

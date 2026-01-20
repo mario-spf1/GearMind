@@ -20,7 +20,12 @@ import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
 import com.gearmind.infrastructure.invoice.InvoicePdfStorage;
 import com.gearmind.infrastructure.invoice.MySqlInvoiceRepository;
+import com.gearmind.infrastructure.telegram.MySqlTelegramRepository;
+import com.gearmind.infrastructure.telegram.TelegramBotClient;
+import com.gearmind.infrastructure.telegram.TelegramConfig;
 import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
+import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -112,7 +117,11 @@ public class FacturaFormController {
         this.empresaRepository = new MySqlEmpresaRepository();
         this.customerRepository = new MySqlCustomerRepository();
         this.vehicleRepository = new MySqlVehicleRepository();
-        this.saveInvoiceUseCase = new SaveInvoiceUseCase(invoiceRepository, empresaRepository, customerRepository, vehicleRepository, new com.gearmind.infrastructure.invoice.InvoicePdfGenerator());
+        TelegramConfig telegramConfig = new TelegramConfig();
+        TelegramBotClient botClient = new TelegramBotClient(telegramConfig, new ObjectMapper());
+        MySqlTelegramRepository telegramRepository = new MySqlTelegramRepository();
+        SendTelegramNotificationUseCase notificationUseCase = new SendTelegramNotificationUseCase(telegramConfig, botClient, telegramRepository, telegramRepository);
+        this.saveInvoiceUseCase = new SaveInvoiceUseCase(invoiceRepository, empresaRepository, customerRepository, vehicleRepository, new com.gearmind.infrastructure.invoice.InvoicePdfGenerator(), notificationUseCase);
         this.getInvoiceUseCase = new GetInvoiceUseCase(invoiceRepository);
     }
 

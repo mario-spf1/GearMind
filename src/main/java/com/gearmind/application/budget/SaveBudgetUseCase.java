@@ -11,10 +11,12 @@ import com.gearmind.domain.customer.CustomerRepository;
 import com.gearmind.domain.vehicle.Vehicle;
 import com.gearmind.domain.vehicle.VehicleRepository;
 import com.gearmind.infrastructure.budget.BudgetPdfGenerator;
+import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class SaveBudgetUseCase {
 
@@ -23,6 +25,7 @@ public class SaveBudgetUseCase {
     private final CustomerRepository customerRepository;
     private final VehicleRepository vehicleRepository;
     private final BudgetPdfGenerator pdfGenerator;
+    private final SendTelegramNotificationUseCase notificationUseCase;
 
     public SaveBudgetUseCase(BudgetRepository budgetRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, BudgetPdfGenerator pdfGenerator) {
         this.budgetRepository = budgetRepository;
@@ -30,6 +33,16 @@ public class SaveBudgetUseCase {
         this.customerRepository = customerRepository;
         this.vehicleRepository = vehicleRepository;
         this.pdfGenerator = pdfGenerator;
+        this.notificationUseCase = null;
+    }
+
+    public SaveBudgetUseCase(BudgetRepository budgetRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, BudgetPdfGenerator pdfGenerator, SendTelegramNotificationUseCase notificationUseCase) {
+        this.budgetRepository = budgetRepository;
+        this.empresaRepository = empresaRepository;
+        this.customerRepository = customerRepository;
+        this.vehicleRepository = vehicleRepository;
+        this.pdfGenerator = pdfGenerator;
+        this.notificationUseCase = notificationUseCase;
     }
 
     public Budget execute(SaveBudgetRequest request) {
@@ -75,6 +88,14 @@ public class SaveBudgetUseCase {
             normalizedLines.add(normalized);
         }
 
+        BudgetStatus previousStatus = null;
+        if (request.getId() != null) {
+            Optional<Budget> existing = budgetRepository.findById(request.getId());
+            if (existing.isPresent()) {
+                previousStatus = existing.get().getEstado();
+            }
+        }
+
         Budget budget = new Budget();
         budget.setId(request.getId());
         budget.setEmpresaId(request.getEmpresaId());
@@ -92,13 +113,29 @@ public class SaveBudgetUseCase {
 
         Budget saved = budgetRepository.save(budget, normalizedLines);
         generatePdf(saved, normalizedLines);
+        notifyEmission(saved, previousStatus, request.getId() == null);
         return saved;
     }
-    
+
     private void generatePdf(Budget budget, List<BudgetLine> lines) {
         Empresa empresa = empresaRepository.findById(budget.getEmpresaId()).orElse(null);
         Customer customer = customerRepository.findById(budget.getClienteId()).orElse(null);
         Vehicle vehicle = vehicleRepository.findById(budget.getVehiculoId()).orElse(null);
         pdfGenerator.generate(budget, lines, empresa, customer, vehicle);
+    }
+
+    private void notifyEmission(Budget budget, BudgetStatus previousStatus, boolean isNew) {
+        if (notificationUseCase == null || budget.getClienteId() == null) {
+            return;
+        }
+        if (budget.getEstado() != BudgetStatus.ENVIADO) {
+            return;
+        }
+        if (!isNew && previousStatus == BudgetStatus.ENVIADO) {
+            return;
+        }
+        String message = "Se ha emitido tu presupuesto #" + budget.getId() + " con un importe estimado de " + budget.getTotalEstimado() + ".";
+        String payload = "budgetId=" + budget.getId() + ";status=" + budget.getEstado().name();
+        notificationUseCase.execute(budget.getClienteId(), "PRESUPUESTO_EMITIDO", message, payload);
     }
 }

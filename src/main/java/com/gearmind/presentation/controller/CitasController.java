@@ -13,6 +13,11 @@ import com.gearmind.domain.user.UserRole;
 import com.gearmind.infrastructure.appointment.MySqlAppointmentRepository;
 import com.gearmind.infrastructure.database.DataSourceFactory;
 import com.gearmind.presentation.table.SmartTable;
+import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
+import com.gearmind.infrastructure.telegram.MySqlTelegramRepository;
+import com.gearmind.infrastructure.telegram.TelegramBotClient;
+import com.gearmind.infrastructure.telegram.TelegramConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -42,14 +47,12 @@ public class CitasController {
     private TabPane tabPane;
     @FXML
     private ComboBox<Integer> cmbPageSize;
-
     @FXML
     private DatePicker dpAgendaFecha;
     @FXML
     private ComboBox<String> cbAgendaEstado;
     @FXML
     private ListView<AgendaSlot> lstAgenda;
-
     @FXML
     private TableView<Appointment> tblCitas;
     @FXML
@@ -70,7 +73,6 @@ public class CitasController {
     private TableColumn<Appointment, String> colNotas;
     @FXML
     private TableColumn<Appointment, Appointment> colAcciones;
-
     @FXML
     private TextField filterClienteField;
     @FXML
@@ -79,13 +81,10 @@ public class CitasController {
     private TextField filterEmpleadoField;
     @FXML
     private TextField filterNotasField;
-
-    // ✅ Empresa filtro: combo visible + TextField oculto para SmartTable
     @FXML
     private ComboBox<EmpresaOption> cbFiltroEmpresa;
     @FXML
     private TextField filterEmpresaField;
-
     @FXML
     private ComboBox<String> cbFiltroEstado;
     @FXML
@@ -94,7 +93,6 @@ public class CitasController {
     private TextField filterEstadoField;
     @FXML
     private TextField filterOrigenField;
-
     @FXML
     private TextField txtBuscar;
     @FXML
@@ -105,15 +103,9 @@ public class CitasController {
     private final SaveAppointmentUseCase saveAppointmentUseCase;
     private final ChangeAppointmentStatusUseCase changeAppointmentStatusUseCase;
     private SmartTable<Appointment> smartTable;
-
-    private final DateTimeFormatter dateTimeFormatter
-            = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.getDefault());
-    private final DateTimeFormatter timeFormatter
-            = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
-
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.getDefault());
+    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
     private final DataSource dataSource = DataSourceFactory.getDataSource();
-
-    // ✅ Empresas (solo SUPER_ADMIN): lista + mapa id->nombre (para mostrar en tabla)
     private final ObservableList<EmpresaOption> empresas = FXCollections.observableArrayList();
     private final Map<Long, String> empresaNameById = new HashMap<>();
     private boolean settingEmpresaComboProgrammatically = false;
@@ -121,8 +113,13 @@ public class CitasController {
     public CitasController() {
         MySqlAppointmentRepository repo = new MySqlAppointmentRepository();
         this.listAppointmentsUseCase = new ListAppointmentsUseCase(repo);
-        this.saveAppointmentUseCase = new SaveAppointmentUseCase(repo);
-        this.changeAppointmentStatusUseCase = new ChangeAppointmentStatusUseCase(repo);
+        TelegramConfig telegramConfig = new TelegramConfig();
+        TelegramBotClient botClient = new TelegramBotClient(telegramConfig, new ObjectMapper());
+        MySqlTelegramRepository telegramRepository = new MySqlTelegramRepository();
+        SendTelegramNotificationUseCase notificationUseCase = new SendTelegramNotificationUseCase(telegramConfig, botClient, telegramRepository, telegramRepository);
+        this.saveAppointmentUseCase = new SaveAppointmentUseCase(repo, notificationUseCase);
+        this.changeAppointmentStatusUseCase = new ChangeAppointmentStatusUseCase(repo, notificationUseCase);
+
     }
 
     @FXML
@@ -136,18 +133,8 @@ public class CitasController {
         configureAgendaControls();
         configureAgendaList();
         configureTable();
-
         tblCitas.setFixedCellSize(28);
-
-        smartTable = new SmartTable<>(
-                tblCitas,
-                masterData,
-                null,
-                cmbPageSize,
-                lblResumen,
-                "citas",
-                this::matchesGlobalFilter
-        );
+        smartTable = new SmartTable<>(tblCitas, masterData, null, cmbPageSize, lblResumen, "citas", this::matchesGlobalFilter);
 
         smartTable.setAfterRefreshCallback(() -> {
             int rows = Math.max(smartTable.getLastVisibleCount(), 1);
@@ -159,25 +146,18 @@ public class CitasController {
             tblCitas.setMaxHeight(Region.USE_PREF_SIZE);
         });
 
-        // filtros SmartTable
         smartTable.addColumnFilter(filterClienteField, (cita, text) -> appointmentValueOrBlank(cita.getCustomerId()).contains(text));
         smartTable.addColumnFilter(filterVehiculoField, (cita, text) -> appointmentValueOrBlank(cita.getVehicleId()).contains(text));
         smartTable.addColumnFilter(filterEmpleadoField, (cita, text) -> appointmentValueOrBlank(cita.getEmployeeId()).contains(text));
-
-        // ✅ Empresa por NOMBRE (no ID)
         smartTable.addColumnFilter(filterEmpresaField, (cita, text) -> safe(getEmpresaName(cita.getEmpresaId())).contains(text));
-
         smartTable.addColumnFilter(filterNotasField, (cita, text) -> safe(cita.getNotes()).contains(text));
         smartTable.addColumnFilter(filterEstadoField, (cita, text) -> safe(mapStatusToLabel(cita.getStatus())).contains(text));
         smartTable.addColumnFilter(filterOrigenField, (cita, text) -> safe(mapOriginToLabel(cita.getOrigin())).contains(text));
 
         configureEstadoYOrigenCombos();
-
         dpAgendaFecha.setValue(LocalDate.now());
-
         applyRoleVisibility();
-        configureEmpresaComboIfSuperAdmin(); // ✅ aquí se carga el mapa y el combo (solo SUPER_ADMIN)
-
+        configureEmpresaComboIfSuperAdmin();
         reloadFromDb();
         if (tabPane != null) {
             tabPane.getSelectionModel().select(0);
@@ -242,10 +222,7 @@ public class CitasController {
         colCliente.setCellValueFactory(cellData -> new SimpleStringProperty(appointmentValueOrBlank(cellData.getValue().getCustomerId())));
         colVehiculo.setCellValueFactory(cellData -> new SimpleStringProperty(appointmentValueOrBlank(cellData.getValue().getVehicleId())));
         colEmpleado.setCellValueFactory(cellData -> new SimpleStringProperty(appointmentValueOrBlank(cellData.getValue().getEmployeeId())));
-
-        // ✅ Empresa: mostrar NOMBRE
         colEmpresa.setCellValueFactory(cellData -> new SimpleStringProperty(getEmpresaName(cellData.getValue().getEmpresaId())));
-
         colEstado.setCellValueFactory(cellData -> {
             AppointmentStatus status = cellData.getValue().getStatus();
             return new SimpleStringProperty(status != null ? mapStatusToLabel(status) : "");
@@ -269,7 +246,8 @@ public class CitasController {
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnEditar = new Button("Editar");
             private final Button btnCompletar = new Button("Completar");
-            private final HBox box = new HBox(8, btnEditar, btnCompletar);
+            private final Button btnCancelar = new Button("Cancelar");
+            private final HBox box = new HBox(8, btnEditar, btnCompletar, btnCancelar);
 
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
@@ -288,12 +266,26 @@ public class CitasController {
                         completarCita(a);
                     }
                 });
+
+                btnCancelar.setOnAction(e -> {
+                    Appointment a = (getTableRow() != null) ? getTableRow().getItem() : null;
+                    if (a != null) {
+                        cancelarCita(a);
+                    }
+                });
             }
 
             @Override
             protected void updateItem(Appointment appointment, boolean empty) {
                 super.updateItem(appointment, empty);
-                setGraphic(empty || appointment == null ? null : box);
+                if (empty || appointment == null) {
+                    setGraphic(null);
+                    return;
+                }
+                boolean disabled = appointment.getStatus() == AppointmentStatus.CANCELLED || appointment.getStatus() == AppointmentStatus.COMPLETED;
+                btnCompletar.setDisable(disabled);
+                btnCancelar.setDisable(disabled);
+                setGraphic(box);
             }
         });
     }
@@ -347,10 +339,8 @@ public class CitasController {
             return;
         }
 
-        // ✅ cargar empresas (lista + mapa)
         empresas.clear();
         empresaNameById.clear();
-
         empresas.add(new EmpresaOption(0L, "Todas"));
 
         String sql = "SELECT id, nombre FROM empresa ORDER BY nombre ASC";
@@ -364,7 +354,6 @@ public class CitasController {
             }
 
         } catch (Exception ex) {
-            // si falla, no reventamos la pantalla
             empresas.clear();
             empresas.add(new EmpresaOption(0L, "Todas"));
             empresaNameById.clear();
@@ -378,7 +367,6 @@ public class CitasController {
                 return;
             }
 
-            // ✅ Guardamos en el TextField oculto el NOMBRE (para filtrar por nombre)
             if (newV == null || newV.id == 0L) {
                 filterEmpresaField.setText("");
             } else {
@@ -572,6 +560,25 @@ public class CitasController {
         }
     }
 
+    private void cancelarCita(Appointment appointment) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Cancelar cita");
+        confirm.setHeaderText("¿Cancelar esta cita?");
+        confirm.setContentText("Se notificará automáticamente al cliente.");
+        Optional<ButtonType> response = confirm.showAndWait();
+        if (response.isEmpty() || response.get() != ButtonType.OK) {
+            return;
+        }
+
+        try {
+            long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+            changeAppointmentStatusUseCase.execute(appointment.getId(), empresaId, AppointmentStatus.CANCELLED);
+            reloadFromDb();
+        } catch (Exception e) {
+            showError("Error al cancelar la cita: " + e.getMessage());
+        }
+    }
+
     private String appointmentValueOrBlank(Long value) {
         return value != null ? String.valueOf(value) : "";
     }
@@ -581,7 +588,7 @@ public class CitasController {
             return "";
         }
         String n = empresaNameById.get(empresaId);
-        return n != null ? n : String.valueOf(empresaId); // fallback si aún no cargó el mapa
+        return n != null ? n : String.valueOf(empresaId);
     }
 
     private String mapStatusToLabel(AppointmentStatus status) {
@@ -627,8 +634,7 @@ public class CitasController {
                 + appointmentValueOrBlank(c.getVehicleId()) + " "
                 + appointmentValueOrBlank(c.getEmployeeId()) + " "
                 + safe(getEmpresaName(c.getEmpresaId())) + " "
-                + // ✅ nombre empresa
-                safe(c.getNotes()) + " "
+                + safe(c.getNotes()) + " "
                 + safe(mapStatusToLabel(c.getStatus())) + " "
                 + safe(mapOriginToLabel(c.getOrigin())));
 
