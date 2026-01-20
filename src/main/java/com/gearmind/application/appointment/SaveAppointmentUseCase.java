@@ -55,6 +55,10 @@ public class SaveAppointmentUseCase {
         }
 
         Long resolvedEmployeeId = resolveEmployeeId(request);
+        boolean employeeOverlap = appointmentRepository.existsEmployeeAtDateTime(empresaId, resolvedEmployeeId, dateTime, excludeId);
+        if (employeeOverlap) {
+            throw new OverlappingAppointmentException("El empleado ya tiene otra cita en la misma fecha y hora.");
+        }
 
         if (request.getId() == null) {
             Appointment appointment = new Appointment();

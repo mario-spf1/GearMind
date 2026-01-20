@@ -15,4 +15,6 @@ public interface AppointmentRepository {
     void delete(Long id);
 
     boolean existsAtDateTime(Long empresaId, Long vehicleId, LocalDateTime dateTime, Long excludeId);
+
+    boolean existsEmployeeAtDateTime(Long empresaId, Long employeeId, LocalDateTime dateTime, Long excludeId);
 }

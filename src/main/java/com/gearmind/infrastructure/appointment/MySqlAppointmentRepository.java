@@ -161,6 +161,48 @@ public class MySqlAppointmentRepository implements AppointmentRepository {
         }
     }
 
+    @Override
+    public boolean existsEmployeeAtDateTime(Long empresaId, Long employeeId, LocalDateTime dateTime, Long excludeId) {
+        if (employeeId == null) {
+            return false;
+        }
+
+        StringBuilder sb = new StringBuilder("""
+                SELECT COUNT(*)
+                FROM cita
+                WHERE empresa_id = ?
+                  AND fecha_hora = ?
+                  AND empleado_id = ?
+                """);
+
+        if (excludeId != null) {
+            sb.append(" AND id <> ? ");
+        }
+
+        String sql = sb.toString();
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+
+            int idx = 1;
+            ps.setLong(idx++, empresaId);
+            ps.setTimestamp(idx++, Timestamp.valueOf(dateTime));
+            ps.setLong(idx++, employeeId);
+
+            if (excludeId != null) {
+                ps.setLong(idx, excludeId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong(1) > 0;
+                }
+                return false;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al comprobar solape de cita por empleado", e);
+        }
+    }
+
     private void insert(Appointment appointment) {
         String sql = """
                 INSERT INTO cita

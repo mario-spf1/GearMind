@@ -213,6 +213,50 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
     }
 
     @Override
+    public List<TelegramAppointmentRequest> findByEmpresaIdAndStatus(long empresaId, TelegramAppointmentRequestStatus status) {
+        String sql = """
+                SELECT id, empresa_id, cliente_id, vehiculo_id, telegram_chat_id, mensaje, fecha, estado
+                FROM telegram_solicitud_cita
+                WHERE empresa_id = ? AND estado = ?
+                ORDER BY fecha DESC
+                """;
+
+        List<TelegramAppointmentRequest> result = new ArrayList<>();
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, empresaId);
+            ps.setString(2, status.name());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapAppointmentRequest(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al listar solicitudes de cita Telegram", e);
+        }
+
+        return result;
+    }
+
+    @Override
+    public void updateStatus(long requestId, TelegramAppointmentRequestStatus status) {
+        String sql = """
+                UPDATE telegram_solicitud_cita
+                SET estado = ?, updated_at = NOW()
+                WHERE id = ?
+                """;
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, status.name());
+            ps.setLong(2, requestId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar estado de solicitud de cita Telegram", e);
+        }
+    }
+
+    @Override
     public void save(TelegramNotificationLog log) {
         String sql = """
                 INSERT INTO telegram_notificacion_log
@@ -264,6 +308,25 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
         }
 
         return result;
+    }
+
+    private TelegramAppointmentRequest mapAppointmentRequest(ResultSet rs) throws SQLException {
+        Long id = rs.getLong("id");
+        long empresaId = rs.getLong("empresa_id");
+        Long clienteId = rs.getLong("cliente_id");
+        if (rs.wasNull()) {
+            clienteId = null;
+        }
+        Long vehiculoId = rs.getLong("vehiculo_id");
+        if (rs.wasNull()) {
+            vehiculoId = null;
+        }
+        long chatId = rs.getLong("telegram_chat_id");
+        String mensaje = rs.getString("mensaje");
+        Timestamp tsFecha = rs.getTimestamp("fecha");
+        LocalDateTime fecha = tsFecha != null ? tsFecha.toLocalDateTime() : null;
+        TelegramAppointmentRequestStatus estado = TelegramAppointmentRequestStatus.valueOf(rs.getString("estado"));
+        return new TelegramAppointmentRequest(id, empresaId, clienteId, vehiculoId, chatId, mensaje, fecha, estado);
     }
 
     @Override

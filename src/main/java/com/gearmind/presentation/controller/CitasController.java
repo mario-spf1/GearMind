@@ -5,15 +5,24 @@ import com.gearmind.application.appointment.ListAppointmentsUseCase;
 import com.gearmind.application.appointment.SaveAppointmentUseCase;
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
+import com.gearmind.application.telegram.ListTelegramAppointmentRequestsUseCase;
 import com.gearmind.domain.appointment.Appointment;
 import com.gearmind.domain.appointment.AppointmentOrigin;
 import com.gearmind.domain.appointment.AppointmentStatus;
+import com.gearmind.domain.customer.Customer;
+import com.gearmind.domain.telegram.TelegramAppointmentRequest;
+import com.gearmind.domain.telegram.TelegramAppointmentRequestStatus;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRole;
+import com.gearmind.domain.vehicle.Vehicle;
+import com.gearmind.infrastructure.auth.MySqlUserRepository;
 import com.gearmind.infrastructure.appointment.MySqlAppointmentRepository;
+import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
 import com.gearmind.infrastructure.database.DataSourceFactory;
+import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
 import com.gearmind.presentation.table.SmartTable;
 import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
+import com.gearmind.application.telegram.UpdateTelegramAppointmentRequestStatusUseCase;
 import com.gearmind.infrastructure.telegram.MySqlTelegramRepository;
 import com.gearmind.infrastructure.telegram.TelegramBotClient;
 import com.gearmind.infrastructure.telegram.TelegramConfig;
@@ -38,8 +47,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javafx.scene.layout.VBox;
 
 public class CitasController {
 
@@ -47,6 +60,8 @@ public class CitasController {
     private TabPane tabPane;
     @FXML
     private ComboBox<Integer> cmbPageSize;
+    @FXML
+    private Button btnSolicitudesBot;
     @FXML
     private DatePicker dpAgendaFecha;
     @FXML
@@ -102,13 +117,19 @@ public class CitasController {
     private final ListAppointmentsUseCase listAppointmentsUseCase;
     private final SaveAppointmentUseCase saveAppointmentUseCase;
     private final ChangeAppointmentStatusUseCase changeAppointmentStatusUseCase;
+    private final ListTelegramAppointmentRequestsUseCase listTelegramAppointmentRequestsUseCase;
+    private final UpdateTelegramAppointmentRequestStatusUseCase updateTelegramAppointmentRequestStatusUseCase;
     private SmartTable<Appointment> smartTable;
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.getDefault());
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
     private final DataSource dataSource = DataSourceFactory.getDataSource();
     private final ObservableList<EmpresaOption> empresas = FXCollections.observableArrayList();
     private final Map<Long, String> empresaNameById = new HashMap<>();
+    private final Map<Long, String> customerNameById = new HashMap<>();
+    private final Map<Long, String> employeeNameById = new HashMap<>();
+    private final Map<Long, String> vehicleLabelById = new HashMap<>();
     private boolean settingEmpresaComboProgrammatically = false;
+    private final Pattern requestedDatePattern = Pattern.compile("Fecha solicitada: (\\d{4}-\\d{2}-\\d{2}) (\\d{2}):(\\d{2})");
 
     public CitasController() {
         MySqlAppointmentRepository repo = new MySqlAppointmentRepository();
@@ -119,12 +140,13 @@ public class CitasController {
         SendTelegramNotificationUseCase notificationUseCase = new SendTelegramNotificationUseCase(telegramConfig, botClient, telegramRepository, telegramRepository);
         this.saveAppointmentUseCase = new SaveAppointmentUseCase(repo, notificationUseCase);
         this.changeAppointmentStatusUseCase = new ChangeAppointmentStatusUseCase(repo, notificationUseCase);
+        this.listTelegramAppointmentRequestsUseCase = new ListTelegramAppointmentRequestsUseCase(telegramRepository);
+        this.updateTelegramAppointmentRequestStatusUseCase = new UpdateTelegramAppointmentRequestStatusUseCase(telegramRepository);
 
     }
 
     @FXML
     private void initialize() {
-        // Page size (como Clientes)
         if (cmbPageSize != null) {
             cmbPageSize.setItems(FXCollections.observableArrayList(10, 25, 50, 100));
             cmbPageSize.getSelectionModel().select(Integer.valueOf(25));
@@ -146,9 +168,9 @@ public class CitasController {
             tblCitas.setMaxHeight(Region.USE_PREF_SIZE);
         });
 
-        smartTable.addColumnFilter(filterClienteField, (cita, text) -> appointmentValueOrBlank(cita.getCustomerId()).contains(text));
-        smartTable.addColumnFilter(filterVehiculoField, (cita, text) -> appointmentValueOrBlank(cita.getVehicleId()).contains(text));
-        smartTable.addColumnFilter(filterEmpleadoField, (cita, text) -> appointmentValueOrBlank(cita.getEmployeeId()).contains(text));
+        smartTable.addColumnFilter(filterClienteField, (cita, text) -> safe(getCustomerLabel(cita.getCustomerId())).contains(text));
+        smartTable.addColumnFilter(filterVehiculoField, (cita, text) -> safe(getVehicleLabel(cita.getVehicleId())).contains(text));
+        smartTable.addColumnFilter(filterEmpleadoField, (cita, text) -> safe(getEmployeeLabel(cita.getEmployeeId())).contains(text));
         smartTable.addColumnFilter(filterEmpresaField, (cita, text) -> safe(getEmpresaName(cita.getEmpresaId())).contains(text));
         smartTable.addColumnFilter(filterNotasField, (cita, text) -> safe(cita.getNotes()).contains(text));
         smartTable.addColumnFilter(filterEstadoField, (cita, text) -> safe(mapStatusToLabel(cita.getStatus())).contains(text));
@@ -159,6 +181,7 @@ public class CitasController {
         applyRoleVisibility();
         configureEmpresaComboIfSuperAdmin();
         reloadFromDb();
+        refreshPendingRequestCount();
         if (tabPane != null) {
             tabPane.getSelectionModel().select(0);
         }
@@ -185,21 +208,35 @@ public class CitasController {
                 HBox citasBox = new HBox(6);
 
                 if (item.appointments().isEmpty()) {
-                    Label libre = new Label("(Libre)");
+                    Label libre = new Label("Sin citas");
                     libre.getStyleClass().add("tfx-muted");
                     citasBox.getChildren().add(libre);
                 } else {
                     for (Appointment a : item.appointments()) {
                         String horaReal = a.getDateTime().toLocalTime().format(timeFormatter);
-                        String texto = horaReal + " · Cliente " + appointmentValueOrBlank(a.getCustomerId());
+                        String cliente = getCustomerLabel(a.getCustomerId());
+                        String empleado = getEmployeeLabel(a.getEmployeeId());
+                        String vehiculo = getVehicleLabel(a.getVehicleId());
+                        String texto = horaReal + " · " + cliente;
+                        if (!vehiculo.isBlank()) {
+                            texto += " · " + vehiculo;
+                        }
+                        if (!empleado.isBlank()) {
+                            texto += " · " + empleado;
+                        }
                         Button chip = new Button(texto);
                         chip.getStyleClass().add("tfx-agenda-chip");
+                        String statusClass = mapStatusToChipClass(a.getStatus());
+                        if (statusClass != null) {
+                            chip.getStyleClass().add(statusClass);
+                        }
                         chip.setOnAction(e -> openCitaForm(a));
                         citasBox.getChildren().add(chip);
                     }
                 }
 
                 HBox row = new HBox(12, lblHora, citasBox);
+                row.getStyleClass().add("tfx-agenda-row");
                 row.setFillHeight(true);
                 setText(null);
                 setGraphic(row);
@@ -219,9 +256,9 @@ public class CitasController {
             return new SimpleStringProperty(appointment.getDateTime().format(dateTimeFormatter));
         });
 
-        colCliente.setCellValueFactory(cellData -> new SimpleStringProperty(appointmentValueOrBlank(cellData.getValue().getCustomerId())));
-        colVehiculo.setCellValueFactory(cellData -> new SimpleStringProperty(appointmentValueOrBlank(cellData.getValue().getVehicleId())));
-        colEmpleado.setCellValueFactory(cellData -> new SimpleStringProperty(appointmentValueOrBlank(cellData.getValue().getEmployeeId())));
+        colCliente.setCellValueFactory(cellData -> new SimpleStringProperty(getCustomerLabel(cellData.getValue().getCustomerId())));
+        colVehiculo.setCellValueFactory(cellData -> new SimpleStringProperty(getVehicleLabel(cellData.getValue().getVehicleId())));
+        colEmpleado.setCellValueFactory(cellData -> new SimpleStringProperty(getEmployeeLabel(cellData.getValue().getEmployeeId())));
         colEmpresa.setCellValueFactory(cellData -> new SimpleStringProperty(getEmpresaName(cellData.getValue().getEmpresaId())));
         colEstado.setCellValueFactory(cellData -> {
             AppointmentStatus status = cellData.getValue().getStatus();
@@ -406,6 +443,11 @@ public class CitasController {
     }
 
     @FXML
+    private void onSolicitudesBot() {
+        openTelegramRequestsDialog();
+    }
+
+    @FXML
     private void onAgendaHoy() {
         dpAgendaFecha.setValue(LocalDate.now());
         loadAgenda();
@@ -455,6 +497,7 @@ public class CitasController {
 
     private void reloadFromDb() {
         long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+        loadLookupMaps(empresaId);
         List<Appointment> citas = listAppointmentsUseCase.execute(empresaId);
 
         if (AuthContext.isLoggedIn()) {
@@ -479,6 +522,7 @@ public class CitasController {
 
         smartTable.refresh();
         loadAgenda();
+        refreshPendingRequestCount();
     }
 
     private void loadAgenda() {
@@ -579,8 +623,121 @@ public class CitasController {
         }
     }
 
-    private String appointmentValueOrBlank(Long value) {
-        return value != null ? String.valueOf(value) : "";
+    private void openTelegramRequestsDialog() {
+        long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+        List<TelegramAppointmentRequest> requests = listTelegramAppointmentRequestsUseCase.execute(empresaId, TelegramAppointmentRequestStatus.PENDIENTE);
+
+        if (requests.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Solicitudes Telegram");
+            alert.setHeaderText(null);
+            alert.setContentText("No hay solicitudes pendientes.");
+            alert.showAndWait();
+            return;
+        }
+
+        TableView<TelegramRequestRow> table = new TableView<>();
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        ObservableList<TelegramRequestRow> rows = FXCollections.observableArrayList();
+        for (TelegramAppointmentRequest request : requests) {
+            LocalDateTime requestedDateTime = parseRequestedDateTime(request.getMensaje());
+            String cliente = getCustomerLabel(request.getClienteId());
+            String vehiculo = getVehicleLabel(request.getVehiculoId());
+            rows.add(new TelegramRequestRow(request, requestedDateTime, cliente, vehiculo));
+        }
+        table.setItems(rows);
+
+        TableColumn<TelegramRequestRow, String> colFecha = new TableColumn<>("Solicitud");
+        colFecha.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().fechaSolicitud()));
+
+        TableColumn<TelegramRequestRow, String> colFechaSolicitada = new TableColumn<>("Fecha solicitada");
+        colFechaSolicitada.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().fechaSolicitada()));
+
+        TableColumn<TelegramRequestRow, String> colCliente = new TableColumn<>("Cliente");
+        colCliente.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().cliente()));
+
+        TableColumn<TelegramRequestRow, String> colVehiculo = new TableColumn<>("Vehículo");
+        colVehiculo.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().vehiculo()));
+
+        TableColumn<TelegramRequestRow, String> colMensaje = new TableColumn<>("Mensaje");
+        colMensaje.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().mensaje()));
+        colMensaje.setCellFactory(column -> new TableCell<>() {
+            private final Label label = new Label();
+
+            {
+                label.setWrapText(true);
+            }
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                    return;
+                }
+                label.setText(item);
+                setGraphic(label);
+            }
+        });
+
+        TableColumn<TelegramRequestRow, TelegramRequestRow> colAcciones = new TableColumn<>("Acciones");
+        colAcciones.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
+        colAcciones.setCellFactory(column -> new TableCell<>() {
+            private final Button btnAceptar = new Button("Aceptar");
+            private final Button btnRechazar = new Button("Rechazar");
+            private final HBox box = new HBox(8, btnAceptar, btnRechazar);
+
+            {
+                btnAceptar.getStyleClass().addAll("tfx-icon-btn", "tfx-icon-btn-success");
+                btnRechazar.getStyleClass().addAll("tfx-icon-btn", "tfx-icon-btn-danger");
+
+                btnAceptar.setOnAction(e -> {
+                    TelegramRequestRow row = getTableRow() != null ? getTableRow().getItem() : null;
+                    if (row != null) {
+                        aceptarSolicitud(row, rows);
+                    }
+                });
+                btnRechazar.setOnAction(e -> {
+                    TelegramRequestRow row = getTableRow() != null ? getTableRow().getItem() : null;
+                    if (row != null) {
+                        rechazarSolicitud(row, rows);
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(TelegramRequestRow row, boolean empty) {
+                super.updateItem(row, empty);
+                if (empty || row == null) {
+                    setGraphic(null);
+                    return;
+                }
+                setGraphic(box);
+            }
+        });
+
+        table.getColumns().addAll(colFecha, colFechaSolicitada, colCliente, colVehiculo, colMensaje, colAcciones);
+
+        Button btnCerrar = new Button("Cerrar");
+        btnCerrar.getStyleClass().add("button-secondary");
+
+        HBox footer = new HBox(8, btnCerrar);
+        footer.setStyle("-fx-alignment: center-right;");
+
+        VBox root = new VBox(12, table, footer);
+        root.setPadding(new javafx.geometry.Insets(12));
+        root.getStyleClass().add("tfx-card");
+
+        Scene scene = new Scene(root, 900, 500);
+        scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+        Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle("Solicitudes de cita (Telegram)");
+        stage.setScene(scene);
+        btnCerrar.setOnAction(e -> stage.close());
+        stage.showAndWait();
+        refreshPendingRequestCount();
     }
 
     private String getEmpresaName(Long empresaId) {
@@ -619,6 +776,217 @@ public class CitasController {
         };
     }
 
+    private String getCustomerLabel(Long customerId) {
+        if (customerId == null) {
+            return "";
+        }
+        String label = customerNameById.get(customerId);
+        return label != null ? label : "Cliente " + customerId;
+    }
+
+    private String getEmployeeLabel(Long employeeId) {
+        if (employeeId == null) {
+            return "";
+        }
+        String label = employeeNameById.get(employeeId);
+        return label != null ? label : "Empleado " + employeeId;
+    }
+
+    private String getVehicleLabel(Long vehicleId) {
+        if (vehicleId == null) {
+            return "";
+        }
+        String label = vehicleLabelById.get(vehicleId);
+        return label != null ? label : "Vehículo " + vehicleId;
+    }
+
+    private String mapStatusToChipClass(AppointmentStatus status) {
+        if (status == null) {
+            return null;
+        }
+        return switch (status) {
+            case REQUESTED ->
+                "tfx-chip-requested";
+            case CONFIRMED ->
+                "tfx-chip-confirmed";
+            case CANCELLED ->
+                "tfx-chip-cancelled";
+            case COMPLETED ->
+                "tfx-chip-completed";
+        };
+    }
+
+    private void loadLookupMaps(long empresaId) {
+        customerNameById.clear();
+        employeeNameById.clear();
+        vehicleLabelById.clear();
+
+        try {
+            MySqlCustomerRepository customerRepository = new MySqlCustomerRepository();
+            for (Customer customer : customerRepository.findByEmpresaId(empresaId)) {
+                customerNameById.put(customer.getId(), formatCustomerLabel(customer));
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            MySqlUserRepository userRepository = new MySqlUserRepository();
+            for (User user : userRepository.findByEmpresaId(empresaId)) {
+                employeeNameById.put(user.getId(), formatEmployeeLabel(user));
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            MySqlVehicleRepository vehicleRepository = new MySqlVehicleRepository();
+            for (Vehicle vehicle : vehicleRepository.findByEmpresaId(empresaId)) {
+                vehicleLabelById.put(vehicle.getId(), formatVehicleLabel(vehicle));
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    private String formatCustomerLabel(Customer customer) {
+        if (customer == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        if (customer.getNombre() != null) {
+            sb.append(customer.getNombre());
+        }
+        if (customer.getDni() != null && !customer.getDni().isBlank()) {
+            sb.append(" · ").append(customer.getDni());
+        }
+        sb.append(" (ID ").append(customer.getId()).append(")");
+        return sb.toString();
+    }
+
+    private String formatEmployeeLabel(User user) {
+        if (user == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        if (user.getNombre() != null) {
+            sb.append(user.getNombre());
+        }
+        sb.append(" (ID ").append(user.getId()).append(")");
+        return sb.toString();
+    }
+
+    private String formatVehicleLabel(Vehicle vehicle) {
+        if (vehicle == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        if (vehicle.getMatricula() != null && !vehicle.getMatricula().isBlank()) {
+            sb.append(vehicle.getMatricula());
+        }
+        if (vehicle.getMarca() != null && !vehicle.getMarca().isBlank()) {
+            if (sb.length() > 0) {
+                sb.append(" · ");
+            }
+            sb.append(vehicle.getMarca());
+        }
+        if (vehicle.getModelo() != null && !vehicle.getModelo().isBlank()) {
+            sb.append(" ").append(vehicle.getModelo());
+        }
+        if (sb.length() == 0) {
+            sb.append("Vehículo ").append(vehicle.getId());
+        } else {
+            sb.append(" (ID ").append(vehicle.getId()).append(")");
+        }
+        return sb.toString();
+    }
+
+    private void refreshPendingRequestCount() {
+        if (btnSolicitudesBot == null) {
+            return;
+        }
+        try {
+            long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+            int count = listTelegramAppointmentRequestsUseCase.execute(empresaId, TelegramAppointmentRequestStatus.PENDIENTE).size();
+            String suffix = count > 0 ? " (" + count + ")" : "";
+            btnSolicitudesBot.setText("Solicitudes bot" + suffix);
+        } catch (Exception e) {
+            btnSolicitudesBot.setText("Solicitudes bot");
+        }
+    }
+
+    private LocalDateTime parseRequestedDateTime(String mensaje) {
+        if (mensaje == null || mensaje.isBlank()) {
+            return null;
+        }
+        Matcher matcher = requestedDatePattern.matcher(mensaje);
+        if (!matcher.find()) {
+            return null;
+        }
+        String datePart = matcher.group(1);
+        String hourPart = matcher.group(2);
+        String minutePart = matcher.group(3);
+        try {
+            return LocalDateTime.parse(datePart + " " + hourPart + ":" + minutePart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void aceptarSolicitud(TelegramRequestRow row, ObservableList<TelegramRequestRow> rows) {
+        if (row == null || row.request() == null) {
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/CitaFormView.fxml"));
+            Parent root = loader.load();
+            CitaFormController controller = loader.getController();
+            long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+            controller.init(empresaId, saveAppointmentUseCase, null);
+            controller.applyTelegramRequestPrefill(row.request(), row.requestedDateTime());
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Confirmar cita solicitada");
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+            stage.setScene(scene);
+            stage.showAndWait();
+
+            if (controller.isSaved()) {
+                updateTelegramAppointmentRequestStatusUseCase.execute(row.request().getId(), TelegramAppointmentRequestStatus.PROCESADA);
+                rows.remove(row);
+                reloadFromDb();
+            }
+        } catch (IOException e) {
+            showError("No se ha podido abrir el formulario de cita: " + e.getMessage());
+        } catch (Exception e) {
+            showError("No se pudo confirmar la solicitud: " + e.getMessage());
+        }
+    }
+
+    private void rechazarSolicitud(TelegramRequestRow row, ObservableList<TelegramRequestRow> rows) {
+        if (row == null || row.request() == null) {
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Rechazar solicitud");
+        confirm.setHeaderText("¿Rechazar esta solicitud de cita?");
+        confirm.setContentText("Se marcará como descartada.");
+        Optional<ButtonType> response = confirm.showAndWait();
+        if (response.isEmpty() || response.get() != ButtonType.OK) {
+            return;
+        }
+
+        try {
+            updateTelegramAppointmentRequestStatusUseCase.execute(row.request().getId(), TelegramAppointmentRequestStatus.DESCARTADA);
+            rows.remove(row);
+            refreshPendingRequestCount();
+        } catch (Exception e) {
+            showError("No se pudo rechazar la solicitud: " + e.getMessage());
+        }
+    }
+
     private String safe(String s) {
         return s == null ? "" : s.toLowerCase(Locale.ROOT);
     }
@@ -630,9 +998,9 @@ public class CitasController {
         String t = safe(text);
 
         String haystack
-                = (appointmentValueOrBlank(c.getCustomerId()) + " "
-                + appointmentValueOrBlank(c.getVehicleId()) + " "
-                + appointmentValueOrBlank(c.getEmployeeId()) + " "
+                = (safe(getCustomerLabel(c.getCustomerId())) + " "
+                + safe(getVehicleLabel(c.getVehicleId())) + " "
+                + safe(getEmployeeLabel(c.getEmployeeId())) + " "
                 + safe(getEmpresaName(c.getEmpresaId())) + " "
                 + safe(c.getNotes()) + " "
                 + safe(mapStatusToLabel(c.getStatus())) + " "
@@ -651,6 +1019,27 @@ public class CitasController {
 
     private record AgendaSlot(java.time.LocalTime time, List<Appointment> appointments) {
 
+    }
+
+    private record TelegramRequestRow(TelegramAppointmentRequest request, LocalDateTime requestedDateTime, String cliente, String vehiculo) {
+
+        String fechaSolicitud() {
+            if (request == null || request.getFecha() == null) {
+                return "";
+            }
+            return request.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        }
+
+        String fechaSolicitada() {
+            if (requestedDateTime == null) {
+                return "Por confirmar";
+            }
+            return requestedDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        }
+
+        String mensaje() {
+            return request != null && request.getMensaje() != null ? request.getMensaje() : "";
+        }
     }
 
     private static class EmpresaOption {

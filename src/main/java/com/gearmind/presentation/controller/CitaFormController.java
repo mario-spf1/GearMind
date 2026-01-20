@@ -5,8 +5,10 @@ import com.gearmind.application.appointment.SaveAppointmentUseCase;
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.domain.appointment.Appointment;
 import com.gearmind.domain.appointment.AppointmentOrigin;
+import com.gearmind.domain.appointment.AppointmentStatus;
 import com.gearmind.domain.customer.Customer;
 import com.gearmind.domain.customer.CustomerRepository;
+import com.gearmind.domain.telegram.TelegramAppointmentRequest;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRepository;
 import com.gearmind.domain.user.UserRole;
@@ -53,6 +55,8 @@ public class CitaFormController {
     private final ObservableList<EmployeeOption> allEmployees = FXCollections.observableArrayList();
     private boolean settingClienteProgrammatically = false;
     private boolean settingEmpleadoProgrammatically = false;
+    private AppointmentOrigin originOverride;
+    private AppointmentStatus statusOverride;
 
     public void init(Long empresaId, SaveAppointmentUseCase saveAppointmentUseCase, Appointment existingAppointment) {
         this.empresaId = empresaId;
@@ -87,6 +91,32 @@ public class CitaFormController {
         } else {
             lblTitulo.setText("Nueva cita");
             dpFecha.setValue(LocalDate.now());
+        }
+    }
+
+    public void applyTelegramRequestPrefill(TelegramAppointmentRequest request, LocalDateTime requestedDateTime) {
+        if (request == null) {
+            return;
+        }
+
+        originOverride = AppointmentOrigin.TELEGRAM;
+        statusOverride = AppointmentStatus.CONFIRMED;
+
+        if (request.getClienteId() != null) {
+            selectCustomerById(request.getClienteId());
+        }
+
+        if (request.getVehiculoId() != null) {
+            txtVehiculoId.setText(String.valueOf(request.getVehiculoId()));
+        }
+
+        if (requestedDateTime != null) {
+            dpFecha.setValue(requestedDateTime.toLocalDate());
+            txtHora.setText(requestedDateTime.toLocalTime().format(timeFormatter));
+        }
+
+        if (request.getMensaje() != null && !request.getMensaje().isBlank()) {
+            txtNotas.setText(request.getMensaje());
         }
     }
 
@@ -388,7 +418,10 @@ public class CitaFormController {
             request.setOrigin(existingAppointment.getOrigin());
             request.setStatus(existingAppointment.getStatus());
         } else {
-            request.setOrigin(AppointmentOrigin.INTERNAL);
+            request.setOrigin(originOverride != null ? originOverride : AppointmentOrigin.INTERNAL);
+            if (statusOverride != null) {
+                request.setStatus(statusOverride);
+            }
         }
 
         Long currentUserId = null;

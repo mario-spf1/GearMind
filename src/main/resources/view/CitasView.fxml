@@ -18,6 +18,7 @@
                 <Label text="Mostrar:"/>
                 <ComboBox fx:id="cmbPageSize" prefWidth="90.0"/>
                 <Label text="por página"/>
+                <Button fx:id="btnSolicitudesBot" text="Solicitudes bot" onAction="#onSolicitudesBot" styleClass="button-secondary"/>
                 <Button text="Refrescar" onAction="#onRefrescar" styleClass="button-secondary"/>
                 <Button text="Nueva cita" onAction="#onNuevaCita" styleClass="button"/>
             </children>
@@ -162,7 +163,7 @@
                                 </HBox>
                             </top>
                             <center>
-                                <ListView fx:id="lstAgenda" fixedCellSize="40.0">
+                                <ListView fx:id="lstAgenda" fixedCellSize="40.0" styleClass="tfx-agenda-list">
                                     <padding>
                                         <Insets top="4" right="10" bottom="10" left="10"/>
                                     </padding>
