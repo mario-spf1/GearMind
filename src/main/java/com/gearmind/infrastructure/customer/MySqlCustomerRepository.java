@@ -217,6 +217,7 @@ public class MySqlCustomerRepository implements CustomerRepository {
                 c.empresa_id,
                 e.nombre AS empresa_nombre,
                 c.nombre,
+                c.dni,
                 c.email,
                 c.telefono,
                 c.notas,

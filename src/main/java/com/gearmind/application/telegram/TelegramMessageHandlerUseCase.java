@@ -70,86 +70,81 @@ public class TelegramMessageHandlerUseCase {
         }
 
         long chatId = update.getMessage().getChat().getId();
-        String text = normalize(update.getMessage().getText());
-        if (text == null) {
-            return;
-        }
-
-        String mapped = mapMenuSelection(text);
-        if (mapped != null) {
-            text = mapped;
-        }
-
-        Optional<TelegramConversationState> activeState = conversationRepository.findConversationByChatId(config.getEmpresaId(), chatId);
-
-        if (text.equals("/start") || text.equals("/ayuda")) {
-            sendHelp(chatId);
-            return;
-        }
-
-        if (text.startsWith("/cancelar") || text.equalsIgnoreCase(OPTION_CANCELAR)) {
-            activeState.ifPresent(state -> conversationRepository.delete(state.getId()));
-            botClient.sendMessageWithKeyboard(chatId, "Conversación cancelada. Usa el menú para continuar.", buildMainMenu(), true);
-            return;
-        }
-
-        if (activeState.isPresent() && !text.startsWith("/")) {
-            handleConversationStep(activeState.get(), update, text);
-            return;
-        }
-
-        if (text.startsWith("/identificar")) {
-            startIdentityConversation(chatId, null, "Necesitamos identificarte para continuar.");
-            return;
-        }
-
-        if (text.startsWith("/cambiar")) {
-            resetLinkedCustomer(chatId);
-            startIdentityConversation(chatId, null, "Vamos a cambiar de cliente. Indícanos tu DNI.");
-            return;
-        }
-
-        if (text.startsWith("/cita")) {
-            if (!ensureLinked(chatId, "/cita")) {
+        try {
+            String text = normalize(update.getMessage().getText());
+            if (text == null) {
                 return;
             }
-            startAppointmentConversation(chatId);
-            return;
-        }
 
-        if (text.startsWith("/estado")) {
-            if (!ensureLinked(chatId, "/estado")) {
+            String mapped = mapMenuSelection(text);
+            if (mapped != null) {
+                text = mapped;
+            }
+
+            Optional<TelegramConversationState> activeState = conversationRepository.findConversationByChatId(config.getEmpresaId(), chatId);
+            if (text.equals("/start") || text.equals("/ayuda")) {
+                sendHelp(chatId);
                 return;
             }
-            sendRepairStatus(chatId);
-            return;
-        }
 
-        if (text.startsWith("/citas")) {
-            if (!ensureLinked(chatId, "/citas")) {
+            if (text.startsWith("/cancelar") || text.equalsIgnoreCase(OPTION_CANCELAR)) {
+                activeState.ifPresent(state -> conversationRepository.delete(state.getId()));
+                botClient.sendMessageWithKeyboard(chatId, "Conversación cancelada. Usa el menú para continuar.", buildMainMenu(), true);
                 return;
             }
-            sendUpcomingAppointments(chatId);
-            return;
-        }
 
-        if (text.startsWith("/cita")) {
-            if (!ensureLinked(chatId, "/cita")) {
+            if (activeState.isPresent() && !text.startsWith("/")) {
+                handleConversationStep(activeState.get(), update, text);
                 return;
             }
-            startAppointmentConversation(chatId);
-            return;
-        }
-
-        if (text.startsWith("/facturas")) {
-            if (!ensureLinked(chatId, "/facturas")) {
+            if (text.startsWith("/identificar")) {
+                startIdentityConversation(chatId, null, "Necesitamos identificarte para continuar.");
                 return;
             }
-            sendInvoices(chatId);
-            return;
+
+            if (text.startsWith("/cambiar")) {
+                resetLinkedCustomer(chatId);
+                startIdentityConversation(chatId, null, "Vamos a cambiar de cliente. Indícanos tu DNI.");
+                return;
+            }
+            if (text.startsWith("/estado")) {
+                if (!ensureLinked(chatId, "/estado")) {
+                    return;
+                }
+                sendRepairStatus(chatId);
+                return;
+            }
+            if (text.startsWith("/citas")) {
+                if (!ensureLinked(chatId, "/citas")) {
+                    return;
+                }
+                sendUpcomingAppointments(chatId);
+                return;
+            }
+
+            if (text.startsWith("/cita")) {
+                if (!ensureLinked(chatId, "/cita")) {
+                    return;
+                }
+                startAppointmentConversation(chatId);
+                return;
+            }
+            if (text.startsWith("/facturas")) {
+                if (!ensureLinked(chatId, "/facturas")) {
+                    return;
+                }
+                sendInvoices(chatId);
+                return;
+            }
+            if (!text.startsWith("/") && handleDniFallback(chatId, text)) {
+                return;
+            }
+
+            botClient.sendMessage(chatId, "No te he entendido. Usa /ayuda para ver opciones.");
+        } catch (Exception e) {
+            botClient.sendMessageWithKeyboard(chatId, "Se produjo un error al procesar tu solicitud. Inténtalo de nuevo.", buildMainMenu(), true);
         }
 
-        botClient.sendMessage(chatId, "No te he entendido. Usa /ayuda para ver opciones.");
     }
 
     private boolean ensureLinked(long chatId, String pendingAction) {
@@ -171,6 +166,27 @@ public class TelegramMessageHandlerUseCase {
         conversationRepository.save(state);
         String prompt = promptMessage != null && !promptMessage.isBlank() ? promptMessage : "Para continuar, indícanos tu DNI.";
         botClient.sendMessageWithKeyboard(chatId, prompt, List.of(List.of(OPTION_CANCELAR)), true);
+    }
+
+    private boolean handleDniFallback(long chatId, String text) {
+        String dni = normalizeDni(text);
+        if (dni.isBlank() || !dni.matches("[A-Z0-9]{5,20}")) {
+            return false;
+        }
+
+        Optional<Customer> customer = customerRepository.findByDni(config.getEmpresaId(), dni);
+        if (customer.isEmpty()) {
+            botClient.sendMessageWithKeyboard(chatId, "No encontramos ese DNI. Usa /identificar para intentarlo de nuevo.", buildMainMenu(), true);
+            return true;
+        }
+
+        Map<String, String> payload = new HashMap<>();
+        payload.put(PAYLOAD_CANDIDATE_ID, String.valueOf(customer.get().getId()));
+        payload.put(PAYLOAD_CANDIDATE_NOMBRE, customer.get().getNombre());
+        TelegramConversationState state = new TelegramConversationState(null, config.getEmpresaId(), chatId, TelegramConversationStep.CONFIRM_IDENTITY, toJson(payload), LocalDateTime.now());
+        conversationRepository.save(state);
+        botClient.sendMessageWithKeyboard(chatId, "¿Eres " + customer.get().getNombre() + "?", List.of(List.of(OPTION_SI, OPTION_NO)), true);
+        return true;
     }
 
     private void startAppointmentConversation(long chatId) {
