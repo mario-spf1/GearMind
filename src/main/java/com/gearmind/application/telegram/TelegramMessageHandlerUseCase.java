@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gearmind.domain.customer.Customer;
 import com.gearmind.domain.customer.CustomerRepository;
 import com.gearmind.domain.telegram.*;
+import com.gearmind.domain.vehicle.Vehicle;
 import com.gearmind.infrastructure.telegram.TelegramBotClient;
 import com.gearmind.infrastructure.telegram.TelegramConfig;
 import com.gearmind.infrastructure.telegram.dto.TelegramUpdate;
@@ -34,6 +35,7 @@ public class TelegramMessageHandlerUseCase {
     private static final String OPTION_REINTENTAR = "Reintentar";
     private static final String OPTION_CONFIRMAR_CITA = "Confirmar cita";
     private static final String OPTION_CAMBIAR_DIA = "Cambiar día";
+    private static final String OPTION_OTRO = "Otro";
     private static final String PAYLOAD_PENDING_ACTION = "pendingAction";
     private static final String PAYLOAD_CANDIDATE_ID = "candidateClienteId";
     private static final String PAYLOAD_CANDIDATE_NOMBRE = "candidateNombre";
@@ -41,6 +43,8 @@ public class TelegramMessageHandlerUseCase {
     private static final String PAYLOAD_APPOINTMENT_MONTH = "appointmentMonth";
     private static final String PAYLOAD_APPOINTMENT_DAY = "appointmentDay";
     private static final String PAYLOAD_APPOINTMENT_HOUR = "appointmentHour";
+    private static final String PAYLOAD_APPOINTMENT_VEHICLE_ID = "appointmentVehicleId";
+    private static final String PAYLOAD_APPOINTMENT_VEHICLE_LABEL = "appointmentVehicleLabel";
     private static final List<Integer> APPOINTMENT_HOURS = List.of(9, 10, 11, 12, 13, 14, 15, 16, 17, 18);
     private final TelegramConfig config;
     private final TelegramBotClient botClient;
@@ -297,8 +301,31 @@ public class TelegramMessageHandlerUseCase {
                     return;
                 }
                 payload.put(PAYLOAD_APPOINTMENT_HOUR, String.valueOf(hour));
+                nextStep = TelegramConversationStep.ASK_VEHICLE;
+                sendVehicleOptions(state.getChatId());
+            }
+            case ASK_VEHICLE -> {
+                VehicleSelection selection = resolveVehicleSelection(state.getChatId(), text);
+                if (selection == null) {
+                    botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona un vehículo válido.", buildVehicleKeyboard(state.getChatId()), true);
+                    return;
+                }
+                if (selection.vehicleId() != null) {
+                    payload.put(PAYLOAD_APPOINTMENT_VEHICLE_ID, String.valueOf(selection.vehicleId()));
+                } else {
+                    payload.remove(PAYLOAD_APPOINTMENT_VEHICLE_ID);
+                }
+                payload.put(PAYLOAD_APPOINTMENT_VEHICLE_LABEL, selection.label());
+                Integer year = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_YEAR));
+                Integer month = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_MONTH));
+                Integer day = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_DAY));
+                Integer hour = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_HOUR));
+                if (year == null || month == null || day == null || hour == null) {
+                    botClient.sendMessageWithKeyboard(state.getChatId(), "No se pudo recuperar la fecha. Selecciona un día válido.", buildDayKeyboard(LocalDate.now().getYear(), LocalDate.now().getMonthValue()), true);
+                    return;
+                }
                 nextStep = TelegramConversationStep.CONFIRM_APPOINTMENT;
-                botClient.sendMessageWithKeyboard(state.getChatId(), appointmentConfirmationMessage(year, month, day, hour), buildConfirmAppointmentKeyboard(), true);
+                botClient.sendMessageWithKeyboard(state.getChatId(), appointmentConfirmationMessage(year, month, day, hour, selection.label()), buildConfirmAppointmentKeyboard(), true);
             }
             case CONFIRM_APPOINTMENT -> {
                 if (OPTION_CONFIRMAR_CITA.equalsIgnoreCase(text)) {
@@ -364,6 +391,8 @@ public class TelegramMessageHandlerUseCase {
         Integer month = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_MONTH));
         Integer day = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_DAY));
         Integer hour = parsePayloadInteger(payload.get(PAYLOAD_APPOINTMENT_HOUR));
+        String vehicleLabel = payload.get(PAYLOAD_APPOINTMENT_VEHICLE_LABEL);
+        Long vehicleId = parsePayloadLong(payload.get(PAYLOAD_APPOINTMENT_VEHICLE_ID));
         LocalDate date = (year != null && month != null && day != null) ? LocalDate.of(year, month, day) : null;
         StringBuilder sb = new StringBuilder();
         if (date != null && hour != null) {
@@ -381,13 +410,13 @@ public class TelegramMessageHandlerUseCase {
                 sb.append("Email: ").append(customer.getEmail()).append("\n");
             }
         });
-        sb.append("Vehículo: Por confirmar\n");
+        sb.append("Vehículo: ").append(vehicleLabel != null && !vehicleLabel.isBlank() ? vehicleLabel : "Otro").append("\n");
         if (username != null && !username.isBlank()) {
             sb.append("Telegram: @").append(username);
         }
 
         Long clienteId = link.map(TelegramClientLink::getClienteId).orElse(null);
-        TelegramAppointmentRequest request = new TelegramAppointmentRequest(null, config.getEmpresaId(), clienteId, null, chatId, sb.toString(), LocalDateTime.now(), TelegramAppointmentRequestStatus.PENDIENTE);
+        TelegramAppointmentRequest request = new TelegramAppointmentRequest(null, config.getEmpresaId(), clienteId, vehicleId, chatId, sb.toString(), LocalDateTime.now(), TelegramAppointmentRequestStatus.PENDIENTE);
         appointmentRequestRepository.save(request);
     }
 
@@ -459,6 +488,44 @@ public class TelegramMessageHandlerUseCase {
         botClient.sendMessageWithKeyboard(chatId, (prefix != null ? prefix + "\n" : "") + "Selecciona el año.", buildYearKeyboard(), true);
     }
 
+    private void sendVehicleOptions(long chatId) {
+        botClient.sendMessageWithKeyboard(chatId, "¿Para qué vehículo es la cita?", buildVehicleKeyboard(chatId), true);
+    }
+
+    private List<List<String>> buildVehicleKeyboard(long chatId) {
+        List<String> options = new java.util.ArrayList<>();
+        clientLinkRepository.findByChatId(config.getEmpresaId(), chatId).map(TelegramClientLink::getClienteId).ifPresent(clienteId -> {
+            List<Vehicle> vehicles = queryRepository.findVehiclesByCliente(config.getEmpresaId(), clienteId);
+            for (Vehicle vehicle : vehicles) {
+                options.add(formatVehicleLabel(vehicle));
+            }
+        });
+        options.add(OPTION_OTRO);
+        return buildKeyboard(options, 2);
+    }
+
+    private VehicleSelection resolveVehicleSelection(long chatId, String text) {
+        if (text == null) {
+            return null;
+        }
+        String normalized = text.trim();
+        if (normalized.equalsIgnoreCase(OPTION_OTRO)) {
+            return new VehicleSelection(null, OPTION_OTRO);
+        }
+        Optional<TelegramClientLink> link = clientLinkRepository.findByChatId(config.getEmpresaId(), chatId);
+        if (link.isEmpty()) {
+            return null;
+        }
+        List<Vehicle> vehicles = queryRepository.findVehiclesByCliente(config.getEmpresaId(), link.get().getClienteId());
+        for (Vehicle vehicle : vehicles) {
+            String label = formatVehicleLabel(vehicle);
+            if (label.equalsIgnoreCase(normalized)) {
+                return new VehicleSelection(vehicle.getId(), label);
+            }
+        }
+        return null;
+    }
+
     private List<List<String>> buildYearKeyboard() {
         int currentYear = LocalDate.now().getYear();
         List<String> options = List.of(String.valueOf(currentYear), String.valueOf(currentYear + 1));
@@ -503,9 +570,10 @@ public class TelegramMessageHandlerUseCase {
         return options;
     }
 
-    private String appointmentConfirmationMessage(int year, int month, int day, int hour) {
+    private String appointmentConfirmationMessage(int year, int month, int day, int hour, String vehicleLabel) {
         LocalDate date = LocalDate.of(year, month, day);
-        return "Has seleccionado " + date + " a las " + String.format("%02d:00", hour) + ". ¿Confirmas la solicitud?";
+        String vehiculo = (vehicleLabel != null && !vehicleLabel.isBlank()) ? vehicleLabel : OPTION_OTRO;
+        return "Has seleccionado " + date + " a las " + String.format("%02d:00", hour) + " para " + vehiculo + ". ¿Confirmas la solicitud?";
     }
 
     private List<List<String>> buildConfirmAppointmentKeyboard() {
@@ -596,6 +664,17 @@ public class TelegramMessageHandlerUseCase {
         return parseInteger(raw);
     }
 
+    private Long parsePayloadLong(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(raw.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     private Integer parseInteger(String raw) {
         if (raw == null || raw.isBlank()) {
             return null;
@@ -613,6 +692,29 @@ public class TelegramMessageHandlerUseCase {
 
     private void appendCustomerHeader(StringBuilder sb, long clienteId) {
         customerRepository.findById(clienteId).ifPresent(customer -> sb.append("Cliente: ").append(customer.getNombre()).append("\n"));
+    }
+
+    private String formatVehicleLabel(Vehicle vehicle) {
+        if (vehicle == null) {
+            return OPTION_OTRO;
+        }
+        StringBuilder sb = new StringBuilder();
+        if (vehicle.getMatricula() != null && !vehicle.getMatricula().isBlank()) {
+            sb.append(vehicle.getMatricula());
+        }
+        if (vehicle.getMarca() != null && !vehicle.getMarca().isBlank()) {
+            if (!sb.isEmpty()) {
+                sb.append(" - ");
+            }
+            sb.append(vehicle.getMarca());
+        }
+        if (vehicle.getModelo() != null && !vehicle.getModelo().isBlank()) {
+            if (!sb.isEmpty()) {
+                sb.append(" ");
+            }
+            sb.append(vehicle.getModelo());
+        }
+        return sb.isEmpty() ? OPTION_OTRO : sb.toString();
     }
 
     private String customerLabel(long chatId) {
@@ -642,6 +744,10 @@ public class TelegramMessageHandlerUseCase {
         } catch (Exception e) {
             return "{}";
         }
+    }
+
+    private record VehicleSelection(Long vehicleId, String label) {
+
     }
 
     private String normalize(String text) {

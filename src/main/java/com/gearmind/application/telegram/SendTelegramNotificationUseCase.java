@@ -29,12 +29,14 @@ public class SendTelegramNotificationUseCase {
 
     public void execute(long clienteId, String tipoEvento, String mensaje, String payload) {
         Optional<TelegramClientLink> link = clientLinkRepository.findByClienteId(config.getEmpresaId(), clienteId);
+        String safeTipoEvento = tipoEvento != null ? tipoEvento : "DESCONOCIDO";
+        String safePayload = payload != null ? payload : "";
         if (link.isEmpty()) {
-            notificationLogRepository.save(new TelegramNotificationLog(null, config.getEmpresaId(),clienteId, 0L, tipoEvento, payload, LocalDateTime.now(), "SIN_VINCULO"));
+            notificationLogRepository.save(new TelegramNotificationLog(null, config.getEmpresaId(), clienteId, 0L, safeTipoEvento, safePayload, LocalDateTime.now(), "SIN_VINCULO"));
             return;
         }
 
         boolean ok = botClient.sendMessage(link.get().getChatId(), mensaje);
-        notificationLogRepository.save(new TelegramNotificationLog(null, config.getEmpresaId(), clienteId, link.get().getChatId(), tipoEvento, payload, LocalDateTime.now(), ok ? "ENVIADO" : "ERROR"));
+        notificationLogRepository.save(new TelegramNotificationLog(null, config.getEmpresaId(), clienteId, link.get().getChatId(), safeTipoEvento, safePayload, LocalDateTime.now(), ok ? "ENVIADO" : "ERROR"));
     }
 }

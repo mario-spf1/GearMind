@@ -100,8 +100,7 @@ public class CitaFormController {
         }
 
         originOverride = AppointmentOrigin.TELEGRAM;
-        statusOverride = AppointmentStatus.CONFIRMED;
-
+        statusOverride = AppointmentStatus.REQUESTED;
         if (request.getClienteId() != null) {
             selectCustomerById(request.getClienteId());
         }

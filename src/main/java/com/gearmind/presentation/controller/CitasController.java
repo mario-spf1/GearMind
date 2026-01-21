@@ -245,7 +245,7 @@ public class CitasController {
     }
 
     private void configureTable() {
-        tblCitas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblCitas.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         tblCitas.setItems(masterData);
 
         colFechaHora.setCellValueFactory(cellData -> {
@@ -272,11 +272,21 @@ public class CitasController {
 
         colNotas.setCellValueFactory(cellData -> {
             String notas = cellData.getValue().getNotes();
-            if (notas == null) {
-                return new SimpleStringProperty("");
+            return new SimpleStringProperty(notas == null ? "" : notas);
+        });
+        
+        colNotas.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null || item.isBlank()) {
+                    setText(null);
+                    setTooltip(null);
+                    return;
+                }
+                setText(item);
+                setTooltip(new Tooltip(item));
             }
-            String trimmed = notas.length() > 40 ? notas.substring(0, 37) + "..." : notas;
-            return new SimpleStringProperty(trimmed);
         });
 
         colAcciones.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
@@ -477,7 +487,7 @@ public class CitasController {
 
         if (filterEstadoField != null) {
             filterEstadoField.clear();
-        }
+        }    
         if (filterOrigenField != null) {
             filterOrigenField.clear();
         }

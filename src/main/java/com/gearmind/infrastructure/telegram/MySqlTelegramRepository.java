@@ -2,6 +2,7 @@ package com.gearmind.infrastructure.telegram;
 
 import com.gearmind.domain.telegram.*;
 import com.gearmind.infrastructure.database.DataSourceFactory;
+import com.gearmind.domain.vehicle.Vehicle;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.time.LocalDate;
@@ -268,11 +269,15 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
             int i = 1;
             ps.setLong(i++, log.getEmpresaId());
             ps.setLong(i++, log.getClienteId());
-            ps.setLong(i++, log.getChatId());
-            ps.setString(i++, log.getTipoEvento());
-            ps.setString(i++, log.getPayload());
+            if (log.getChatId() > 0) {
+                ps.setLong(i++, log.getChatId());
+            } else {
+                ps.setNull(i++, Types.BIGINT);
+            }
+            ps.setString(i++, log.getTipoEvento() != null ? log.getTipoEvento() : "DESCONOCIDO");
+            ps.setString(i++, log.getPayload() != null ? log.getPayload() : "");
             ps.setTimestamp(i++, Timestamp.valueOf(log.getEnviadoAt()));
-            ps.setString(i, log.getResultado());
+            ps.setString(i, log.getResultado() != null ? log.getResultado() : "ERROR");
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Error al guardar log de notificación Telegram", e);
@@ -439,6 +444,53 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al consultar disponibilidad de citas Telegram", e);
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<Vehicle> findVehiclesByCliente(long empresaId, long clienteId) {
+        String sql = """
+                SELECT id, empresa_id, cliente_id, matricula, marca, modelo, year, vin, created_at, updated_at
+                FROM vehiculo
+                WHERE empresa_id = ? AND cliente_id = ?
+                ORDER BY matricula ASC
+                """;
+
+        List<Vehicle> result = new ArrayList<>();
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, empresaId);
+            ps.setLong(2, clienteId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Vehicle vehicle = new Vehicle();
+                    vehicle.setId(rs.getLong("id"));
+                    vehicle.setEmpresaId(rs.getLong("empresa_id"));
+                    vehicle.setClienteId(rs.getLong("cliente_id"));
+                    vehicle.setMatricula(rs.getString("matricula"));
+                    vehicle.setMarca(rs.getString("marca"));
+                    vehicle.setModelo(rs.getString("modelo"));
+                    int year = rs.getInt("year");
+                    if (!rs.wasNull()) {
+                        vehicle.setYear(year);
+                    }
+                    vehicle.setVin(rs.getString("vin"));
+                    Timestamp created = rs.getTimestamp("created_at");
+                    if (created != null) {
+                        vehicle.setCreatedAt(created.toLocalDateTime());
+                    }
+                    Timestamp updated = rs.getTimestamp("updated_at");
+                    if (updated != null) {
+                        vehicle.setUpdatedAt(updated.toLocalDateTime());
+                    }
+                    result.add(vehicle);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al consultar vehículos Telegram", e);
         }
 
         return result;
