@@ -4,9 +4,11 @@ import com.gearmind.application.budget.GetBudgetUseCase;
 import com.gearmind.application.budget.ListBudgetsUseCase;
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
+import com.gearmind.application.inventory.AdjustInventoryUseCase;
 import com.gearmind.application.invoice.GetInvoiceUseCase;
 import com.gearmind.application.invoice.SaveInvoiceRequest;
 import com.gearmind.application.invoice.SaveInvoiceUseCase;
+import com.gearmind.application.product.ListProductsUseCase;
 import com.gearmind.domain.budget.Budget;
 import com.gearmind.domain.budget.BudgetLine;
 import com.gearmind.domain.company.Empresa;
@@ -14,12 +16,15 @@ import com.gearmind.domain.customer.Customer;
 import com.gearmind.domain.invoice.Invoice;
 import com.gearmind.domain.invoice.InvoiceLine;
 import com.gearmind.domain.invoice.InvoiceStatus;
+import com.gearmind.domain.product.Product;
 import com.gearmind.domain.vehicle.Vehicle;
 import com.gearmind.infrastructure.budget.MySqlBudgetRepository;
 import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
 import com.gearmind.infrastructure.invoice.InvoicePdfStorage;
 import com.gearmind.infrastructure.invoice.MySqlInvoiceRepository;
+import com.gearmind.infrastructure.inventory.MySqlInventoryMovementRepository;
+import com.gearmind.infrastructure.product.MySqlProductRepository;
 import com.gearmind.infrastructure.telegram.MySqlTelegramRepository;
 import com.gearmind.infrastructure.telegram.TelegramBotClient;
 import com.gearmind.infrastructure.telegram.TelegramConfig;
@@ -32,6 +37,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -71,6 +77,8 @@ public class FacturaFormController {
     @FXML
     private TableView<InvoiceLine> tblLineas;
     @FXML
+    private TableColumn<InvoiceLine, ProductOption> colProducto;
+    @FXML
     private TableColumn<InvoiceLine, String> colDescripcion;
     @FXML
     private TableColumn<InvoiceLine, BigDecimal> colCantidad;
@@ -93,6 +101,8 @@ public class FacturaFormController {
     private final ObservableList<VehiculoOption> vehiculos = FXCollections.observableArrayList();
     private final ObservableList<InvoiceLine> lineas = FXCollections.observableArrayList();
     private final List<VehiculoOption> vehiculosEmpresa = new java.util.ArrayList<>();
+    private final ObservableList<ProductOption> productos = FXCollections.observableArrayList();
+    private final java.util.Map<Long, ProductOption> productosById = new java.util.HashMap<>();
 
     private Long editingId;
     private boolean saved = false;
@@ -106,6 +116,7 @@ public class FacturaFormController {
     private final MySqlEmpresaRepository empresaRepository;
     private final MySqlCustomerRepository customerRepository;
     private final MySqlVehicleRepository vehicleRepository;
+    private final ListProductsUseCase listProductsUseCase;
 
     private final java.text.DecimalFormat moneyFormat = new java.text.DecimalFormat("#,##0.00", new java.text.DecimalFormatSymbols(Locale.getDefault()));
 
@@ -117,11 +128,14 @@ public class FacturaFormController {
         this.empresaRepository = new MySqlEmpresaRepository();
         this.customerRepository = new MySqlCustomerRepository();
         this.vehicleRepository = new MySqlVehicleRepository();
+        MySqlProductRepository productRepository = new MySqlProductRepository();
+        this.listProductsUseCase = new ListProductsUseCase(productRepository);
         TelegramConfig telegramConfig = new TelegramConfig();
         TelegramBotClient botClient = new TelegramBotClient(telegramConfig, new ObjectMapper());
         MySqlTelegramRepository telegramRepository = new MySqlTelegramRepository();
         SendTelegramNotificationUseCase notificationUseCase = new SendTelegramNotificationUseCase(telegramConfig, botClient, telegramRepository, telegramRepository);
-        this.saveInvoiceUseCase = new SaveInvoiceUseCase(invoiceRepository, empresaRepository, customerRepository, vehicleRepository, new com.gearmind.infrastructure.invoice.InvoicePdfGenerator(), notificationUseCase);
+        AdjustInventoryUseCase adjustInventoryUseCase = new AdjustInventoryUseCase(productRepository, new MySqlInventoryMovementRepository());
+        this.saveInvoiceUseCase = new SaveInvoiceUseCase(invoiceRepository, empresaRepository, customerRepository, vehicleRepository, new com.gearmind.infrastructure.invoice.InvoicePdfGenerator(), notificationUseCase, adjustInventoryUseCase);
         this.getInvoiceUseCase = new GetInvoiceUseCase(invoiceRepository);
     }
 
@@ -361,11 +375,7 @@ public class FacturaFormController {
         } else {
             budgets = listBudgetsUseCase.listByEmpresa(empresaId);
         }
-        presupuestos.setAll(budgets.stream()
-                .filter(b -> b.getEmpresaId() == empresaId)
-                .sorted(Comparator.comparing(Budget::getFecha, Comparator.nullsLast(Comparator.reverseOrder())))
-                .map(b -> new PresupuestoOption(b.getId(), budgetLabel(b), b.getClienteId(), b.getVehiculoId()))
-                .toList());
+        presupuestos.setAll(budgets.stream().filter(b -> b.getEmpresaId() == empresaId).sorted(Comparator.comparing(Budget::getFecha, Comparator.nullsLast(Comparator.reverseOrder()))).map(b -> new PresupuestoOption(b.getId(), budgetLabel(b), b.getClienteId(), b.getVehiculoId())).toList());
 
         List<Customer> customers = customerRepository.findByEmpresaId(empresaId);
         clientes.setAll(customers.stream().sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER)).map(c -> new ClienteOption(c.getId(), customerLabel(c))).toList());
@@ -373,6 +383,7 @@ public class FacturaFormController {
         List<Vehicle> vehicles = vehicleRepository.findByEmpresaId(empresaId);
         vehiculosEmpresa.clear();
         vehiculosEmpresa.addAll(vehicles.stream().sorted(Comparator.comparing(Vehicle::getMatricula, String.CASE_INSENSITIVE_ORDER)).map(v -> new VehiculoOption(v.getId(), vehicleLabel(v), v.getClienteId())).toList());
+        loadProductosForEmpresa(empresaId);
 
         if (cmbPresupuesto != null && !presupuestos.isEmpty() && cmbPresupuesto.getValue() == null) {
             cmbPresupuesto.getSelectionModel().selectFirst();
@@ -397,6 +408,35 @@ public class FacturaFormController {
         tblLineas.setItems(lineas);
         tblLineas.setEditable(true);
         tblLineas.setFixedCellSize(28);
+
+        if (colProducto != null) {
+            colProducto.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(getProductOption(c.getValue().getProductoId())));
+            colProducto.setCellFactory(col -> new ComboBoxTableCell<>(new StringConverter<>() {
+                @Override
+                public String toString(ProductOption value) {
+                    return value == null ? "" : value.label;
+                }
+
+                @Override
+                public ProductOption fromString(String string) {
+                    return null;
+                }
+            }, productos));
+            colProducto.setOnEditCommit(event -> {
+                InvoiceLine line = event.getRowValue();
+                ProductOption selected = event.getNewValue();
+                line.setProductoId(selected != null ? selected.id : null);
+                if (selected != null) {
+                    if (line.getDescripcion() == null || line.getDescripcion().isBlank()) {
+                        line.setDescripcion(selected.label);
+                    }
+                    if (line.getPrecio() == null || BigDecimal.ZERO.compareTo(line.getPrecio()) == 0) {
+                        line.setPrecio(selected.precioVenta != null ? selected.precioVenta : BigDecimal.ZERO);
+                    }
+                }
+                updateTotals();
+            });
+        }
 
         colDescripcion.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDescripcion()));
         colDescripcion.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -503,6 +543,36 @@ public class FacturaFormController {
         line.setPrecio(BigDecimal.ZERO);
         line.setTotal(BigDecimal.ZERO);
         return line;
+    }
+
+    private void loadProductosForEmpresa(long empresaId) {
+        List<Product> productList = listProductsUseCase.listByEmpresa(empresaId).stream().filter(Product::isActivo).sorted(Comparator.comparing(Product::getNombre, String.CASE_INSENSITIVE_ORDER)).toList();
+        productosById.clear();
+        productos.clear();
+        for (Product product : productList) {
+            ProductOption option = new ProductOption(product.getId(), productLabel(product), product.getPrecioVenta());
+            productos.add(option);
+            productosById.put(option.id, option);
+        }
+        if (tblLineas != null) {
+            tblLineas.refresh();
+        }
+    }
+
+    private String productLabel(Product product) {
+        String nombre = product.getNombre() == null ? "" : product.getNombre();
+        String referencia = product.getReferencia() == null ? "" : product.getReferencia();
+        if (!referencia.isBlank()) {
+            return nombre + " · Ref " + referencia;
+        }
+        return nombre;
+    }
+
+    private ProductOption getProductOption(Long productId) {
+        if (productId == null) {
+            return null;
+        }
+        return productosById.get(productId);
     }
 
     private long getEmpresaId() {
@@ -701,6 +771,24 @@ public class FacturaFormController {
         @Override
         public String toString() {
             return nombre;
+        }
+    }
+
+    private static class ProductOption {
+
+        private final long id;
+        private final String label;
+        private final BigDecimal precioVenta;
+
+        private ProductOption(long id, String label, BigDecimal precioVenta) {
+            this.id = id;
+            this.label = label;
+            this.precioVenta = precioVenta;
+        }
+
+        @Override
+        public String toString() {
+            return label;
         }
     }
 

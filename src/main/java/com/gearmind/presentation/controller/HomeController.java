@@ -5,14 +5,17 @@ import com.gearmind.application.common.SessionManager;
 import com.gearmind.application.message.ListConversationsUseCase;
 import com.gearmind.application.message.ListMessagesUseCase;
 import com.gearmind.application.message.SendMessageUseCase;
+import com.gearmind.application.product.ListLowStockProductsUseCase;
 import com.gearmind.domain.message.ConversationSummary;
 import com.gearmind.domain.message.InternalMessage;
 import com.gearmind.domain.message.MessageRepository;
+import com.gearmind.domain.product.Product;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRole;
 import com.gearmind.domain.user.UserRepository;
 import com.gearmind.infrastructure.auth.MySqlUserRepository;
 import com.gearmind.infrastructure.message.MySqlMessageRepository;
+import com.gearmind.infrastructure.product.MySqlProductRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -25,6 +28,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -54,6 +58,10 @@ public class HomeController {
     @FXML
     private Button btnMensajes;
     @FXML
+    private Button btnAlertas;
+    @FXML
+    private Label lblAlertas;
+    @FXML
     private Button btnNavDashboard;
     @FXML
     private Button btnNavReportes;
@@ -81,8 +89,10 @@ public class HomeController {
     private javafx.scene.Node savedSidebar;
     private ContextMenu userMenu;
     private ContextMenu messagesMenu;
+    private ContextMenu alertsMenu;
     private ListView<ConversationSummary> conversationList;
     private ListView<InternalMessage> messageList;
+    private ListView<Product> alertsList;
     private TextField messageInput;
     private Button btnSendMessage;
     private ComboBox<UserOption> cmbNewConversation;
@@ -92,6 +102,7 @@ public class HomeController {
     private final ListMessagesUseCase listMessagesUseCase = new ListMessagesUseCase(messageRepository);
     private final SendMessageUseCase sendMessageUseCase = new SendMessageUseCase(messageRepository);
     private final UserRepository userRepository = new MySqlUserRepository();
+    private final ListLowStockProductsUseCase listLowStockProductsUseCase = new ListLowStockProductsUseCase(new MySqlProductRepository());
 
     @FXML
     public void initialize() {
@@ -99,12 +110,18 @@ public class HomeController {
         setupFromAuthContext();
         initUserMenu();
         initMessagesMenu();
+        initAlertasMenu();
 
         if (userBox != null) {
             userBox.setOnMouseClicked(e -> showUserMenu());
         }
+
         if (lblUsuarioActual != null) {
             lblUsuarioActual.setOnMouseClicked(e -> showUserMenu());
+        }
+
+        if (btnAlertas != null) {
+            btnAlertas.setDisable(!AuthContext.isLoggedIn());
         }
 
         loadView("/view/DashboardView.fxml");
@@ -304,6 +321,49 @@ public class HomeController {
         btnMensajes.setDisable(!AuthContext.isLoggedIn());
     }
 
+    private void initAlertasMenu() {
+        if (btnAlertas == null) {
+            return;
+        }
+
+        alertsList = new ListView<>();
+        alertsList.setPlaceholder(new Label("Sin alertas de stock."));
+        alertsList.setPrefWidth(320);
+        alertsList.getStyleClass().add("tfx-chat-list");
+        alertsList.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(Product item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                    return;
+                }
+                String empresa = AuthContext.isSuperAdmin() ? safe(item.getEmpresaNombre()) + " · " : "";
+                String referencia = safe(item.getReferencia());
+                String nombre = safe(item.getNombre());
+                String label = empresa + nombre + (referencia.isBlank() ? "" : " · Ref " + referencia);
+                Label name = new Label(label);
+                Label stock = new Label(formatStock(item));
+                stock.getStyleClass().add("tfx-warn");
+                HBox row = new HBox(8, name, new Region(), stock);
+                HBox.setHgrow(row.getChildren().get(1), Priority.ALWAYS);
+                setGraphic(row);
+                setText(null);
+            }
+        });
+
+        VBox content = new VBox(8, new Label("Productos con stock bajo"), alertsList);
+        content.getStyleClass().add("tfx-chat-popup");
+        CustomMenuItem item = new CustomMenuItem(content, false);
+        item.setHideOnClick(false);
+        alertsMenu = new ContextMenu(item);
+        alertsMenu.setAutoHide(false);
+        Tooltip.install(btnAlertas, new Tooltip("Alertas de stock"));
+        btnAlertas.setDisable(!AuthContext.isLoggedIn());
+        refreshAlertBadge();
+    }
+
     @FXML
     private void onUserMenu() {
         showUserMenu();
@@ -312,6 +372,11 @@ public class HomeController {
     @FXML
     private void onMessagesMenu() {
         showMessagesMenu();
+    }
+
+    @FXML
+    private void onAlertasMenu() {
+        showAlertasMenu();
     }
 
     private void showUserMenu() {
@@ -339,6 +404,18 @@ public class HomeController {
 
         refreshConversations();
         messagesMenu.show(btnMensajes, Side.BOTTOM, 0, 6);
+    }
+
+    private void showAlertasMenu() {
+        if (alertsMenu == null || btnAlertas == null) {
+            return;
+        }
+        if (alertsMenu.isShowing()) {
+            alertsMenu.hide();
+            return;
+        }
+        refreshStockAlerts();
+        alertsMenu.show(btnAlertas, Side.BOTTOM, 0, 6);
     }
 
     private void refreshConversations() {
@@ -386,6 +463,29 @@ public class HomeController {
         }
     }
 
+    private void refreshStockAlerts() {
+        if (!AuthContext.isLoggedIn() || alertsList == null) {
+            return;
+        }
+        List<Product> lowStock = AuthContext.isSuperAdmin() ? listLowStockProductsUseCase.listAllWithEmpresa() : listLowStockProductsUseCase.listByEmpresa(AuthContext.getEmpresaId());
+        alertsList.setItems(FXCollections.observableArrayList(lowStock));
+        refreshAlertBadge();
+    }
+
+    private void refreshAlertBadge() {
+        if (lblAlertas == null) {
+            return;
+        }
+        int count = 0;
+        if (AuthContext.isLoggedIn()) {
+            List<Product> lowStock = AuthContext.isSuperAdmin() ? listLowStockProductsUseCase.listAllWithEmpresa() : listLowStockProductsUseCase.listByEmpresa(AuthContext.getEmpresaId());
+            count = lowStock.size();
+        }
+        lblAlertas.setText(String.valueOf(count));
+        lblAlertas.setVisible(count > 0);
+        lblAlertas.setManaged(count > 0);
+    }
+
     private void sendMessage() {
         if (activeConversation == null || !AuthContext.isLoggedIn()) {
             return;
@@ -424,6 +524,16 @@ public class HomeController {
     private ObservableList<UserOption> loadAvailableUsers(long empresaId, long userId) {
         List<UserOption> options = userRepository.findByEmpresaId(empresaId).stream().filter(User::isActivo).filter(user -> user.getId() != userId).map(user -> new UserOption(user.getId(), user.getNombre())).toList();
         return FXCollections.observableArrayList(options);
+    }
+
+    private String formatStock(Product product) {
+        int stock = product.getStock() == null ? 0 : product.getStock();
+        int minimo = product.getStockMinimo() == null ? 0 : product.getStockMinimo();
+        return stock + " / " + minimo;
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
     }
 
     private static class UserOption {

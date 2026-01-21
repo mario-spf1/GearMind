@@ -2,10 +2,14 @@ package com.gearmind.presentation.controller;
 
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
+import com.gearmind.application.inventory.AdjustInventoryUseCase;
 import com.gearmind.application.product.ActivateProductUseCase;
 import com.gearmind.application.product.DeactivateProductUseCase;
+import com.gearmind.application.product.ListLowStockProductsUseCase;
 import com.gearmind.application.product.ListProductsUseCase;
+import com.gearmind.domain.inventory.InventoryMovementType;
 import com.gearmind.domain.product.Product;
+import com.gearmind.infrastructure.inventory.MySqlInventoryMovementRepository;
 import com.gearmind.infrastructure.product.MySqlProductRepository;
 import com.gearmind.presentation.table.SmartTable;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -18,6 +22,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -62,6 +68,10 @@ public class ProductosController {
     private Button btnNuevoProducto;
     @FXML
     private Label lblHeaderInfo;
+    @FXML
+    private Label lblAlertasStock;
+    @FXML
+    private ListView<Product> lstStockBajo;
 
     @FXML
     private TextField filterNombreField;
@@ -83,8 +93,10 @@ public class ProductosController {
     private Label lblResumen;
 
     private final ListProductsUseCase listProductsUseCase;
+    private final ListLowStockProductsUseCase listLowStockProductsUseCase;
     private final DeactivateProductUseCase deactivateProductUseCase;
     private final ActivateProductUseCase activateProductUseCase;
+    private final AdjustInventoryUseCase adjustInventoryUseCase;
 
     private final ObservableList<Product> masterData = FXCollections.observableArrayList();
     private SmartTable<Product> smartTable;
@@ -94,8 +106,10 @@ public class ProductosController {
     public ProductosController() {
         MySqlProductRepository repo = new MySqlProductRepository();
         this.listProductsUseCase = new ListProductsUseCase(repo);
+        this.listLowStockProductsUseCase = new ListLowStockProductsUseCase(repo);
         this.deactivateProductUseCase = new DeactivateProductUseCase(repo);
         this.activateProductUseCase = new ActivateProductUseCase(repo);
+        this.adjustInventoryUseCase = new AdjustInventoryUseCase(repo, new MySqlInventoryMovementRepository());
     }
 
     @FXML
@@ -141,6 +155,23 @@ public class ProductosController {
         });
 
         colStock.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getStock()));
+        colStock.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                getStyleClass().remove("tfx-warn");
+                if (empty) {
+                    setText(null);
+                    return;
+                }
+                setText(item == null ? "0" : String.valueOf(item));
+                Product product = getTableRow() != null ? getTableRow().getItem() : null;
+                if (product != null && isLowStock(product)) {
+                    getStyleClass().add("tfx-warn");
+                }
+            }
+        });
+
         colStockMinimo.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getStockMinimo()));
         colPrecioCompra.setCellValueFactory(c -> new SimpleStringProperty(formatPrice(c.getValue().getPrecioCompra())));
         colPrecioVenta.setCellValueFactory(c -> new SimpleStringProperty(formatPrice(c.getValue().getPrecioVenta())));
@@ -166,14 +197,17 @@ public class ProductosController {
         colAcciones.setCellFactory(col -> new TableCell<>() {
 
             private final Button btnEditar = new Button("Editar");
+            private final Button btnStock = new Button("Stock");
             private final Button btnToggle = new Button();
-            private final HBox box = new HBox(8, btnEditar, btnToggle);
+            private final HBox box = new HBox(8, btnEditar, btnStock, btnToggle);
 
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
+                btnStock.getStyleClass().add("tfx-icon-btn");
                 btnToggle.getStyleClass().add("tfx-icon-btn");
 
                 btnEditar.setTooltip(new Tooltip("Editar producto"));
+                btnStock.setTooltip(new Tooltip("Añadir stock"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
 
                 btnEditar.setOnAction(e -> {
@@ -187,6 +221,13 @@ public class ProductosController {
                     Product p = getItem();
                     if (p != null) {
                         toggleProductActive(p);
+                    }
+                });
+
+                btnStock.setOnAction(e -> {
+                    Product p = getItem();
+                    if (p != null) {
+                        openStockAdjustment(p);
                     }
                 });
             }
@@ -205,10 +246,12 @@ public class ProductosController {
                     btnToggle.setText("Desactivar");
                     btnToggle.getStyleClass().add("tfx-icon-btn-danger");
                     btnToggle.setTooltip(new Tooltip("Desactivar producto"));
+                    btnStock.setDisable(false);
                 } else {
                     btnToggle.setText("Activar");
                     btnToggle.getStyleClass().add("tfx-icon-btn-success");
                     btnToggle.setTooltip(new Tooltip("Activar producto"));
+                    btnStock.setDisable(true);
                 }
 
                 setGraphic(box);
@@ -292,6 +335,31 @@ public class ProductosController {
             });
         }
 
+        if (lstStockBajo != null) {
+            lstStockBajo.setPlaceholder(new Label("Sin alertas de stock."));
+            lstStockBajo.setCellFactory(list -> new ListCell<>() {
+                @Override
+                protected void updateItem(Product item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                        setGraphic(null);
+                        return;
+                    }
+                    String empresa = AuthContext.isSuperAdmin() ? safeRaw(item.getEmpresaNombre()) + " · " : "";
+                    String referencia = safeRaw(item.getReferencia());
+                    String nombre = safeRaw(item.getNombre());
+                    String label = empresa + nombre + (referencia.isBlank() ? "" : " · Ref " + referencia);
+                    Label name = new Label(label);
+                    Label stock = new Label(formatStock(item));
+                    stock.getStyleClass().add("tfx-warn");
+                    HBox row = new HBox(8, name, new Region(), stock);
+                    HBox.setHgrow(row.getChildren().get(1), Priority.ALWAYS);
+                    setGraphic(row);
+                }
+            });
+        }
+
         setupRowDoubleClick();
         loadProductosFromDb();
     }
@@ -311,12 +379,7 @@ public class ProductosController {
         masterData.setAll(productos);
 
         if (isSuperAdmin && filterEmpresaCombo != null) {
-            var empresas = productos.stream()
-                    .map(Product::getEmpresaNombre)
-                    .filter(s -> s != null && !s.isBlank())
-                    .distinct()
-                    .sorted(String.CASE_INSENSITIVE_ORDER)
-                    .toList();
+            var empresas = productos.stream().map(Product::getEmpresaNombre).filter(s -> s != null && !s.isBlank()).distinct().sorted(String.CASE_INSENSITIVE_ORDER).toList();
 
             filterEmpresaCombo.setItems(FXCollections.observableArrayList(empresas));
             filterEmpresaCombo.getItems().add(0, "Todas");
@@ -327,6 +390,21 @@ public class ProductosController {
 
         if (lblHeaderInfo != null) {
             lblHeaderInfo.setText(masterData.size() + " productos registrados");
+        }
+        loadStockAlerts();
+    }
+
+    private void loadStockAlerts() {
+        if (lstStockBajo == null) {
+            return;
+        }
+        List<Product> lowStock = AuthContext.isSuperAdmin() ? listLowStockProductsUseCase.listAllWithEmpresa() : listLowStockProductsUseCase.listByEmpresa(SessionManager.getInstance().getCurrentEmpresaId());
+        lstStockBajo.setItems(FXCollections.observableArrayList(lowStock));
+        if (lblAlertasStock != null) {
+            int count = lowStock.size();
+            lblAlertasStock.setText(String.valueOf(count));
+            lblAlertasStock.setVisible(count > 0);
+            lblAlertasStock.setManaged(count > 0);
         }
     }
 
@@ -388,6 +466,11 @@ public class ProductosController {
         loadProductosFromDb();
     }
 
+    @FXML
+    private void onRefrescarAlertas() {
+        loadStockAlerts();
+    }
+
     private void openProductoForm(Product product) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ProductoFormView.fxml"));
@@ -421,6 +504,45 @@ public class ProductosController {
         }
     }
 
+    private void openStockAdjustment(Product product) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Añadir stock");
+        dialog.setHeaderText("Entrada de stock para \"" + product.getNombre() + "\"");
+        Label lblCantidad = new Label("Cantidad:");
+        TextField txtCantidad = new TextField();
+        txtCantidad.setPromptText("0");
+        Label lblNotas = new Label("Notas:");
+        TextArea txtNotas = new TextArea();
+        txtNotas.setPromptText("Compra, ajuste, etc.");
+        txtNotas.setPrefRowCount(3);
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.add(lblCantidad, 0, 0);
+        grid.add(txtCantidad, 1, 0);
+        grid.add(lblNotas, 0, 1);
+        grid.add(txtNotas, 1, 1);
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.OK);
+
+        dialog.showAndWait().ifPresent(btn -> {
+            if (btn != ButtonType.OK) {
+                return;
+            }
+            try {
+                int cantidad = Integer.parseInt(txtCantidad.getText().trim());
+                if (cantidad <= 0) {
+                    throw new IllegalArgumentException("La cantidad debe ser mayor que cero.");
+                }
+                String notas = txtNotas.getText();
+                adjustInventoryUseCase.execute(product.getEmpresaId(), product.getId(), InventoryMovementType.ENTRADA, cantidad, "Entrada manual", notas);
+                loadProductosFromDb();
+            } catch (Exception ex) {
+                new Alert(Alert.AlertType.ERROR, "No se pudo añadir stock.\n\n" + ex.getMessage()).showAndWait();
+            }
+        });
+    }
+
     @FXML
     private void onLimpiarFiltros() {
         if (filterNombreField != null) {
@@ -450,6 +572,18 @@ public class ProductosController {
 
     private String safeRaw(String s) {
         return s == null ? "" : s;
+    }
+
+    private boolean isLowStock(Product product) {
+        int stock = product.getStock() == null ? 0 : product.getStock();
+        int minimo = product.getStockMinimo() == null ? 0 : product.getStockMinimo();
+        return stock <= minimo;
+    }
+
+    private String formatStock(Product product) {
+        int stock = product.getStock() == null ? 0 : product.getStock();
+        int minimo = product.getStockMinimo() == null ? 0 : product.getStockMinimo();
+        return stock + " / " + minimo;
     }
 
     private String formatPrice(BigDecimal value) {

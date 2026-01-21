@@ -11,12 +11,16 @@ import com.gearmind.domain.customer.CustomerRepository;
 import com.gearmind.domain.vehicle.Vehicle;
 import com.gearmind.domain.vehicle.VehicleRepository;
 import com.gearmind.infrastructure.invoice.InvoicePdfGenerator;
+import com.gearmind.application.inventory.AdjustInventoryUseCase;
 import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
+import com.gearmind.domain.inventory.InventoryMovementType;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class SaveInvoiceUseCase {
@@ -27,6 +31,7 @@ public class SaveInvoiceUseCase {
     private final VehicleRepository vehicleRepository;
     private final InvoicePdfGenerator pdfGenerator;
     private final SendTelegramNotificationUseCase notificationUseCase;
+    private final AdjustInventoryUseCase adjustInventoryUseCase;
 
     public SaveInvoiceUseCase(InvoiceRepository invoiceRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, InvoicePdfGenerator pdfGenerator) {
         this.invoiceRepository = invoiceRepository;
@@ -35,6 +40,7 @@ public class SaveInvoiceUseCase {
         this.vehicleRepository = vehicleRepository;
         this.pdfGenerator = pdfGenerator;
         this.notificationUseCase = null;
+        this.adjustInventoryUseCase = null;
     }
 
     public SaveInvoiceUseCase(InvoiceRepository invoiceRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, InvoicePdfGenerator pdfGenerator, SendTelegramNotificationUseCase notificationUseCase) {
@@ -44,6 +50,17 @@ public class SaveInvoiceUseCase {
         this.vehicleRepository = vehicleRepository;
         this.pdfGenerator = pdfGenerator;
         this.notificationUseCase = notificationUseCase;
+        this.adjustInventoryUseCase = null;
+    }
+
+    public SaveInvoiceUseCase(InvoiceRepository invoiceRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, InvoicePdfGenerator pdfGenerator, SendTelegramNotificationUseCase notificationUseCase, AdjustInventoryUseCase adjustInventoryUseCase) {
+        this.invoiceRepository = invoiceRepository;
+        this.empresaRepository = empresaRepository;
+        this.customerRepository = customerRepository;
+        this.vehicleRepository = vehicleRepository;
+        this.pdfGenerator = pdfGenerator;
+        this.notificationUseCase = notificationUseCase;
+        this.adjustInventoryUseCase = adjustInventoryUseCase;
     }
 
     public Invoice execute(SaveInvoiceRequest request) {
@@ -71,6 +88,7 @@ public class SaveInvoiceUseCase {
 
         List<InvoiceLine> normalizedLines = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
+        List<InvoiceLine> previousLines = List.of();
 
         for (InvoiceLine line : request.getLineas()) {
             if (line.getDescripcion() == null || line.getDescripcion().isBlank()) {
@@ -106,6 +124,7 @@ public class SaveInvoiceUseCase {
             if (existing.isPresent()) {
                 previousStatus = existing.get().getEstado();
             }
+            previousLines = invoiceRepository.findLinesByInvoiceId(request.getId());
         }
 
         Invoice invoice = new Invoice();
@@ -127,6 +146,7 @@ public class SaveInvoiceUseCase {
         }
 
         Invoice saved = invoiceRepository.save(invoice, normalizedLines);
+        updateInventoryMovements(saved, previousLines, normalizedLines);
         generatePdf(saved, normalizedLines);
         notifyEmission(saved, previousStatus, request.getId() == null);
         return saved;
@@ -141,6 +161,68 @@ public class SaveInvoiceUseCase {
         Customer customer = customerRepository.findById(invoice.getClienteId()).orElse(null);
         Vehicle vehicle = vehicleRepository.findById(invoice.getVehiculoId()).orElse(null);
         pdfGenerator.generate(invoice, lines, empresa, customer, vehicle);
+    }
+
+    private void updateInventoryMovements(Invoice invoice, List<InvoiceLine> previousLines, List<InvoiceLine> newLines) {
+        if (adjustInventoryUseCase == null) {
+            return;
+        }
+        Map<Long, Integer> previousTotals = aggregateProductQuantities(previousLines);
+        Map<Long, Integer> newTotals = aggregateProductQuantities(newLines);
+
+        for (Map.Entry<Long, Integer> entry : newTotals.entrySet()) {
+            long productId = entry.getKey();
+            int newQty = entry.getValue();
+            int oldQty = previousTotals.getOrDefault(productId, 0);
+            int delta = newQty - oldQty;
+            applyInventoryDelta(invoice, productId, delta);
+        }
+
+        for (Map.Entry<Long, Integer> entry : previousTotals.entrySet()) {
+            long productId = entry.getKey();
+            if (newTotals.containsKey(productId)) {
+                continue;
+            }
+            int delta = -entry.getValue();
+            applyInventoryDelta(invoice, productId, delta);
+        }
+    }
+
+    private Map<Long, Integer> aggregateProductQuantities(List<InvoiceLine> lines) {
+        Map<Long, Integer> totals = new HashMap<>();
+        if (lines == null) {
+            return totals;
+        }
+        for (InvoiceLine line : lines) {
+            if (line.getProductoId() == null) {
+                continue;
+            }
+            int qty = toIntQuantity(line.getCantidad());
+            totals.merge(line.getProductoId(), qty, Integer::sum);
+        }
+        return totals;
+    }
+
+    private int toIntQuantity(BigDecimal quantity) {
+        if (quantity == null) {
+            return 0;
+        }
+        try {
+            return quantity.intValueExact();
+        } catch (ArithmeticException ex) {
+            throw new IllegalArgumentException("La cantidad de producto debe ser un número entero.");
+        }
+    }
+
+    private void applyInventoryDelta(Invoice invoice, long productId, int delta) {
+        if (delta == 0) {
+            return;
+        }
+        InventoryMovementType type = delta > 0 ? InventoryMovementType.SALIDA : InventoryMovementType.ENTRADA;
+        int quantity = Math.abs(delta);
+        String reference = invoice.getNumero() == null ? "Factura #" + invoice.getId() : "Factura " + invoice.getNumero();
+        String notas = delta > 0 ? "Consumo en factura" : "Ajuste por edición de factura";
+        adjustInventoryUseCase.execute(invoice.getEmpresaId(), productId, type, quantity, reference, notas);
     }
 
     private void notifyEmission(Invoice invoice, InvoiceStatus previousStatus, boolean isNew) {

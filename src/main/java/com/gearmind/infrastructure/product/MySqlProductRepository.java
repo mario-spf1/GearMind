@@ -165,6 +165,24 @@ public class MySqlProductRepository implements ProductRepository {
     }
 
     @Override
+    public void updateStock(long productId, long empresaId, int newStock) {
+        String sql = """
+                UPDATE producto
+                SET stock = ?, updated_at = NOW()
+                WHERE id = ? AND empresa_id = ?
+                """;
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newStock);
+            ps.setLong(2, productId);
+            ps.setLong(3, empresaId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error actualizando stock del producto " + productId, e);
+        }
+    }
+
+    @Override
     public void deactivate(long productId, long empresaId) {
         String sql = """
                 UPDATE producto
@@ -223,6 +241,62 @@ public class MySqlProductRepository implements ProductRepository {
 
         } catch (SQLException e) {
             throw new RuntimeException("Error listando productos con empresa", e);
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<Product> findLowStockByEmpresa(long empresaId) {
+        List<Product> result = new ArrayList<>();
+
+        String sql = """
+                SELECT id, empresa_id, nombre, descripcion, referencia, categoria, stock, stock_minimo,
+                       precio_compra, precio_venta, activo, created_at, updated_at
+                FROM producto
+                WHERE empresa_id = ?
+                  AND activo = 1
+                  AND stock <= COALESCE(stock_minimo, 0)
+                ORDER BY stock ASC, nombre ASC
+                """;
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, empresaId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error listando stock bajo", e);
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<Product> findLowStockAllWithEmpresa() {
+        List<Product> result = new ArrayList<>();
+
+        String sql = """
+            SELECT p.id, p.empresa_id, p.nombre, p.descripcion, p.referencia, p.categoria, p.stock, p.stock_minimo,
+                   p.precio_compra, p.precio_venta, p.activo, p.created_at, p.updated_at,
+                   e.nombre AS empresa_nombre
+            FROM producto p
+            JOIN empresa e ON e.id = p.empresa_id
+            WHERE p.activo = 1
+              AND p.stock <= COALESCE(p.stock_minimo, 0)
+            ORDER BY p.stock ASC, p.nombre ASC
+            """;
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Product product = mapRow(rs);
+                product.setEmpresaNombre(rs.getString("empresa_nombre"));
+                result.add(product);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error listando stock bajo con empresa", e);
         }
 
         return result;

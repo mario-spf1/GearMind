@@ -1,14 +1,18 @@
 package com.gearmind.presentation.controller;
 
 import com.gearmind.application.common.AuthContext;
+import com.gearmind.application.inventory.ListInventoryMovementsUseCase;
 import com.gearmind.application.invoice.ListInvoicesUseCase;
 import com.gearmind.application.product.ListProductsUseCase;
 import com.gearmind.application.repair.ListRepairsUseCase;
+import com.gearmind.domain.inventory.InventoryMovement;
+import com.gearmind.domain.inventory.InventoryMovementType;
 import com.gearmind.domain.invoice.Invoice;
 import com.gearmind.domain.invoice.InvoiceStatus;
 import com.gearmind.domain.product.Product;
 import com.gearmind.domain.repair.Repair;
 import com.gearmind.domain.repair.RepairStatus;
+import com.gearmind.infrastructure.inventory.MySqlInventoryMovementRepository;
 import com.gearmind.infrastructure.invoice.MySqlInvoiceRepository;
 import com.gearmind.infrastructure.product.MySqlProductRepository;
 import com.gearmind.infrastructure.repair.MySqlRepairRepository;
@@ -69,6 +73,7 @@ public class ReportesController {
     private final ListRepairsUseCase listRepairsUseCase;
     private final ListInvoicesUseCase listInvoicesUseCase;
     private final ListProductsUseCase listProductsUseCase;
+    private final ListInventoryMovementsUseCase listInventoryMovementsUseCase;
     private final ReportPdfGenerator reportPdfGenerator = new ReportPdfGenerator();
 
     private final DecimalFormat priceFormat = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.getDefault()));
@@ -78,6 +83,7 @@ public class ReportesController {
         this.listRepairsUseCase = new ListRepairsUseCase(new MySqlRepairRepository());
         this.listInvoicesUseCase = new ListInvoicesUseCase(new MySqlInvoiceRepository());
         this.listProductsUseCase = new ListProductsUseCase(new MySqlProductRepository());
+        this.listInventoryMovementsUseCase = new ListInventoryMovementsUseCase(new MySqlInventoryMovementRepository());
     }
 
     @FXML
@@ -97,11 +103,9 @@ public class ReportesController {
             colEmpresa.setVisible(false);
         }
 
-        cmbTipo.setItems(FXCollections.observableArrayList("Reparaciones", "Ingresos", "Stock"));
+        cmbTipo.setItems(FXCollections.observableArrayList("Reparaciones", "Ingresos", "Stock", "Movimientos"));
         cmbTipo.getSelectionModel().selectFirst();
-
-        smartTable = new SmartTable<>(tblReportes, masterData, txtFiltro, null, lblResumen, "reportes",
-                (item, text) -> matchesSearch(item, text));
+        smartTable = new SmartTable<>(tblReportes, masterData, txtFiltro, null, lblResumen, "reportes", (item, text) -> matchesSearch(item, text));
 
         onGenerar();
     }
@@ -114,6 +118,8 @@ public class ReportesController {
                 buildIngresos();
             case "Stock" ->
                 buildStock();
+            case "Movimientos" ->
+                buildMovimientos();
             default ->
                 buildReparaciones();
         };
@@ -201,6 +207,22 @@ public class ReportesController {
                 .toList();
     }
 
+    private List<ReportItem> buildMovimientos() {
+        List<InventoryMovement> movements = AuthContext.isSuperAdmin() ? listInventoryMovementsUseCase.listAllWithEmpresa() : listInventoryMovementsUseCase.listByEmpresa(AuthContext.getEmpresaId());
+
+        return movements.stream().sorted(Comparator.comparing(m -> Optional.ofNullable(m.getCreatedAt()).orElse(LocalDateTime.MIN), Comparator.reverseOrder()))
+                .map(m -> new ReportItem(
+                AuthContext.isSuperAdmin() ? safe(m.getEmpresaNombre()) : safe(AuthContext.getEmpresaNombre()),
+                "Movimiento",
+                buildMovementDescription(m),
+                mapMovementStatus(m.getTipo()),
+                m.getCreatedAt() != null ? m.getCreatedAt().toLocalDate() : null,
+                formatDate(m.getCreatedAt()),
+                m.getCantidad() == null ? "0" : String.valueOf(m.getCantidad()),
+                null))
+                .toList();
+    }
+
     private List<ReportItem> applyDateRange(List<ReportItem> items, LocalDate from, LocalDate to) {
         if (from == null && to == null) {
             return items;
@@ -246,6 +268,26 @@ public class ReportesController {
             return base + " · Ref " + referencia;
         }
         return base;
+    }
+
+    private String buildMovementDescription(InventoryMovement movement) {
+        String nombre = safe(movement.getProductoNombre());
+        String referencia = safe(movement.getProductoReferencia());
+        String base = nombre.isBlank() ? "Producto" : nombre;
+        if (!referencia.isBlank()) {
+            base += " · Ref " + referencia;
+        }
+        if (movement.getReferencia() != null && !movement.getReferencia().isBlank()) {
+            base += " · " + movement.getReferencia();
+        }
+        return base;
+    }
+
+    private String mapMovementStatus(InventoryMovementType tipo) {
+        if (tipo == null) {
+            return "Salida";
+        }
+        return tipo == InventoryMovementType.ENTRADA ? "Entrada" : "Salida";
     }
 
     private String mapRepairStatus(RepairStatus status) {
