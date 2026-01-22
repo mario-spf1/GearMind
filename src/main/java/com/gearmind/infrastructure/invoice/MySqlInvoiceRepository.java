@@ -241,6 +241,19 @@ public class MySqlInvoiceRepository implements InvoiceRepository {
         }
     }
 
+    @Override
+    public void updateStatus(long invoiceId, InvoiceStatus status) {
+        String sql = "UPDATE factura SET estado = ? WHERE id = ?";
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setString(1, status != null ? status.name() : InvoiceStatus.PENDIENTE.name());
+            ps.setLong(2, invoiceId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar estado de la factura", e);
+        }
+    }
+
     private long insertInvoice(Invoice invoice) {
         String sql = """
                 INSERT INTO factura
