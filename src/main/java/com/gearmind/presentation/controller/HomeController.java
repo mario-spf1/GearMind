@@ -84,6 +84,8 @@ public class HomeController {
     @FXML
     private Button btnNavFacturas;
     @FXML
+    private Button btnNavPagos;
+    @FXML
     private Button btnNavTareas;
 
     private javafx.scene.Node savedSidebar;
@@ -181,7 +183,7 @@ public class HomeController {
     }
 
     private void setAllSidebarButtonsVisible(boolean visible) {
-        for (Button b : List.of(btnNavDashboard, btnNavReportes, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas)) {
+        for (Button b : List.of(btnNavDashboard, btnNavReportes, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavPagos, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas)) {
             if (b != null) {
                 b.setVisible(visible);
                 b.setManaged(visible);
@@ -605,8 +607,7 @@ public class HomeController {
     }
 
     private void setActiveNavButton(Button activeButton) {
-        List<Button> buttons = List.of(btnNavDashboard, btnNavReportes, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas);
-
+        List<Button> buttons = List.of(btnNavDashboard, btnNavReportes, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavPagos, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas);
         for (Button b : buttons) {
             if (b != null) {
                 b.getStyleClass().remove("tfx-nav-active");
@@ -661,6 +662,12 @@ public class HomeController {
     private void onNavFacturas() {
         loadView("/view/FacturasView.fxml");
         setActiveNavButton(btnNavFacturas);
+    }
+
+    @FXML
+    private void onNavPagos() {
+        loadView("/view/PagosView.fxml");
+        setActiveNavButton(btnNavPagos);
     }
 
     @FXML

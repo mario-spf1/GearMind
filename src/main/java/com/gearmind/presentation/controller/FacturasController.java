@@ -7,8 +7,10 @@ import com.gearmind.application.email.SendInvoiceEmailRequest;
 import com.gearmind.application.email.SendInvoiceEmailUseCase;
 import com.gearmind.application.invoice.DeleteInvoiceUseCase;
 import com.gearmind.application.invoice.ListInvoicesUseCase;
+import com.gearmind.application.payment.ListPaymentsUseCase;
 import com.gearmind.domain.invoice.Invoice;
 import com.gearmind.domain.invoice.InvoiceStatus;
+import com.gearmind.domain.payment.Payment;
 import com.gearmind.infrastructure.invoice.InvoicePdfStorage;
 import com.gearmind.infrastructure.invoice.InvoicePdfGenerator;
 import com.gearmind.infrastructure.invoice.MySqlInvoiceRepository;
@@ -16,6 +18,7 @@ import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
 import com.gearmind.infrastructure.email.JdbcSmtpConfigRepository;
 import com.gearmind.infrastructure.email.SmtpEmailSenderFactory;
+import com.gearmind.infrastructure.payment.MySqlPaymentRepository;
 import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
 import com.gearmind.presentation.table.SmartTable;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -39,8 +42,10 @@ import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class FacturasController {
 
@@ -87,7 +92,9 @@ public class FacturasController {
     private final ListInvoicesUseCase listInvoicesUseCase;
     private final DeleteInvoiceUseCase deleteInvoiceUseCase;
     private final SendInvoiceEmailUseCase sendInvoiceEmailUseCase;
+    private final ListPaymentsUseCase listPaymentsUseCase;
     private final DecimalFormat priceFormat = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.getDefault()));
+    private Set<Long> invoicesWithPayment = new HashSet<>();
 
     public FacturasController() {
         MySqlInvoiceRepository repo = new MySqlInvoiceRepository();
@@ -95,6 +102,7 @@ public class FacturasController {
         this.deleteInvoiceUseCase = new DeleteInvoiceUseCase(repo);
         EnviarEmailEmpresaUseCase enviarEmailEmpresaUseCase = new EnviarEmailEmpresaUseCase(new JdbcSmtpConfigRepository(), new SmtpEmailSenderFactory());
         this.sendInvoiceEmailUseCase = new SendInvoiceEmailUseCase(repo, new MySqlEmpresaRepository(), new MySqlCustomerRepository(), new MySqlVehicleRepository(), new InvoicePdfGenerator(), enviarEmailEmpresaUseCase);
+        this.listPaymentsUseCase = new ListPaymentsUseCase(new MySqlPaymentRepository());
     }
 
     @FXML
@@ -153,13 +161,15 @@ public class FacturasController {
             private final Button btnEditar = new Button("Editar");
             private final Button btnPdf = new Button("PDF");
             private final Button btnEnviar = new Button("Enviar");
+            private final Button btnPagar = new Button("Pagar");
             private final Button btnEliminar = new Button("Eliminar");
-            private final HBox box = new HBox(8, btnEditar, btnPdf, btnEnviar, btnEliminar);
+            private final HBox box = new HBox(8, btnEditar, btnPdf, btnEnviar, btnPagar, btnEliminar);
 
             {
                 btnEditar.getStyleClass().add("tfx-icon-btn");
                 btnPdf.getStyleClass().add("tfx-icon-btn-secondary");
                 btnEnviar.getStyleClass().add("tfx-icon-btn");
+                btnPagar.getStyleClass().add("tfx-icon-btn");
                 btnEliminar.getStyleClass().add("tfx-icon-btn-danger");
 
                 btnEditar.setOnAction(e -> {
@@ -183,6 +193,13 @@ public class FacturasController {
                     }
                 });
 
+                btnPagar.setOnAction(e -> {
+                    Invoice invoice = getItem();
+                    if (invoice != null) {
+                        openPagoForm(invoice);
+                    }
+                });
+
                 btnEliminar.setOnAction(e -> {
                     Invoice invoice = getItem();
                     if (invoice != null) {
@@ -198,6 +215,9 @@ public class FacturasController {
                     setGraphic(null);
                     return;
                 }
+                boolean alreadyPaid = invoicesWithPayment.contains(invoice.getId()) || invoice.getEstado() == InvoiceStatus.PAGADA;
+                boolean canRegister = !alreadyPaid && invoice.getEstado() != InvoiceStatus.ANULADA;
+                btnPagar.setDisable(!canRegister);
                 btnEliminar.setVisible(AuthContext.isAdminOrSuperAdmin());
                 btnEliminar.setManaged(AuthContext.isAdminOrSuperAdmin());
                 setGraphic(box);
@@ -286,6 +306,9 @@ public class FacturasController {
             invoices = listInvoicesUseCase.listByEmpresa(empresaId);
         }
 
+        List<Payment> payments = isSuperAdmin ? listPaymentsUseCase.listAllWithEmpresa() : listPaymentsUseCase.listByEmpresa(SessionManager.getInstance().getCurrentEmpresaId());
+        invoicesWithPayment = payments.stream().map(Payment::getFacturaId).collect(HashSet::new, HashSet::add, HashSet::addAll);
+
         invoices.sort(Comparator.comparing(Invoice::getFecha, Comparator.nullsLast(Comparator.reverseOrder())));
         masterData.setAll(invoices);
 
@@ -300,6 +323,33 @@ public class FacturasController {
 
         if (lblHeaderInfo != null) {
             lblHeaderInfo.setText(masterData.size() + " facturas registradas");
+        }
+    }
+
+    private void openPagoForm(Invoice invoice) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/PagoFormView.fxml"));
+            Parent root = loader.load();
+            PagoFormController controller = loader.getController();
+            controller.initForInvoice(invoice.getId());
+
+            Stage stage = new Stage();
+            stage.setTitle("Registrar pago");
+            stage.initOwner(tblFacturas.getScene().getWindow());
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.setResizable(false);
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+            stage.setScene(scene);
+            stage.showAndWait();
+
+            if (controller.isSaved()) {
+                loadInvoicesFromDb();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "No se pudo abrir el formulario de pago: " + ex.getMessage()).showAndWait();
         }
     }
 
