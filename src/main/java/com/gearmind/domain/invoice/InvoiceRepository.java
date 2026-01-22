@@ -16,4 +16,6 @@ public interface InvoiceRepository {
     Invoice save(Invoice invoice, List<InvoiceLine> lines);
 
     void delete(long invoiceId, long empresaId);
+
+    void updateStatus(long invoiceId, InvoiceStatus status);
 }
