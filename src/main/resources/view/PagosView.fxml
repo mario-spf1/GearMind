@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.gearmind.presentation.controller.FacturasController"
+      fx:controller="com.gearmind.presentation.controller.PagosController"
       spacing="12"
       styleClass="tfx-page">
 
     <children>
-
         <HBox spacing="8" styleClass="tfx-toolbar">
-            <children> 
+            <children>
                 <VBox spacing="2">
                     <children>
-                        <Label text="Facturas" styleClass="tfx-title-xl"/>
-                        <Label fx:id="lblHeaderInfo" text="Gestión de facturas" styleClass="tfx-subtitle"/>
+                        <Label text="Pagos" styleClass="tfx-title-xl"/>
+                        <Label fx:id="lblHeaderInfo" text="Gestión de pagos" styleClass="tfx-subtitle"/>
                     </children>
                 </VBox>
                 <Region HBox.hgrow="ALWAYS"/>
@@ -26,10 +26,8 @@
                     <Label text="por página" styleClass="tfx-toolbar-label"/>
                 </HBox>
                 <Button text="Recargar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
-                <Button fx:id="btnNuevaFactura" text="Nueva factura" styleClass="tfx-btn-primary" onAction="#onNuevaFactura"/>
             </children>
         </HBox>
-
         <VBox spacing="8" styleClass="tfx-card">
             <padding>
                 <Insets top="8" right="8" bottom="8" left="8"/>
@@ -51,7 +49,7 @@
                                 <ComboBox fx:id="filterEmpresaCombo" prefWidth="170" styleClass="tfx-filter-field"/>
                             </HBox>
                             <TextField fx:id="filterClienteField" promptText="Cliente" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
-                            <TextField fx:id="filterNumeroField" promptText="Número" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="filterFacturaField" promptText="Factura" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
                             <HBox spacing="8" alignment="CENTER_LEFT">
                                 <Label text="Estado" styleClass="tfx-filter-label"/>
                                 <ComboBox fx:id="filterEstadoCombo" prefWidth="170" styleClass="tfx-filter-field"/>
@@ -69,16 +67,18 @@
         </VBox>
         <VBox spacing="6" styleClass="tfx-card">
             <children>
-                <TableView fx:id="tblFacturas">
+                <TableView fx:id="tblPagos">
                     <columns>
                         <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="150"/>
                         <TableColumn fx:id="colCliente" text="Cliente"/>
-                        <TableColumn fx:id="colVehiculo" text="Vehículo"/>
-                        <TableColumn fx:id="colNumero" text="Número" prefWidth="140"/>
-                        <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120"/>
+                        <TableColumn fx:id="colFactura" text="Factura" prefWidth="120"/>
+                        <TableColumn fx:id="colTipo" text="Tipo" prefWidth="110"/>
                         <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
                         <TableColumn fx:id="colTotal" text="Total" prefWidth="120"/>
-                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="220"/>
+                        <TableColumn fx:id="colPagado" text="Pagado" prefWidth="120"/>
+                        <TableColumn fx:id="colPendiente" text="Pendiente" prefWidth="120"/>
+                        <TableColumn fx:id="colPlazos" text="Plazos" prefWidth="90"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="140"/>
                     </columns>
                 </TableView>
                 <HBox>

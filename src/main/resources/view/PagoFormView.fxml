@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.PagoFormController"
+      spacing="12"
+      styleClass="tfx-page">
+
+    <children>
+        <Label text="Registrar pago" styleClass="tfx-title-xl"/>
+
+        <VBox styleClass="tfx-card" spacing="12">
+            <children>
+                <GridPane hgap="10" vgap="10">
+                    <padding>
+                        <Insets top="5" right="5" bottom="5" left="5"/>
+                    </padding>
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="35"/>
+                        <ColumnConstraints percentWidth="65"/>
+                    </columnConstraints>
+                    <children>
+                        <Label text="Factura:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <Label fx:id="lblFactura" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <Label text="Cliente:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <Label fx:id="lblCliente" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label text="Total:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <Label fx:id="lblTotal" text="0,00" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="tfx-title"/>
+                    </children>
+                </GridPane>
+            </children>
+        </VBox>
+
+        <VBox styleClass="tfx-card" spacing="12">
+            <children>
+                <Label text="Tipo de pago" styleClass="tfx-title"/>
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <children>
+                        <RadioButton fx:id="rbContado" text="Contado"/>
+                        <RadioButton fx:id="rbPlazos" text="A plazos"/>
+                    </children>
+                </HBox>
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="35"/>
+                        <ColumnConstraints percentWidth="65"/>
+                    </columnConstraints>
+                    <children>
+                        <Label text="Número de plazos:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtPlazos" prefWidth="120" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <Label text="Primer vencimiento:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <DatePicker fx:id="dpPrimerVencimiento" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    </children>
+                </GridPane>
+            </children>
+        </VBox>
+
+        <HBox spacing="8">
+            <children>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Cancelar" onAction="#onCancelar" styleClass="tfx-btn-ghost"/>
+                <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="tfx-btn-primary"/>
+            </children>
+        </HBox>
+    </children>
+</VBox>
