@@ -2,11 +2,30 @@ package com.gearmind.presentation.controller;
 
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
+import com.gearmind.application.appointment.ListAppointmentsUseCase;
 import com.gearmind.application.customer.ListCustomersUseCase;
+import com.gearmind.application.invoice.ListInvoicesUseCase;
+import com.gearmind.application.repair.ListRepairsUseCase;
+import com.gearmind.application.vehicle.ListVehiclesUseCase;
+import com.gearmind.domain.appointment.Appointment;
+import com.gearmind.domain.appointment.AppointmentStatus;
 import com.gearmind.domain.customer.Customer;
+import com.gearmind.domain.invoice.Invoice;
+import com.gearmind.domain.invoice.InvoiceStatus;
+import com.gearmind.domain.repair.Repair;
+import com.gearmind.domain.repair.RepairStatus;
+import com.gearmind.domain.task.Task;
+import com.gearmind.domain.task.TaskPriority;
+import com.gearmind.domain.task.TaskStatus;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRole;
+import com.gearmind.domain.vehicle.Vehicle;
+import com.gearmind.infrastructure.appointment.MySqlAppointmentRepository;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
+import com.gearmind.infrastructure.invoice.MySqlInvoiceRepository;
+import com.gearmind.infrastructure.repair.MySqlRepairRepository;
+import com.gearmind.infrastructure.task.MySqlTaskRepository;
+import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -14,9 +33,10 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class DashboardController {
@@ -51,11 +71,37 @@ public class DashboardController {
     private Label lblRolInfo;
     @FXML
     private Label lblEmpresaInfo;
+    @FXML
+    private Label lblCitasHoy;
+    @FXML
+    private Label lblReparacionesActivas;
+    @FXML
+    private Label lblTareasCriticas;
+    @FXML
+    private Label lblAgendaHint;
+    @FXML
+    private Label lblReparacionesCola;
+    @FXML
+    private Label lblPendientesCobro;
+    @FXML
+    private Label lblCitasConfirmadas;
+    @FXML
+    private Label lblSatisfaccionEstimada;
 
     private final ListCustomersUseCase listCustomersUseCase;
+    private final ListVehiclesUseCase listVehiclesUseCase;
+    private final ListRepairsUseCase listRepairsUseCase;
+    private final ListAppointmentsUseCase listAppointmentsUseCase;
+    private final ListInvoicesUseCase listInvoicesUseCase;
+    private final MySqlTaskRepository taskRepository;
 
     public DashboardController() {
         this.listCustomersUseCase = new ListCustomersUseCase(new MySqlCustomerRepository());
+        this.listVehiclesUseCase = new ListVehiclesUseCase(new MySqlVehicleRepository());
+        this.listRepairsUseCase = new ListRepairsUseCase(new MySqlRepairRepository());
+        this.listAppointmentsUseCase = new ListAppointmentsUseCase(new MySqlAppointmentRepository());
+        this.listInvoicesUseCase = new ListInvoicesUseCase(new MySqlInvoiceRepository());
+        this.taskRepository = new MySqlTaskRepository();
     }
 
     @FXML
@@ -63,7 +109,7 @@ public class DashboardController {
         setupSessionSummary();
         setupClientesTable();
         loadClientesData();
-        setupPlaceholders();
+        loadDashboardStats();
     }
 
     private void setupSessionSummary() {
@@ -167,15 +213,146 @@ public class DashboardController {
         }
     }
 
-    private void setupPlaceholders() {
-        if (lblTotalVehiculos != null) {
-            lblTotalVehiculos.setText("0");
-        }
-        if (lblReparacionesAbiertas != null) {
-            lblReparacionesAbiertas.setText("0");
-        }
-        if (lblTareasPendientes != null) {
-            lblTareasPendientes.setText("0");
+    private void loadDashboardStats() {
+        try {
+            Long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
+            if (empresaId == null) {
+                setDashboardFallback();
+                return;
+            }
+
+            List<Vehicle> vehicles = listVehiclesUseCase.execute();
+            if (lblTotalVehiculos != null) {
+                lblTotalVehiculos.setText(String.valueOf(vehicles.size()));
+            }
+
+            List<Repair> repairs = listRepairsUseCase.execute();
+            long reparacionesActivas = repairs.stream()
+                    .map(Repair::getEstado)
+                    .filter(Objects::nonNull)
+                    .filter(status -> status == RepairStatus.ABIERTA || status == RepairStatus.EN_PROCESO)
+                    .count();
+            if (lblReparacionesAbiertas != null) {
+                lblReparacionesAbiertas.setText(String.valueOf(reparacionesActivas));
+            }
+
+            List<Task> tasks = taskRepository.findByEmpresa(empresaId);
+            long tareasPendientes = tasks.stream()
+                    .map(Task::getEstado)
+                    .filter(Objects::nonNull)
+                    .filter(status -> status == TaskStatus.PENDIENTE || status == TaskStatus.EN_PROCESO)
+                    .count();
+            if (lblTareasPendientes != null) {
+                lblTareasPendientes.setText(String.valueOf(tareasPendientes));
+            }
+
+            List<Appointment> appointments = listAppointmentsUseCase.execute(empresaId);
+            long citasHoy = appointments.stream()
+                    .filter(a -> a.getDateTime() != null)
+                    .filter(a -> a.getStatus() != AppointmentStatus.CANCELLED)
+                    .filter(a -> a.getDateTime().toLocalDate().equals(LocalDate.now()))
+                    .count();
+
+            long tareasCriticas = tasks.stream()
+                    .filter(t -> t.getPrioridad() == TaskPriority.ALTA)
+                    .filter(t -> t.getEstado() == TaskStatus.PENDIENTE || t.getEstado() == TaskStatus.EN_PROCESO)
+                    .count();
+
+            List<Invoice> invoices = listInvoicesUseCase.listByEmpresa(empresaId);
+            long pendientesCobro = invoices.stream()
+                    .map(Invoice::getEstado)
+                    .filter(Objects::nonNull)
+                    .filter(status -> status == InvoiceStatus.PENDIENTE)
+                    .count();
+
+            long citasConfirmadas = appointments.stream()
+                    .filter(a -> a.getStatus() == AppointmentStatus.CONFIRMED)
+                    .count();
+
+            String satisfaccionEstimada = buildSatisfaccionEstimada(tasks);
+
+            if (lblCitasHoy != null) {
+                lblCitasHoy.setText("• " + citasHoy + " citas programadas hoy");
+            }
+            if (lblReparacionesActivas != null) {
+                lblReparacionesActivas.setText("• " + reparacionesActivas + " reparaciones activas");
+            }
+            if (lblTareasCriticas != null) {
+                lblTareasCriticas.setText("• " + tareasCriticas + " tareas críticas");
+            }
+
+            if (lblReparacionesCola != null) {
+                lblReparacionesCola.setText(String.valueOf(reparacionesActivas));
+            }
+            if (lblPendientesCobro != null) {
+                lblPendientesCobro.setText(String.valueOf(pendientesCobro));
+            }
+            if (lblCitasConfirmadas != null) {
+                lblCitasConfirmadas.setText(String.valueOf(citasConfirmadas));
+            }
+            if (lblSatisfaccionEstimada != null) {
+                lblSatisfaccionEstimada.setText(satisfaccionEstimada);
+            }
+
+            if (lblAgendaHint != null) {
+                if (tareasCriticas > 0) {
+                    lblAgendaHint.setText("Revisa las tareas críticas pendientes.");
+                } else if (citasHoy > 0) {
+                    lblAgendaHint.setText("Agenda con actividad hoy.");
+                } else {
+                    lblAgendaHint.setText("Sin alertas críticas pendientes.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            setDashboardFallback();
         }
     }
+
+    private void setDashboardFallback() {
+        if (lblTotalVehiculos != null) {
+            lblTotalVehiculos.setText("—");
+        }
+        if (lblReparacionesAbiertas != null) {
+            lblReparacionesAbiertas.setText("—");
+        }
+        if (lblTareasPendientes != null) {
+            lblTareasPendientes.setText("—");
+        }
+        if (lblCitasHoy != null) {
+            lblCitasHoy.setText("• — citas programadas hoy");
+        }
+        if (lblReparacionesActivas != null) {
+            lblReparacionesActivas.setText("• — reparaciones activas");
+        }
+        if (lblTareasCriticas != null) {
+            lblTareasCriticas.setText("• — tareas críticas");
+        }
+        if (lblAgendaHint != null) {
+            lblAgendaHint.setText("No se pudo cargar la agenda.");
+        }
+        if (lblReparacionesCola != null) {
+            lblReparacionesCola.setText("—");
+        }
+        if (lblPendientesCobro != null) {
+            lblPendientesCobro.setText("—");
+        }
+        if (lblCitasConfirmadas != null) {
+            lblCitasConfirmadas.setText("—");
+        }
+        if (lblSatisfaccionEstimada != null) {
+            lblSatisfaccionEstimada.setText("—");
+        }
+    }
+
+    private String buildSatisfaccionEstimada(List<Task> tasks) {
+        if (tasks == null || tasks.isEmpty()) {
+            return "—";
+        }
+        long total = tasks.size();
+        long completadas = tasks.stream().filter(t -> t.getEstado() == TaskStatus.COMPLETADA).count();
+        long porcentaje = Math.round((double) completadas * 100 / total);
+        return porcentaje + "%";
+    }
+
 }

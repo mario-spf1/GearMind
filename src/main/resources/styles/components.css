@@ -190,6 +190,24 @@
     -fx-border-width: 0;
 }
 
+.tfx-table {
+    -fx-background-insets: 0;
+    -fx-padding: 2;
+}
+
+.tfx-table .column-header-background {
+    -fx-background-radius: 10 10 0 0;
+}
+
+.tfx-table .column-header, .tfx-table .column-header .label {
+    -fx-font-size: 11px;
+    -fx-letter-spacing: 0.4px;
+}
+
+.tfx-flow {
+    -fx-alignment: top-left;
+}
+
 .tfx-grid {
     -fx-hgap: 12;
     -fx-vgap: 12;
@@ -278,6 +296,19 @@
     -fx-spacing: 8;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 20, 0.18, 0, 4);
 }
+
+.tfx-dashboard-table {
+    -fx-min-width: 360;
+}
+
+.tfx-dashboard-side {
+    -fx-min-width: 260;
+}
+
+.tfx-dashboard-session {
+    -fx-min-width: 360;
+}
+
 
 .tfx-card-sm {
     -fx-background-color: -tfx-surface;
