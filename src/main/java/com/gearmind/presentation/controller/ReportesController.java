@@ -24,6 +24,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.Region;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -46,6 +47,8 @@ public class ReportesController {
     private DatePicker dpHasta;
     @FXML
     private TextField txtFiltro;
+    @FXML
+    private ComboBox<Integer> cmbPageSize;
     @FXML
     private TableView<ReportItem> tblReportes;
     @FXML
@@ -105,8 +108,63 @@ public class ReportesController {
 
         cmbTipo.setItems(FXCollections.observableArrayList("Reparaciones", "Ingresos", "Stock", "Movimientos"));
         cmbTipo.getSelectionModel().selectFirst();
-        smartTable = new SmartTable<>(tblReportes, masterData, txtFiltro, null, lblResumen, "reportes", (item, text) -> matchesSearch(item, text));
+        if (cmbPageSize != null) {
+            cmbPageSize.setItems(FXCollections.observableArrayList(10, 25, 50, 100, 0));
+            cmbPageSize.getSelectionModel().select(Integer.valueOf(25));
 
+            var converter = new javafx.util.StringConverter<Integer>() {
+                @Override
+                public String toString(Integer value) {
+                    if (value == null) {
+                        return "";
+                    }
+                    return value == 0 ? "Todos" : String.valueOf(value);
+                }
+
+                @Override
+                public Integer fromString(String s) {
+                    if (s == null) {
+                        return 25;
+                    }
+                    s = s.trim();
+                    return "Todos".equalsIgnoreCase(s) ? 0 : Integer.valueOf(s);
+                }
+            };
+
+            cmbPageSize.setConverter(converter);
+            cmbPageSize.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(Integer item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : (item == 0 ? "Todos" : String.valueOf(item)));
+                }
+            });
+            cmbPageSize.setCellFactory(lv -> new ListCell<>() {
+                @Override
+                protected void updateItem(Integer item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : (item == 0 ? "Todos" : String.valueOf(item)));
+                }
+            });
+        }
+
+        smartTable = new SmartTable<>(tblReportes, masterData, txtFiltro, cmbPageSize, lblResumen, "reportes", (item, text) -> matchesSearch(item, text));
+        tblReportes.setFixedCellSize(28);
+
+        smartTable.setAfterRefreshCallback(() -> {
+            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
+            double headerHeight = 28;
+            double tableHeight = headerHeight + rows * tblReportes.getFixedCellSize() + 2;
+
+            tblReportes.setPrefHeight(tableHeight);
+            tblReportes.setMinHeight(Region.USE_PREF_SIZE);
+            tblReportes.setMaxHeight(Region.USE_PREF_SIZE);
+        });
+        onGenerar();
+    }
+    
+    @FXML
+    private void onRefrescar() {
         onGenerar();
     }
 
