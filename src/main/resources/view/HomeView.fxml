@@ -12,7 +12,12 @@
         <HBox spacing="12" styleClass="tfx-toolbar" alignment="CENTER_LEFT">
             <children>
                 <Button fx:id="btnToggleSidebar" text="☰" onAction="#onToggleSidebar" mnemonicParsing="false" styleClass="tfx-icon-btn"/>
-                <Label text="GearMind" styleClass="tfx-toolbar-title"/>
+                <HBox spacing="8" alignment="CENTER_LEFT" styleClass="tfx-brand">
+                    <children>
+                        <Label text="⚙" styleClass="tfx-brand-icon"/>
+                        <Label text="GearMind" styleClass="tfx-toolbar-title"/>
+                    </children>
+                </HBox>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button fx:id="btnMensajes" text="💬" onAction="#onMessagesMenu" mnemonicParsing="false" styleClass="tfx-icon-btn"/>
                 <HBox spacing="4" alignment="CENTER_RIGHT">

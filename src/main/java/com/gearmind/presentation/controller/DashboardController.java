@@ -125,6 +125,7 @@ public class DashboardController {
         colCliEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
 
         tblUltimosClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblUltimosClientes.setFixedCellSize(28);
     }
 
     private void loadClientesData() {
@@ -138,6 +139,10 @@ public class DashboardController {
 
             if (tblUltimosClientes != null) {
                 tblUltimosClientes.setItems(FXCollections.observableArrayList(ultimos));
+                int rows = Math.max(1, ultimos.size());
+                double headerHeight = 28;
+                double tableHeight = headerHeight + rows * tblUltimosClientes.getFixedCellSize() + 2;
+                tblUltimosClientes.setPrefHeight(tableHeight);
             }
 
             if (lblUltimosClientesInfo != null) {
@@ -164,13 +169,13 @@ public class DashboardController {
 
     private void setupPlaceholders() {
         if (lblTotalVehiculos != null) {
-            lblTotalVehiculos.setText("—");
+            lblTotalVehiculos.setText("0");
         }
         if (lblReparacionesAbiertas != null) {
-            lblReparacionesAbiertas.setText("—");
+            lblReparacionesAbiertas.setText("0");
         }
         if (lblTareasPendientes != null) {
-            lblTareasPendientes.setText("—");
+            lblTareasPendientes.setText("0");
         }
     }
 }

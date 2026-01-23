@@ -5,22 +5,22 @@
 }
 
 * {
-    -tfx-bg: #0e0f12;
-    -tfx-surface: #14161b;
-    -tfx-card: #1a1d24;
-    -tfx-border: #24262c;
+    -tfx-bg: #0b1017;
+    -tfx-surface: #121824;
+    -tfx-card: #171e2b;
+    -tfx-border: #232b3a;
 
-    -tfx-text: #e9ecf1;
-    -tfx-muted: #a6adbb;
+    -tfx-text: #eef2f7;
+    -tfx-muted: #a4afbf;
 
-    -tfx-primary: #4f7cff;
-    -tfx-primary-600: #3f66d1;
-    -tfx-accent: #38d6ae;
+    -tfx-primary: #5b8bff;
+    -tfx-primary-600: #446de0;
+    -tfx-accent: #36d0b2;
 
-    -tfx-success: #29c070;
-    -tfx-danger: #e05454;
-    -tfx-warning: #f0c24b;
-    -tfx-focus: #99b3ff;
+    -tfx-success: #2cc987;
+    -tfx-danger: #e35d5d;
+    -tfx-warning: #f1c55a;
+    -tfx-focus: #9bb7ff;
 
     -tfx-radius: 12;
     -tfx-gap: 12;
@@ -43,6 +43,10 @@
 
 .tfx-subtitle {
     -fx-text-fill: -tfx-muted;
+}
+
+.tfx-label-strong {
+    -fx-font-weight: 700;
 }
 
 .tfx-muted {

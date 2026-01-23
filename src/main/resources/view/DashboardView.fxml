@@ -5,49 +5,78 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.gearmind.presentation.controller.DashboardController"
-      spacing="14"
+      spacing="16"
       styleClass="tfx-page">
 
     <children>
 
-        <VBox spacing="4">
+        <HBox spacing="12" alignment="CENTER_LEFT">
             <children>
-                <Label text="Panel de control" styleClass="tfx-title-xl"/>
-
-                <Label fx:id="lblEmpresaTitulo" text="Resumen de GearMind" styleClass="tfx-subtitle"/>
-            </children>
-        </VBox>
-
-        <HBox spacing="12">
-            <children>
-                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
                     <children>
-                        <Label text="Clientes" styleClass="tfx-kpi-title"/>
+                        <Label text="Panel de control" styleClass="tfx-title-xl"/>
+                        <Label fx:id="lblEmpresaTitulo" text="Resumen de GearMind" styleClass="tfx-subtitle"/>
+                    </children>
+                </VBox>
+                <VBox spacing="6" styleClass="tfx-card-subtle">
+                    <children>
+                        <Label text="Estado del taller" styleClass="tfx-label-strong"/>
+                        <Label text="Actualizado hace un momento" styleClass="tfx-muted"/>
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+
+        <HBox spacing="12" alignment="CENTER_LEFT">            
+            <children>
+                <VBox styleClass="tfx-card-kpi tfx-kpi-accent" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <children>
+                                <Label text="👥" styleClass="tfx-kpi-icon"/>
+                                <Label text="Clientes" styleClass="tfx-kpi-title"/>
+                            </children>
+                        </HBox>
                         <Label fx:id="lblTotalClientes" text="0" styleClass="tfx-kpi-number"/>
                         <Label text="Clientes registrados en la empresa" styleClass="tfx-muted"/>
                     </children>
                 </VBox>
 
-                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
+                <VBox styleClass="tfx-card-kpi tfx-kpi-neutral" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">               
                     <children>
-                        <Label text="Vehículos" styleClass="tfx-kpi-title"/>
-                        <Label fx:id="lblTotalVehiculos" text="—" styleClass="tfx-kpi-number"/>
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <children>
+                                <Label text="🚗" styleClass="tfx-kpi-icon"/>
+                                <Label text="Vehículos" styleClass="tfx-kpi-title"/>
+                            </children>
+                        </HBox>
+                        <Label fx:id="lblTotalVehiculos" text="0" styleClass="tfx-kpi-number"/>
                         <Label text="Módulo pendiente de implementar" styleClass="tfx-muted"/>
                     </children>
                 </VBox>
 
-                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
+                <VBox styleClass="tfx-card-kpi tfx-kpi-warning" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
                     <children>
-                        <Label text="Reparaciones abiertas" styleClass="tfx-kpi-title"/>
-                        <Label fx:id="lblReparacionesAbiertas" text="—" styleClass="tfx-kpi-number"/>
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <children>
+                                <Label text="🛠️" styleClass="tfx-kpi-icon"/>
+                                <Label text="Reparaciones abiertas" styleClass="tfx-kpi-title"/>
+                            </children>
+                        </HBox>
+                        <Label fx:id="lblReparacionesAbiertas" text="0" styleClass="tfx-kpi-number"/>
                         <Label text="Se mostrará cuando exista el módulo" styleClass="tfx-muted"/>
                     </children>
                 </VBox>
 
-                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
+                <VBox styleClass="tfx-card-kpi tfx-kpi-success" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
                     <children>
-                        <Label text="Tareas pendientes" styleClass="tfx-kpi-title"/>
-                        <Label fx:id="lblTareasPendientes" text="—" styleClass="tfx-kpi-number"/>
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <children>
+                                <Label text="✅" styleClass="tfx-kpi-icon"/>
+                                <Label text="Tareas pendientes" styleClass="tfx-kpi-title"/>
+                            </children>
+                        </HBox>
+                        <Label fx:id="lblTareasPendientes" text="0" styleClass="tfx-kpi-number"/>
                         <Label text="Pendiente de integrar con tareas" styleClass="tfx-muted"/>
                     </children>
                 </VBox>
@@ -56,10 +85,15 @@
         </HBox>
 
         <HBox spacing="12">
-            <VBox spacing="8" styleClass="tfx-card" VBox.vgrow="ALWAYS">
+            <VBox spacing="10" styleClass="tfx-card" VBox.vgrow="ALWAYS">
                 <children>
-                    <Label text="Últimos clientes añadidos"/>
-                    <TableView fx:id="tblUltimosClientes" prefHeight="260">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <children>
+                            <Label text="Últimos clientes añadidos" styleClass="tfx-label-strong"/>
+                            <Label text="5 recientes" styleClass="tfx-pill tfx-pill-info"/>
+                        </children>
+                    </HBox>
+                    <TableView fx:id="tblUltimosClientes">
                         <columns>
                             <TableColumn fx:id="colCliNombre" text="Nombre" prefWidth="180"/>
                             <TableColumn fx:id="colCliDni" text="DNI" prefWidth="120"/>
@@ -71,13 +105,21 @@
                 </children>
             </VBox>
 
-            <VBox spacing="8" styleClass="tfx-card" prefWidth="280">
+            <VBox spacing="10" styleClass="tfx-card" prefWidth="320">
                 <children>
-                    <Label text="Próximas citas y avisos"/>
-                    <Label text="Esta sección mostrará:" styleClass="tfx-muted"/>
-                    <Label text="• Próximas citas de taller" styleClass="tfx-muted"/>
-                    <Label text="• Reparaciones con fecha límite cercana" styleClass="tfx-muted"/>
-                    <Label text="• Recordatorios importantes" styleClass="tfx-muted"/>
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <children>
+                            <Label text="Agenda y avisos" styleClass="tfx-label-strong"/>
+                            <Label text="Próximo" styleClass="tfx-pill tfx-pill-warning"/>
+                        </children>
+                    </HBox>
+                    <VBox spacing="6" styleClass="tfx-card-subtle">
+                        <children>
+                            <Label text="• 0 citas programadas hoy" styleClass="tfx-muted"/>
+                            <Label text="• 0 reparaciones con vencimiento cercano" styleClass="tfx-muted"/>
+                            <Label text="• 0 recordatorios críticos" styleClass="tfx-muted"/>
+                        </children>
+                    </VBox>
                     <Separator/>
                     <Label text="Módulo aún no implementado" styleClass="tfx-warn"/>
                 </children>
@@ -85,14 +127,51 @@
 
         </HBox>
 
-        <HBox>
+        <HBox spacing="12">
             <children>
-                <VBox spacing="6" styleClass="tfx-card" VBox.vgrow="ALWAYS">
+                <VBox spacing="8" styleClass="tfx-card" VBox.vgrow="ALWAYS">                    
                     <children>
-                        <Label text="Resumen de sesión actual"/>
+                        <Label text="Resumen de sesión actual" styleClass="tfx-label-strong"/>
                         <Label fx:id="lblUsuarioInfo" text="Usuario actual" styleClass="tfx-muted"/>
                         <Label fx:id="lblRolInfo" text="Rol" styleClass="tfx-muted"/>
                         <Label fx:id="lblEmpresaInfo" text="Empresa" styleClass="tfx-muted"/>
+                    </children>
+                </VBox>
+                <VBox spacing="8" styleClass="tfx-card" prefWidth="320">
+                    <children>
+                        <Label text="Pulso del taller" styleClass="tfx-label-strong"/>
+                        <HBox spacing="8">
+                            <children>
+                                <VBox spacing="4" styleClass="tfx-card-mini" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label text="Reparaciones en cola" styleClass="tfx-muted"/>
+                                        <Label text="—" styleClass="tfx-mini-number"/>
+                                    </children>
+                                </VBox>
+                                <VBox spacing="4" styleClass="tfx-card-mini" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label text="Pendientes de cobro" styleClass="tfx-muted"/>
+                                        <Label text="—" styleClass="tfx-mini-number"/>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+                        <HBox spacing="8">
+                            <children>
+                                <VBox spacing="4" styleClass="tfx-card-mini" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label text="Citas confirmadas" styleClass="tfx-muted"/>
+                                        <Label text="—" styleClass="tfx-mini-number"/>
+                                    </children>
+                                </VBox>
+                                <VBox spacing="4" styleClass="tfx-card-mini" HBox.hgrow="ALWAYS">
+                                    <children>
+                                        <Label text="Satisfacción estimada" styleClass="tfx-muted"/>
+                                        <Label text="—" styleClass="tfx-mini-number"/>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
                     </children>
                 </VBox>
             </children>

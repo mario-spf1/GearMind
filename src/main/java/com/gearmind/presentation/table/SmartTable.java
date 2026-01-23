@@ -14,11 +14,8 @@ import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 /**
- * Helper genérico para tablas con:
- *  - búsqueda global
- *  - filtros por columna (fila de filtros)
- *  - límite de filas (page size)
- *  - resumen "Mostrando X de Y ..."
+ * Helper genérico para tablas con: - búsqueda global - filtros por columna
+ * (fila de filtros) - límite de filas (page size)
  */
 public class SmartTable<T> {
 
@@ -30,7 +27,7 @@ public class SmartTable<T> {
     private final Label summaryLabel;
     private final String entityLabelPlural;
 
-    private final BiPredicate<T, String> globalMatcher; // puede ser null
+    private final BiPredicate<T, String> globalMatcher;
 
     private final List<ColumnFilter<T>> columnFilters = new ArrayList<>();
 
@@ -48,6 +45,10 @@ public class SmartTable<T> {
         this.summaryLabel = summaryLabel;
         this.entityLabelPlural = (entityLabelPlural == null || entityLabelPlural.isBlank()) ? "elementos" : entityLabelPlural;
         this.globalMatcher = globalMatcher;
+
+        if (this.table != null) {
+            this.table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        }
 
         if (this.globalSearchField != null) {
             this.globalSearchField.textProperty().addListener((obs, o, n) -> refresh());
@@ -80,22 +81,22 @@ public class SmartTable<T> {
 
         field.textProperty().addListener((obs, o, n) -> refresh());
     }
-    
+
     /**
     * Registra un filtro por columna basado en ComboBox.
     * combo: ComboBox del footer (p.ej. "Todos/Activo/Inactivo").
     * matcher: recibe (fila, valorSeleccionadoMinusculas) y devuelve true si coincide.
-    */
-   public void addColumnFilter(ComboBox<String> combo, BiPredicate<T, String> matcher) {
-       if (combo == null || matcher == null) {
-           return;
-       }
+     */
+    public void addColumnFilter(ComboBox<String> combo, BiPredicate<T, String> matcher) {
+        if (combo == null || matcher == null) {
+            return;
+        }
 
-       ColumnFilter<T> cf = new ColumnFilter<>(combo, matcher);
-       columnFilters.add(cf);
+        ColumnFilter<T> cf = new ColumnFilter<>(combo, matcher);
+        columnFilters.add(cf);
 
-       combo.valueProperty().addListener((obs, o, n) -> refresh());
-   }
+        combo.valueProperty().addListener((obs, o, n) -> refresh());
+    }
 
     /**
      * Reaplica todos los filtros y repone los datos en la tabla.
@@ -170,7 +171,9 @@ public class SmartTable<T> {
     }
 
     private void updateSummaryLabel() {
-        if (summaryLabel == null) return;
+        if (summaryLabel == null) {
+            return;
+        }
 
         if (lastTotalCount == 0) {
             summaryLabel.setText("No hay " + entityLabelPlural + " que mostrar.");
