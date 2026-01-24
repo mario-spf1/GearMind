@@ -15,6 +15,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -147,19 +148,20 @@ public class ClientesController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-danger");
-
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-danger");
                 if (empty || item == null) {
                     setText(null);
+                    setAlignment(Pos.CENTER);
                 } else {
                     setText(item);
                     getStyleClass().add("tfx-badge");
+                    getStyleClass().add("tfx-table-badge");
                     getStyleClass().add("Activo".equalsIgnoreCase(item) ? "tfx-badge-success" : "tfx-badge-danger");
+                    setAlignment(Pos.CENTER);
                 }
             }
         });
 
-        // ===== Acciones =====
         colAcciones.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
         colAcciones.setCellFactory(col -> new TableCell<>() {
 
@@ -169,9 +171,11 @@ public class ClientesController {
             private final HBox box = new HBox(8, btnEditar, btnToggle, btnEliminar);
 
             {
-                btnEditar.getStyleClass().add("tfx-icon-btn");
-                btnToggle.getStyleClass().add("tfx-icon-btn");
-                btnEliminar.getStyleClass().add("tfx-icon-btn-danger");
+                box.getStyleClass().add("tfx-table-actions");
+
+                btnEditar.getStyleClass().add("tfx-table-action-btn");
+                btnToggle.getStyleClass().add("tfx-table-action-btn");
+                btnEliminar.getStyleClass().addAll("tfx-table-action-btn", "tfx-table-action-danger");
 
                 btnEditar.setTooltip(new Tooltip("Editar cliente"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
@@ -207,15 +211,15 @@ public class ClientesController {
                     return;
                 }
 
-                btnToggle.getStyleClass().removeAll("tfx-icon-btn-danger", "tfx-icon-btn-success");
-
+                btnToggle.getStyleClass().removeAll("tfx-table-action-danger", "tfx-table-action-success");
+                
                 if (customer.isActivo()) {
                     btnToggle.setText("Desactivar");
-                    btnToggle.getStyleClass().add("tfx-icon-btn-danger");
+                    btnToggle.getStyleClass().add("tfx-table-action-danger");
                     btnToggle.setTooltip(new Tooltip("Desactivar cliente"));
                 } else {
                     btnToggle.setText("Activar");
-                    btnToggle.getStyleClass().add("tfx-icon-btn-success");
+                    btnToggle.getStyleClass().add("tfx-table-action-success");
                     btnToggle.setTooltip(new Tooltip("Activar cliente"));
                 }
 
