@@ -108,6 +108,11 @@ public class ReportesController {
 
         cmbTipo.setItems(FXCollections.observableArrayList("Reparaciones", "Ingresos", "Stock", "Movimientos"));
         cmbTipo.getSelectionModel().selectFirst();
+        cmbTipo.valueProperty().addListener((obs, oldValue, newValue) -> {
+            configureColumnsFor(newValue);
+            onGenerar();
+        });
+
         if (cmbPageSize != null) {
             cmbPageSize.setItems(FXCollections.observableArrayList(10, 25, 50, 100, 0));
             cmbPageSize.getSelectionModel().select(Integer.valueOf(25));
@@ -160,9 +165,11 @@ public class ReportesController {
             tblReportes.setMinHeight(Region.USE_PREF_SIZE);
             tblReportes.setMaxHeight(Region.USE_PREF_SIZE);
         });
+
+        configureColumnsFor(cmbTipo.getValue());
         onGenerar();
     }
-    
+
     @FXML
     private void onRefrescar() {
         onGenerar();
@@ -171,6 +178,7 @@ public class ReportesController {
     @FXML
     private void onGenerar() {
         String tipo = cmbTipo != null ? cmbTipo.getValue() : "Reparaciones";
+        configureColumnsFor(tipo);
         List<ReportItem> items = switch (tipo) {
             case "Ingresos" ->
                 buildIngresos();
@@ -188,6 +196,51 @@ public class ReportesController {
 
         if (lblHeaderInfo != null) {
             lblHeaderInfo.setText(masterData.size() + " registros en reporte");
+        }
+    }
+
+    private void configureColumnsFor(String tipo) {
+        String resolvedTipo = tipo == null ? "Reparaciones" : tipo;
+        boolean showEmpresa = AuthContext.isSuperAdmin();
+
+        colEmpresa.setVisible(showEmpresa);
+        colTipo.setVisible(false);
+        colDescripcion.setVisible(true);
+        colFecha.setVisible(true);
+        colEstado.setVisible(true);
+        colCantidad.setVisible(false);
+        colTotal.setVisible(true);
+
+        switch (resolvedTipo) {
+            case "Ingresos" -> {
+                colFecha.setText("Fecha");
+                colEstado.setText("Estado");
+                colCantidad.setVisible(false);
+                colTotal.setText("Total");
+                colTotal.setVisible(true);
+            }
+            case "Stock" -> {
+                colFecha.setText("Actualizado");
+                colEstado.setText("Estado");
+                colCantidad.setText("Stock");
+                colCantidad.setVisible(true);
+                colTotal.setText("Precio venta");
+                colTotal.setVisible(true);
+            }
+            case "Movimientos" -> {
+                colFecha.setText("Fecha");
+                colEstado.setText("Tipo");
+                colCantidad.setText("Cantidad");
+                colCantidad.setVisible(true);
+                colTotal.setVisible(false);
+            }
+            default -> {
+                colFecha.setText("Fecha");
+                colEstado.setText("Estado");
+                colCantidad.setVisible(false);
+                colTotal.setText("Total");
+                colTotal.setVisible(true);
+            }
         }
     }
 

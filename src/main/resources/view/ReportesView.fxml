@@ -25,9 +25,8 @@
                     <ComboBox fx:id="cmbPageSize" prefWidth="90"/>
                     <Label text="por página" styleClass="tfx-toolbar-label"/>
                 </HBox>
-                <Button text="Refrescar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
-                <Button text="Generar reporte" onAction="#onGenerar" styleClass="tfx-btn-primary"/>
-                <Button text="Exportar PDF" onAction="#onExportarPdf" styleClass="tfx-btn-secondary"/>
+                <Button text="Recargar" onAction="#onRefrescar" styleClass="tfx-btn-ghost"/>
+                <Button text="Exportar PDF" onAction="#onExportarPdf" styleClass="tfx-btn-primary"/>
             </children>
         </HBox>
 
