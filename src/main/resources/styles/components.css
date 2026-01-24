@@ -171,6 +171,11 @@
     -fx-text-fill: #f87171;
 }
 
+.tfx-badge-warning {
+    -fx-background-color: rgba(251,191,36,0.18);
+    -fx-text-fill: #fbbf24;
+}
+
 .table-view {
     -fx-background-color: #0f1522;
     -fx-control-inner-background: #0f1522;

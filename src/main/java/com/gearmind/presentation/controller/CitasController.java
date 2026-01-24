@@ -247,6 +247,7 @@ public class CitasController {
     private void configureTable() {
         tblCitas.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         tblCitas.setItems(masterData);
+        configureColumnWidths();
 
         colFechaHora.setCellValueFactory(cellData -> {
             Appointment appointment = cellData.getValue();
@@ -264,6 +265,31 @@ public class CitasController {
             AppointmentStatus status = cellData.getValue().getStatus();
             return new SimpleStringProperty(status != null ? mapStatusToLabel(status) : "");
         });
+        colEstado.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-warning", "tfx-badge-danger");
+                if (empty || item == null) {
+                    setText(null);
+                    setAlignment(javafx.geometry.Pos.CENTER);
+                    return;
+                }
+                setText(item);
+                getStyleClass().addAll("tfx-badge", "tfx-table-badge");
+                switch (item) {
+                    case "Completada" ->
+                        getStyleClass().add("tfx-badge-success");
+                    case "Cancelada" ->
+                        getStyleClass().add("tfx-badge-danger");
+                    case "Confirmada", "Solicitada" ->
+                        getStyleClass().add("tfx-badge-warning");
+                    default -> {
+                    }
+                }
+                setAlignment(javafx.geometry.Pos.CENTER);
+            }
+        });
 
         colOrigen.setCellValueFactory(cellData -> {
             AppointmentOrigin origin = cellData.getValue().getOrigin();
@@ -274,7 +300,7 @@ public class CitasController {
             String notas = cellData.getValue().getNotes();
             return new SimpleStringProperty(notas == null ? "" : notas);
         });
-        
+
         colNotas.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -297,8 +323,13 @@ public class CitasController {
             private final HBox box = new HBox(8, btnEditar, btnCompletar, btnCancelar);
 
             {
-                btnEditar.getStyleClass().add("tfx-icon-btn");
-                btnCompletar.getStyleClass().add("tfx-icon-btn-secondary");
+                box.getStyleClass().add("tfx-table-actions");
+                btnEditar.getStyleClass().add("tfx-table-action-btn");
+                btnCompletar.getStyleClass().addAll("tfx-table-action-btn", "tfx-table-action-success");
+                btnCancelar.getStyleClass().addAll("tfx-table-action-btn", "tfx-table-action-danger");
+                btnEditar.setTooltip(new Tooltip("Editar cita"));
+                btnCompletar.setTooltip(new Tooltip("Marcar como completada"));
+                btnCancelar.setTooltip(new Tooltip("Cancelar cita"));
 
                 btnEditar.setOnAction(e -> {
                     Appointment a = (getTableRow() != null) ? getTableRow().getItem() : null;
@@ -335,6 +366,45 @@ public class CitasController {
                 setGraphic(box);
             }
         });
+    }
+
+    private void configureColumnWidths() {
+        if (colFechaHora != null) {
+            colFechaHora.setPrefWidth(130);
+            colFechaHora.setMinWidth(120);
+        }
+        if (colCliente != null) {
+            colCliente.setPrefWidth(180);
+            colCliente.setMinWidth(160);
+        }
+        if (colVehiculo != null) {
+            colVehiculo.setPrefWidth(190);
+            colVehiculo.setMinWidth(170);
+        }
+        if (colEmpleado != null) {
+            colEmpleado.setPrefWidth(150);
+            colEmpleado.setMinWidth(130);
+        }
+        if (colEmpresa != null) {
+            colEmpresa.setPrefWidth(120);
+            colEmpresa.setMinWidth(110);
+        }
+        if (colEstado != null) {
+            colEstado.setPrefWidth(110);
+            colEstado.setMinWidth(100);
+        }
+        if (colOrigen != null) {
+            colOrigen.setPrefWidth(100);
+            colOrigen.setMinWidth(90);
+        }
+        if (colNotas != null) {
+            colNotas.setPrefWidth(180);
+            colNotas.setMinWidth(150);
+        }
+        if (colAcciones != null) {
+            colAcciones.setPrefWidth(210);
+            colAcciones.setMinWidth(200);
+        }
     }
 
     private void configureEstadoYOrigenCombos() {
@@ -487,7 +557,7 @@ public class CitasController {
 
         if (filterEstadoField != null) {
             filterEstadoField.clear();
-        }    
+        }
         if (filterOrigenField != null) {
             filterOrigenField.clear();
         }
@@ -508,7 +578,13 @@ public class CitasController {
     private void reloadFromDb() {
         long empresaId = SessionManager.getInstance().getCurrentEmpresaId();
         loadLookupMaps(empresaId);
-        List<Appointment> citas = listAppointmentsUseCase.execute(empresaId);
+        List<Appointment> citas = new ArrayList<>();
+        for (Appointment cita : listAppointmentsUseCase.execute(empresaId)) {
+            if (cita != null && cita.getStatus() == AppointmentStatus.REQUESTED) {
+                continue;
+            }
+            citas.add(cita);
+        }
 
         if (AuthContext.isLoggedIn()) {
             UserRole role = AuthContext.getRole();

@@ -20,7 +20,7 @@
                 <Label text="por página"/>
                 <Button fx:id="btnSolicitudesBot" text="Solicitudes bot" onAction="#onSolicitudesBot" styleClass="button-secondary"/>
                 <Button text="Refrescar" onAction="#onRefrescar" styleClass="button-secondary tfx-btn-reload"/>
-                <Button text="Nueva cita" onAction="#onNuevaCita" styleClass="button"/>
+                <Button text="Nueva cita" onAction="#onNuevaCita" styleClass="tfx-btn-primary"/>
             </children>
             <padding>
                 <Insets top="10" right="10" bottom="10" left="10"/>
@@ -45,7 +45,7 @@
                                             <children>
                                                 <Label text="Filtros" styleClass="tfx-muted"/>
                                                 <Region HBox.hgrow="ALWAYS"/>
-                                                <Button text="Limpiar" onAction="#onLimpiarFiltros" styleClass="button-secondary"/>
+                                                <Button text="Limpiar filtros" onAction="#onLimpiarFiltros" styleClass="tfx-btn-ghost"/>
                                             </children>
                                         </HBox>
                                         <GridPane hgap="10" vgap="8">
