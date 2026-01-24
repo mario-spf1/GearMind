@@ -82,17 +82,17 @@
             <children>
                 <TableView fx:id="tblProductos">
                     <columns>
-                        <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="140"/>
+                        <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="130"/>
                         <TableColumn fx:id="colNombre" text="Nombre" prefWidth="160"/>
-                        <TableColumn fx:id="colReferencia" text="Referencia" prefWidth="120"/>
-                        <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="120"/>
-                        <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="200"/>
-                        <TableColumn fx:id="colStock" text="Stock" prefWidth="80"/>
-                        <TableColumn fx:id="colStockMinimo" text="Stock mínimo" prefWidth="110"/>
-                        <TableColumn fx:id="colPrecioCompra" text="Precio compra" prefWidth="120"/>
-                        <TableColumn fx:id="colPrecioVenta" text="Precio venta" prefWidth="120"/>
-                        <TableColumn fx:id="colEstado" text="Estado" prefWidth="110"/>
-                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
+                        <TableColumn fx:id="colReferencia" text="Referencia" prefWidth="110"/>
+                        <TableColumn fx:id="colCategoria" text="Categoría" prefWidth="110"/>
+                        <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="230"/>
+                        <TableColumn fx:id="colStock" text="Stock" prefWidth="70"/>
+                        <TableColumn fx:id="colStockMinimo" text="Stock mínimo" prefWidth="90"/>
+                        <TableColumn fx:id="colPrecioCompra" text="Precio compra" prefWidth="105"/>
+                        <TableColumn fx:id="colPrecioVenta" text="Precio venta" prefWidth="105"/>
+                        <TableColumn fx:id="colEstado" text="Estado" prefWidth="95"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="140"/>
                     </columns>
                 </TableView>
 

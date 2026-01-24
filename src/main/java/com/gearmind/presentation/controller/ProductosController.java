@@ -18,6 +18,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -147,8 +148,7 @@ public class ProductosController {
                     setText(null);
                     setTooltip(null);
                 } else {
-                    String trimmed = item.length() > 40 ? item.substring(0, 37) + "..." : item;
-                    setText(trimmed);
+                    setText(item);
                     setTooltip(new Tooltip(item));
                 }
             }
@@ -181,14 +181,17 @@ public class ProductosController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-danger");
-
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-danger");
+                
                 if (empty || item == null) {
                     setText(null);
+                    setAlignment(Pos.CENTER);
                 } else {
                     setText(item);
                     getStyleClass().add("tfx-badge");
+                    getStyleClass().add("tfx-table-badge");
                     getStyleClass().add("Activo".equalsIgnoreCase(item) ? "tfx-badge-success" : "tfx-badge-danger");
+                    setAlignment(Pos.CENTER);
                 }
             }
         });
@@ -202,10 +205,11 @@ public class ProductosController {
             private final HBox box = new HBox(8, btnEditar, btnStock, btnToggle);
 
             {
-                btnEditar.getStyleClass().add("tfx-icon-btn");
-                btnStock.getStyleClass().add("tfx-icon-btn");
-                btnToggle.getStyleClass().add("tfx-icon-btn");
+                box.getStyleClass().add("tfx-table-actions");
 
+                btnEditar.getStyleClass().add("tfx-table-action-btn");
+                btnStock.getStyleClass().add("tfx-table-action-btn");
+                btnToggle.getStyleClass().add("tfx-table-action-btn");
                 btnEditar.setTooltip(new Tooltip("Editar producto"));
                 btnStock.setTooltip(new Tooltip("Añadir stock"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
@@ -240,16 +244,16 @@ public class ProductosController {
                     return;
                 }
 
-                btnToggle.getStyleClass().removeAll("tfx-icon-btn-danger", "tfx-icon-btn-success");
+                btnToggle.getStyleClass().removeAll("tfx-table-action-danger", "tfx-table-action-success");
 
                 if (product.isActivo()) {
                     btnToggle.setText("Desactivar");
-                    btnToggle.getStyleClass().add("tfx-icon-btn-danger");
+                    btnToggle.getStyleClass().add("tfx-table-action-danger");
                     btnToggle.setTooltip(new Tooltip("Desactivar producto"));
                     btnStock.setDisable(false);
                 } else {
                     btnToggle.setText("Activar");
-                    btnToggle.getStyleClass().add("tfx-icon-btn-success");
+                    btnToggle.getStyleClass().add("tfx-table-action-success");
                     btnToggle.setTooltip(new Tooltip("Activar producto"));
                     btnStock.setDisable(true);
                 }
@@ -587,6 +591,7 @@ public class ProductosController {
     }
 
     private String formatPrice(BigDecimal value) {
-        return value == null ? "0.00" : priceFormat.format(value);
+        BigDecimal resolved = value == null ? BigDecimal.ZERO : value;
+        return priceFormat.format(resolved) + " €";
     }
 }
