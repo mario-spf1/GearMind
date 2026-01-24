@@ -33,10 +33,23 @@
 }
 
 .tfx-btn-reload {
+    -fx-background-color: #151e2d;
+    -fx-text-fill: -tfx-text;
+    -fx-border-color: rgba(91,139,255,0.28);
+    -fx-border-width: 1;
     -fx-padding: 8 12;
     -fx-font-size: 12px;
+    -fx-font-weight: 600;
     -fx-background-radius: 10;
     -fx-border-radius: 10;
+}
+
+.tfx-btn-reload:hover {
+    -fx-background-color: #1a2436;
+}
+
+.tfx-btn-reload:armed {
+    -fx-background-color: #111827;
 }
 
 .tfx-icon-btn {
@@ -86,6 +99,14 @@
 
 .combo-box-base .arrow-button .arrow {
     -fx-background-color: -tfx-text;
+}
+
+.combo-box-base .arrow-button {
+    -fx-background-color: #0d121b;
+    -fx-border-color: transparent;
+    -fx-padding: 0 10;
+    -fx-background-radius: 0 10 10 0;
+    -fx-border-radius: 0 10 10 0;
 }
 
 .combo-box-popup .list-view .list-cell {

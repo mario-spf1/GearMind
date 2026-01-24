@@ -117,8 +117,10 @@ public class VehiculosController {
             private final HBox box = new HBox(8, btnEditar, btnEliminar);
 
             {
-                btnEditar.getStyleClass().add("tfx-icon-btn");
-                btnEliminar.getStyleClass().add("tfx-icon-btn-danger");
+                box.getStyleClass().add("tfx-table-actions");
+
+                btnEditar.getStyleClass().add("tfx-table-action-btn");
+                btnEliminar.getStyleClass().addAll("tfx-table-action-btn", "tfx-table-action-danger");
                 btnEditar.setTooltip(new Tooltip("Editar vehículo"));
                 btnEliminar.setTooltip(new Tooltip("Eliminar vehículo"));
 
