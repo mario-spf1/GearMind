@@ -21,11 +21,13 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.util.Duration;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -48,6 +50,8 @@ public class FichajesController {
     @FXML
     private ComboBox<UsuarioOption> cmbEmpleado;
     @FXML
+    private DatePicker dpDiaFiltro;
+    @FXML
     private TableView<Fichaje> tblFichajes;
     @FXML
     private TableColumn<Fichaje, String> colFecha;
@@ -57,6 +61,8 @@ public class FichajesController {
     private TableColumn<Fichaje, String> colEmpleado;
     @FXML
     private TableColumn<Fichaje, String> colEmpresa;
+    @FXML
+    private Label lblTotalDia;
 
     private final MySqlFichajeRepository fichajeRepository;
     private final MySqlEmpresaRepository empresaRepository;
@@ -96,6 +102,7 @@ public class FichajesController {
         colEmpresa.setCellValueFactory(cell -> new SimpleStringProperty(safe(cell.getValue().getEmpresaNombre())));
         tblFichajes.setItems(fichajes);
         tblFichajes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblFichajes.setFixedCellSize(28);
     }
 
     private void setupFilters() {
@@ -112,6 +119,9 @@ public class FichajesController {
             if (cmbEmpleado != null) {
                 cmbEmpleado.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
             }
+            if (dpDiaFiltro != null) {
+                dpDiaFiltro.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
+            }
             return;
         }
 
@@ -122,6 +132,9 @@ public class FichajesController {
             if (cmbEmpleado != null) {
                 cmbEmpleado.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
             }
+            if (dpDiaFiltro != null) {
+                dpDiaFiltro.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
+            }
             return;
         }
 
@@ -131,6 +144,9 @@ public class FichajesController {
         hideNode(cmbEmpleado);
         hideColumn(colEmpleado);
         hideColumn(colEmpresa);
+        if (dpDiaFiltro != null) {
+            dpDiaFiltro.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
+        }
     }
 
     private void loadEmpresas() {
@@ -165,6 +181,7 @@ public class FichajesController {
         UserRole role = AuthContext.getRole();
         Long empresaId = null;
         Long userId = null;
+        LocalDate diaFiltro = dpDiaFiltro != null ? dpDiaFiltro.getValue() : null;
 
         if (role == UserRole.EMPLEADO) {
             empresaId = AuthContext.getEmpresaId();
@@ -177,7 +194,40 @@ public class FichajesController {
             userId = cmbEmpleado != null && cmbEmpleado.getValue() != null ? cmbEmpleado.getValue().id : null;
         }
 
-        fichajes.setAll(fichajeRepository.findByFilters(empresaId, userId));
+        if (diaFiltro != null) {
+            fichajes.setAll(fichajeRepository.findByFilters(empresaId, userId, diaFiltro));
+        } else {
+            fichajes.setAll(fichajeRepository.findByFilters(empresaId, userId));
+        }
+        updateTableHeight();
+        updateTotalDia(userId, diaFiltro);
+    }
+
+    private void updateTableHeight() {
+        if (tblFichajes == null) {
+            return;
+        }
+        int rows = Math.max(1, fichajes.size());
+        double headerHeight = 28;
+        double tableHeight = headerHeight + rows * tblFichajes.getFixedCellSize() + 2;
+        tblFichajes.setPrefHeight(tableHeight);
+    }
+
+    private void updateTotalDia(Long userId, LocalDate diaFiltro) {
+        if (lblTotalDia == null) {
+            return;
+        }
+        if (diaFiltro == null) {
+            lblTotalDia.setText("Total del día: —");
+            return;
+        }
+        if (userId == null || userId == 0L) {
+            lblTotalDia.setText("Total del día: selecciona un usuario");
+            return;
+        }
+        List<Fichaje> registros = fichajeRepository.findByUserAndDate(userId, diaFiltro);
+        java.time.Duration total = calculateWorkedTotal(registros);
+        lblTotalDia.setText("Total del día: " + formatDuration(total, null));
     }
 
     @FXML
@@ -256,6 +306,28 @@ public class FichajesController {
         long hours = totalMinutes / 60;
         long minutes = totalMinutes % 60;
         return String.format("%02d:%02d h", hours, minutes);
+    }
+
+    private java.time.Duration calculateWorkedTotal(List<Fichaje> registros) {
+        java.time.Duration total = java.time.Duration.ZERO;
+        LocalDateTime open = null;
+        for (Fichaje fichaje : registros) {
+            if (fichaje.getFecha() == null) {
+                continue;
+            }
+            if (fichaje.getMovimiento() == FichajeMovimiento.ENTRADA) {
+                open = fichaje.getFecha();
+            } else if (fichaje.getMovimiento() == FichajeMovimiento.SALIDA) {
+                if (open != null) {
+                    total = total.plus(java.time.Duration.between(open, fichaje.getFecha()));
+                    open = null;
+                }
+            }
+        }
+        if (open != null) {
+            total = total.plus(java.time.Duration.between(open, LocalDateTime.now()));
+        }
+        return total;
     }
 
     private String safe(String value) {

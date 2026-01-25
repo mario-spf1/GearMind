@@ -181,8 +181,8 @@ public class DashboardController {
             if (lblTotalClientes != null) {
                 lblTotalClientes.setText(String.valueOf(all.size()));
             }
-            List<Customer> ultimos = all.stream().sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER)).limit(5).collect(Collectors.toList());
-
+            List<Customer> ultimos = all.stream().sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER)).limit(10).collect(Collectors.toList());
+            
             if (tblUltimosClientes != null) {
                 tblUltimosClientes.setItems(FXCollections.observableArrayList(ultimos));
                 int rows = Math.max(1, ultimos.size());
@@ -194,7 +194,7 @@ public class DashboardController {
             if (lblUltimosClientesInfo != null) {
                 if (all.isEmpty()) {
                     lblUltimosClientesInfo.setText("Todavía no hay clientes registrados.");
-                } else if (all.size() <= 5) {
+                } else if (all.size() <= 10) {
                     lblUltimosClientesInfo.setText("Mostrando todos los clientes (" + all.size() + ").");
                 } else {
                     lblUltimosClientesInfo.setText("Mostrando los últimos " + ultimos.size()

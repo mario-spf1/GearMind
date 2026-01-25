@@ -204,6 +204,7 @@ public class HomeController {
         MenuItem miLogout = new MenuItem("Cerrar sesión");
         miLogout.setOnAction(e -> onLogout());
         userMenu = new ContextMenu(miManage, new SeparatorMenuItem(), miLogout);
+        userMenu.getStyleClass().add("tfx-user-menu");
         userMenu.setAutoHide(true);
     }
 

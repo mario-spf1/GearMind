@@ -269,6 +269,32 @@
     -fx-text-fill: -tfx-success;
 }
 
+.tfx-user-menu {
+    -fx-background-color: #111827;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #2a3346;
+    -fx-border-width: 1;
+    -fx-padding: 6;
+}
+
+.tfx-user-menu .menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 6 12;
+}
+
+.tfx-user-menu .menu-item:focused {
+    -fx-background-color: rgba(91,139,255,0.2);
+}
+
+.tfx-user-menu .menu-item .label {
+    -fx-text-fill: #e5e7eb;
+}
+
+.tfx-user-menu .separator:horizontal .line {
+    -fx-border-color: #2a3346;
+}
+
 .tfx-flow {
     -fx-alignment: top-left;
 }

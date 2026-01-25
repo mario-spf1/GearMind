@@ -17,7 +17,6 @@
                 <Label text="Mi panel" styleClass="tfx-title-xl"/>
                 <Label fx:id="lblUsuarioNombre" text="Usuario" styleClass="tfx-subtitle"/>
             </VBox>
-            <Button fx:id="btnEditarUsuario" text="Editar perfil" onAction="#onEditarUsuario" styleClass="button tfx-btn-primary"/>
         </HBox>
 
         <GridPane hgap="12" vgap="12">
@@ -67,14 +66,29 @@
                 <ColumnConstraints percentWidth="35" hgrow="ALWAYS"/>
             </columnConstraints>
             <VBox spacing="10" styleClass="tfx-card" GridPane.columnIndex="0">
+                <Label text="Datos de perfil" styleClass="tfx-label-strong"/>
+                <GridPane hgap="12" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+                        <ColumnConstraints percentWidth="75" hgrow="ALWAYS"/>
+                    </columnConstraints>
+                    <Label text="Nombre" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="tfx-muted"/>
+                    <TextField fx:id="txtNombre" promptText="Nombre completo" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                    <Label text="Email" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="tfx-muted"/>
+                    <TextField fx:id="txtEmail" promptText="correo@empresa.com" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <Label text="Nueva contraseña" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="tfx-muted"/>
+                    <PasswordField fx:id="txtPassword" promptText="Opcional" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                </GridPane>
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Button fx:id="btnGuardarPerfil" text="Guardar cambios" onAction="#onGuardarPerfil" styleClass="button tfx-btn-primary"/>
+                    <Label fx:id="lblGuardarEstado" text="" styleClass="tfx-muted"/>
+                </HBox>
+                <Separator/>
                 <Label text="Resumen de cuenta" styleClass="tfx-label-strong"/>
-                <Label fx:id="lblEmail" text="Email" styleClass="tfx-muted"/>
                 <Label fx:id="lblRol" text="Rol" styleClass="tfx-muted"/>
                 <Label fx:id="lblEmpresa" text="Empresa" styleClass="tfx-muted"/>
-
-                <Separator/>
-                <Label text="Acciones rápidas" styleClass="tfx-label-strong"/>
-                <Label text="Edita tu perfil para mantener tu información actualizada." styleClass="tfx-muted"/>
+                <Label fx:id="lblEmail" text="Email" styleClass="tfx-muted"/>
             </VBox>
             <VBox spacing="10" styleClass="tfx-card tfx-dashboard-side" GridPane.columnIndex="1">
                 <Label text="Actividad de hoy" styleClass="tfx-label-strong"/>

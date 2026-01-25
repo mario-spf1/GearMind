@@ -30,17 +30,29 @@
                 <ComboBox fx:id="cmbEmpresa" prefWidth="220"/>
                 <Label fx:id="lblEmpleadoFiltro" text="Empleado:"/>
                 <ComboBox fx:id="cmbEmpleado" prefWidth="240"/>
+                <Label text="Día:"/>
+                <DatePicker fx:id="dpDiaFiltro" prefWidth="150"/>
             </children>
         </HBox>
 
-        <TableView fx:id="tblFichajes" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="160"/>
-                <TableColumn fx:id="colMovimiento" text="Movimiento" prefWidth="140"/>
-                <TableColumn fx:id="colEmpleado" text="Empleado" prefWidth="220"/>
-                <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="220"/>
-            </columns>
-        </TableView>
+        <VBox spacing="8" styleClass="tfx-card" VBox.vgrow="ALWAYS">
+            <children>
+                <TableView fx:id="tblFichajes">
+                    <columns>
+                        <TableColumn fx:id="colFecha" text="Fecha" prefWidth="160"/>
+                        <TableColumn fx:id="colMovimiento" text="Movimiento" prefWidth="140"/>
+                        <TableColumn fx:id="colEmpleado" text="Empleado" prefWidth="220"/>
+                        <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="220"/>
+                    </columns>
+                </TableView>
+                <HBox>
+                    <children>
+                        <Label fx:id="lblTotalDia" text="Total del día: —" styleClass="tfx-muted"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
     </children>
 
     <padding>

@@ -9,6 +9,8 @@ public interface FichajeRepository {
 
     List<Fichaje> findByFilters(Long empresaId, Long userId);
 
+    List<Fichaje> findByFilters(Long empresaId, Long userId, java.time.LocalDate date);
+
     List<Fichaje> findByUserAndDate(Long userId, java.time.LocalDate date);
 
     void save(Fichaje fichaje);

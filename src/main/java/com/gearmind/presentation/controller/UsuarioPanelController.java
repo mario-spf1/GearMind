@@ -4,22 +4,24 @@ import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.common.SessionManager;
 import com.gearmind.application.fichaje.GetFichajeStatusUseCase;
 import com.gearmind.application.user.GetUserStatsUseCase;
+import com.gearmind.application.user.SaveUserRequest;
+import com.gearmind.application.user.SaveUserUseCase;
 import com.gearmind.application.user.UserStats;
 import com.gearmind.domain.fichaje.FichajeMovimiento;
 import com.gearmind.domain.fichaje.FichajeStatus;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRole;
+import com.gearmind.infrastructure.auth.BCryptPasswordHasher;
+import com.gearmind.infrastructure.auth.MySqlUserRepository;
 import com.gearmind.infrastructure.fichaje.MySqlFichajeRepository;
 import com.gearmind.infrastructure.repair.MySqlRepairRepository;
 import com.gearmind.infrastructure.task.MySqlTaskRepository;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.stage.Stage;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -52,14 +54,24 @@ public class UsuarioPanelController {
     @FXML
     private Label lblReparacionesDetalle;
     @FXML
-    private Button btnEditarUsuario;
+    private TextField txtNombre;
+    @FXML
+    private TextField txtEmail;
+    @FXML
+    private PasswordField txtPassword;
+    @FXML
+    private Button btnGuardarPerfil;
+    @FXML
+    private Label lblGuardarEstado;
 
     private final GetUserStatsUseCase statsUseCase;
     private final GetFichajeStatusUseCase fichajeStatusUseCase;
+    private final SaveUserUseCase saveUserUseCase;
 
     public UsuarioPanelController() {
         this.statsUseCase = new GetUserStatsUseCase(new MySqlTaskRepository(), new MySqlRepairRepository());
         this.fichajeStatusUseCase = new GetFichajeStatusUseCase(new MySqlFichajeRepository());
+        this.saveUserUseCase = new SaveUserUseCase(new MySqlUserRepository(), new BCryptPasswordHasher());
     }
 
     @FXML
@@ -67,6 +79,7 @@ public class UsuarioPanelController {
         loadUserData();
         loadStats();
         loadFichajeStatus();
+        setupProfileForm();
     }
 
     private void loadUserData() {
@@ -80,6 +93,12 @@ public class UsuarioPanelController {
         }
         if (lblEmail != null) {
             lblEmail.setText("Email: " + user.getEmail());
+        }
+        if (txtNombre != null) {
+            txtNombre.setText(user.getNombre());
+        }
+        if (txtEmail != null) {
+            txtEmail.setText(user.getEmail());
         }
         if (lblRol != null) {
             UserRole role = AuthContext.getRole();
@@ -101,6 +120,29 @@ public class UsuarioPanelController {
                 lblEmpresa.setText("Empresa: " + empresaNombre);
             }
         }
+    }
+
+    private void setupProfileForm() {
+        if (btnGuardarPerfil == null) {
+            return;
+        }
+        btnGuardarPerfil.setDisable(true);
+        if (txtNombre != null) {
+            txtNombre.textProperty().addListener((obs, oldVal, newVal) -> validateProfileForm());
+        }
+        if (txtEmail != null) {
+            txtEmail.textProperty().addListener((obs, oldVal, newVal) -> validateProfileForm());
+        }
+        validateProfileForm();
+    }
+
+    private void validateProfileForm() {
+        if (btnGuardarPerfil == null) {
+            return;
+        }
+        String nombre = txtNombre != null ? txtNombre.getText().trim() : "";
+        String email = txtEmail != null ? txtEmail.getText().trim() : "";
+        btnGuardarPerfil.setDisable(nombre.isBlank() || email.isBlank());
     }
 
     private void loadStats() {
@@ -162,36 +204,37 @@ public class UsuarioPanelController {
     }
 
     @FXML
-    private void onEditarUsuario() {
+    private void onGuardarPerfil() {
+        if (!AuthContext.isLoggedIn()) {
+            return;
+        }
         try {
             User current = AuthContext.getCurrentUser();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/UsuarioFormView.fxml"));
-            Parent rootForm = loader.load();
-            UsuarioFormController controller = loader.getController();
-            controller.initForSelfEdit(current);
-            Stage stage = new Stage();
-            stage.setTitle("Mi cuenta");
-            stage.initOwner(btnEditarUsuario.getScene().getWindow());
-            stage.initModality(javafx.stage.Modality.WINDOW_MODAL);
-            stage.setResizable(false);
-            Scene scene = new Scene(rootForm);
-            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
-            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
-            stage.setScene(scene);
-            stage.showAndWait();
-
-            if (controller.isSaved()) {
-                var repo = new com.gearmind.infrastructure.auth.MySqlUserRepository();
-                repo.findById(current.getId()).ifPresent(updated -> {
-                    String empresaNombre = SessionManager.getInstance().getCurrentEmpresaNombre();
-                    SessionManager.getInstance().startSession(updated, empresaNombre);
-                    loadUserData();
-                });
+            String nombre = txtNombre != null ? txtNombre.getText().trim() : "";
+            String email = txtEmail != null ? txtEmail.getText().trim() : "";
+            String password = txtPassword != null ? txtPassword.getText() : null;
+            SaveUserRequest request = new SaveUserRequest(current.getId(), current.getEmpresaId(), nombre, email, password, current.getRol(), current.isActivo());
+            User updated = saveUserUseCase.save(request);
+            SessionManager.getInstance().startSession(updated, SessionManager.getInstance().getCurrentEmpresaNombre());
+            if (txtPassword != null) {
+                txtPassword.clear();
             }
+            loadUserData();
+            setProfileStatus("Cambios guardados.", true);
         } catch (Exception ex) {
             ex.printStackTrace();
-            new Alert(Alert.AlertType.ERROR, "No se pudo abrir la edición de usuario: " + ex.getMessage()).showAndWait();
+            setProfileStatus("No se pudo guardar: " + ex.getMessage(), false);
+            new Alert(Alert.AlertType.ERROR, "No se pudo guardar el perfil: " + ex.getMessage()).showAndWait();
         }
+    }
+
+    private void setProfileStatus(String message, boolean success) {
+        if (lblGuardarEstado == null) {
+            return;
+        }
+        lblGuardarEstado.setText(message);
+        lblGuardarEstado.getStyleClass().removeAll("tfx-ok", "tfx-error");
+        lblGuardarEstado.getStyleClass().add(success ? "tfx-ok" : "tfx-error");
     }
 
     private String formatDuration(Duration duration) {
