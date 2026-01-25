@@ -99,7 +99,7 @@ public class UsuarioFormController {
         hideNode(lblEmpresa);
         hideNode(boxEmpresa);
         if (cmbRol != null) {
-            cmbRol.setItems(FXCollections.observableArrayList(UserRole.values()));
+            cmbRol.setItems(buildRoleOptions());
             cmbRol.getSelectionModel().select(user.getRol());
             cmbRol.setDisable(true);
             cmbRol.setManaged(false);
@@ -166,6 +166,9 @@ public class UsuarioFormController {
         }
         if (cmbRol != null) {
             cmbRol.getSelectionModel().select(user.getRol());
+            if (cmbRol.getSelectionModel().getSelectedItem() == null && !cmbRol.getItems().isEmpty()) {
+                cmbRol.getSelectionModel().selectFirst();
+            }
         }
         if (chkActivo != null) {
             chkActivo.setSelected(user.isActivo());
@@ -192,7 +195,7 @@ public class UsuarioFormController {
         }
 
         if (cmbRol != null) {
-            cmbRol.setItems(FXCollections.observableArrayList(UserRole.values()));
+            cmbRol.setItems(buildRoleOptions());
             cmbRol.getSelectionModel().select(UserRole.EMPLEADO);
         }
 
@@ -235,6 +238,21 @@ public class UsuarioFormController {
         String email = safeTrim(txtEmail != null ? txtEmail.getText() : "");
         boolean ok = !nombre.isBlank() && !email.isBlank();
         btnGuardar.setDisable(!ok);
+    }
+
+    private ObservableList<UserRole> buildRoleOptions() {
+        if (!AuthContext.isLoggedIn()) {
+            return FXCollections.observableArrayList(UserRole.values());
+        }
+
+        UserRole currentRole = AuthContext.getRole();
+        if (currentRole == UserRole.ADMIN) {
+            return FXCollections.observableArrayList(UserRole.ADMIN, UserRole.EMPLEADO);
+        }
+        if (currentRole == UserRole.EMPLEADO) {
+            return FXCollections.observableArrayList(UserRole.EMPLEADO);
+        }
+        return FXCollections.observableArrayList(UserRole.values());
     }
 
     @FXML
@@ -350,6 +368,7 @@ public class UsuarioFormController {
             public String toString(EmpresaOption opt) {
                 return opt == null ? "" : opt.nombre;
             }
+
             @Override
             public EmpresaOption fromString(String s) {
                 if (s == null) {
@@ -449,10 +468,12 @@ public class UsuarioFormController {
 
         public final long id;
         public final String nombre;
+
         public EmpresaOption(long id, String nombre) {
             this.id = id;
             this.nombre = nombre;
         }
+
         @Override
         public String toString() {
             return nombre;

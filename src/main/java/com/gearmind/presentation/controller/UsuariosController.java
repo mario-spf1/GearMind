@@ -196,7 +196,20 @@ public class UsuariosController {
         smartTable.addColumnFilter(filterEmailField, (u, text) -> safe(u.getEmail()).contains(text));
 
         if (filterRolCombo != null) {
-            filterRolCombo.setItems(FXCollections.observableArrayList("Todos", UserRole.SUPER_ADMIN.name(), UserRole.ADMIN.name(), UserRole.EMPLEADO.name()));
+            UserRole currentRole = AuthContext.getRole();
+            List<String> roleOptions = new ArrayList<>();
+            roleOptions.add("Todos");
+            if (currentRole == UserRole.SUPER_ADMIN) {
+                roleOptions.add(UserRole.SUPER_ADMIN.name());
+                roleOptions.add(UserRole.ADMIN.name());
+                roleOptions.add(UserRole.EMPLEADO.name());
+            } else if (currentRole == UserRole.ADMIN) {
+                roleOptions.add(UserRole.ADMIN.name());
+                roleOptions.add(UserRole.EMPLEADO.name());
+            } else {
+                roleOptions.add(UserRole.EMPLEADO.name());
+            }
+            filterRolCombo.setItems(FXCollections.observableArrayList(roleOptions));
             filterRolCombo.getSelectionModel().select("Todos");
 
             smartTable.addColumnFilter(filterRolCombo, (u, selected) -> {
@@ -290,7 +303,7 @@ public class UsuariosController {
                 }
 
                 btnToggle.getStyleClass().removeAll("tfx-table-action-danger", "tfx-table-action-success");
-                
+
                 if (user.isActivo()) {
                     btnToggle.setText("Desactivar");
                     btnToggle.getStyleClass().add("tfx-table-action-danger");

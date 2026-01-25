@@ -36,12 +36,12 @@
                         <TextField fx:id="txtNombre" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
                         <Label text="DNI:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                         <TextField fx:id="txtDni" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                        <Label text="Email:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtEmail" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                        <Label text="Teléfono:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtTelefono" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-                        <Label text="Notas:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                        <TextArea fx:id="txtNotas" GridPane.rowIndex="4" GridPane.columnIndex="1" prefRowCount="4"/>
+                        <Label text="Email:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtEmail" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <Label text="Teléfono:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtTelefono" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <Label text="Notas:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                        <TextArea fx:id="txtNotas" GridPane.rowIndex="5" GridPane.columnIndex="1" prefRowCount="4"/>
                     </children>
                 </GridPane>
             </children>
