@@ -99,6 +99,42 @@ public class MySqlFichajeRepository implements FichajeRepository {
     }
 
     @Override
+    public List<Fichaje> findByUserAndDate(Long userId, java.time.LocalDate date) {
+        String sql = """
+                SELECT f.id, f.empresa_id, f.user_id, f.movimiento, f.fecha,
+                       u.nombre AS usuario_nombre,
+                       e.nombre AS empresa_nombre
+                FROM fichaje f
+                JOIN usuario u ON u.id = f.user_id
+                JOIN empresa e ON e.id = f.empresa_id
+                WHERE f.user_id = ?
+                  AND f.fecha >= ?
+                  AND f.fecha < ?
+                ORDER BY f.fecha ASC
+                """;
+
+        List<Fichaje> result = new ArrayList<>();
+        java.time.LocalDateTime startOfDay = date.atStartOfDay();
+        java.time.LocalDateTime endOfDay = startOfDay.plusDays(1);
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            ps.setTimestamp(2, Timestamp.valueOf(startOfDay));
+            ps.setTimestamp(3, Timestamp.valueOf(endOfDay));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al consultar fichajes del día", e);
+        }
+
+        return result;
+    }
+
+    @Override
     public void save(Fichaje fichaje) {
         String sql = """
                 INSERT INTO fichaje (empresa_id, user_id, movimiento, fecha)

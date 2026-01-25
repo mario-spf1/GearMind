@@ -27,14 +27,22 @@ import java.util.Optional;
 
 public class UsuarioPanelController {
 
-    @FXML private Label lblUsuarioNombre;
-    @FXML private Label lblTareasAsignadas;
-    @FXML private Label lblReparaciones;
-    @FXML private Label lblTiempoTrabajado;
-    @FXML private Label lblEmail;
-    @FXML private Label lblRol;
-    @FXML private Label lblEmpresa;
-    @FXML private Button btnEditarUsuario;
+    @FXML
+    private Label lblUsuarioNombre;
+    @FXML
+    private Label lblTareasAsignadas;
+    @FXML
+    private Label lblReparaciones;
+    @FXML
+    private Label lblTiempoTrabajado;
+    @FXML
+    private Label lblEmail;
+    @FXML
+    private Label lblRol;
+    @FXML
+    private Label lblEmpresa;
+    @FXML
+    private Button btnEditarUsuario;
 
     private final GetUserStatsUseCase statsUseCase;
     private final GetFichajeStatusUseCase fichajeStatusUseCase;
@@ -66,9 +74,12 @@ public class UsuarioPanelController {
         if (lblRol != null) {
             UserRole role = AuthContext.getRole();
             String rolTexto = switch (role) {
-                case SUPER_ADMIN -> "Super administrador";
-                case ADMIN -> "Administrador";
-                case EMPLEADO -> "Empleado";
+                case SUPER_ADMIN ->
+                    "Super administrador";
+                case ADMIN ->
+                    "Administrador";
+                case EMPLEADO ->
+                    "Empleado";
             };
             lblRol.setText("Rol: " + rolTexto);
         }
@@ -103,7 +114,7 @@ public class UsuarioPanelController {
 
         Optional<FichajeStatus> status = fichajeStatusUseCase.execute(AuthContext.getCurrentUser().getId());
         if (lblTiempoTrabajado != null) {
-            if (status.isEmpty() || status.get().movimientoActual() == FichajeMovimiento.SALIDA) {
+            if (status.isEmpty()) {
                 lblTiempoTrabajado.setText("—");
             } else {
                 lblTiempoTrabajado.setText(formatDuration(status.get().tiempoTrabajado(), status.get().fechaUltimoMovimiento()));
@@ -145,8 +156,8 @@ public class UsuarioPanelController {
     }
 
     private String formatDuration(Duration duration, LocalDateTime from) {
-        if (duration == null || from == null) {
-            return "—";
+        if (duration == null) {
+            return "00:00 h";
         }
         long totalMinutes = duration.toMinutes();
         long hours = totalMinutes / 60;

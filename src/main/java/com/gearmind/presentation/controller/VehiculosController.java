@@ -369,8 +369,12 @@ public class VehiculosController {
         alert.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
                 long empresaId = AuthContext.isSuperAdmin() ? vehicle.getEmpresaId() : AuthContext.getEmpresaId();
-                deleteVehicleUseCase.delete(vehicle.getId(), empresaId);
-                loadVehiculosFromDb();
+                try {
+                    deleteVehicleUseCase.delete(vehicle.getId(), empresaId);
+                    loadVehiculosFromDb();
+                } catch (Exception ex) {
+                    showError(ex.getMessage());
+                }
             }
         });
     }

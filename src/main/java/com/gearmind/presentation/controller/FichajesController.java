@@ -208,11 +208,15 @@ public class FichajesController {
 
     private void refreshStatus() {
         Optional<FichajeStatus> status = getFichajeStatusUseCase.execute(AuthContext.getCurrentUser().getId());
-        if (status.isEmpty() || status.get().movimientoActual() == FichajeMovimiento.SALIDA) {
+        if (status.isEmpty()) {
             btnSesionLaboral.setText("Comenzar sesión laboral");
             lblTiempoActual.setText("Tiempo: 00:00 h");
         } else {
-            btnSesionLaboral.setText("Terminar sesión laboral");
+            if (status.get().movimientoActual() == FichajeMovimiento.SALIDA) {
+                btnSesionLaboral.setText("Comenzar sesión laboral");
+            } else {
+                btnSesionLaboral.setText("Terminar sesión laboral");
+            }
             lblTiempoActual.setText("Tiempo: " + formatDuration(status.get().tiempoTrabajado(), status.get().fechaUltimoMovimiento()));
         }
     }
@@ -245,7 +249,7 @@ public class FichajesController {
     }
 
     private String formatDuration(java.time.Duration duration, LocalDateTime from) {
-        if (duration == null || from == null) {
+        if (duration == null) {
             return "00:00 h";
         }
         long totalMinutes = duration.toMinutes();

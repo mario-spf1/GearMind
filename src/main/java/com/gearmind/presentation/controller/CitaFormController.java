@@ -121,9 +121,7 @@ public class CitaFormController {
             txtHora.setText(requestedDateTime.toLocalTime().format(timeFormatter));
         }
 
-        if (request.getMensaje() != null && !request.getMensaje().isBlank()) {
-            txtNotas.setText(request.getMensaje());
-        }
+        txtNotas.setText("Solicitada por bot.");
     }
 
     private void configureCombos() {

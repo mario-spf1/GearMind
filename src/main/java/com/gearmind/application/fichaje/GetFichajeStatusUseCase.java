@@ -24,10 +24,37 @@ public class GetFichajeStatusUseCase {
         }
         Fichaje fichaje = last.get();
         LocalDateTime fecha = fichaje.getFecha();
-        Duration worked = null;
-        if (fichaje.getMovimiento() == FichajeMovimiento.ENTRADA && fecha != null) {
-            worked = Duration.between(fecha, LocalDateTime.now());
-        }
+        Duration worked = calculateWorkedToday(userId);
         return Optional.of(new FichajeStatus(fichaje.getMovimiento(), fecha, worked));
+    }
+
+    private Duration calculateWorkedToday(Long userId) {
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.util.List<Fichaje> fichajes = fichajeRepository.findByUserAndDate(userId, today);
+        if (fichajes.isEmpty()) {
+            return Duration.ZERO;
+        }
+
+        Duration total = Duration.ZERO;
+        LocalDateTime open = null;
+        for (Fichaje f : fichajes) {
+            if (f.getFecha() == null) {
+                continue;
+            }
+            if (f.getMovimiento() == FichajeMovimiento.ENTRADA) {
+                open = f.getFecha();
+            } else if (f.getMovimiento() == FichajeMovimiento.SALIDA) {
+                if (open != null) {
+                    total = total.plus(Duration.between(open, f.getFecha()));
+                    open = null;
+                }
+            }
+        }
+
+        if (open != null) {
+            total = total.plus(Duration.between(open, LocalDateTime.now()));
+        }
+
+        return total;
     }
 }

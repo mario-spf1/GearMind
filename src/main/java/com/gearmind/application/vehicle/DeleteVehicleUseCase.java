@@ -15,6 +15,9 @@ public class DeleteVehicleUseCase {
         if (!AuthContext.isAdminOrSuperAdmin()) {
             throw new IllegalStateException("No tienes permisos para eliminar vehículos.");
         }
+        if (repository.hasAssociatedRecords(vehicleId)) {
+            throw new IllegalStateException("No se puede eliminar el vehículo porque tiene reparaciones pendientes o información asociada.");
+        }
         repository.delete(vehicleId, empresaId);
     }
 }

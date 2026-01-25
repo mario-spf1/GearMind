@@ -205,6 +205,34 @@ public class MySqlVehicleRepository implements VehicleRepository {
     }
 
     @Override
+    public boolean hasAssociatedRecords(long vehicleId) {
+        String sql = """
+            SELECT (EXISTS(SELECT 1 FROM reparacion WHERE vehiculo_id = ?)
+                OR EXISTS(SELECT 1 FROM presupuesto WHERE vehiculo_id = ?)
+                OR EXISTS(SELECT 1 FROM factura WHERE vehiculo_id = ?)
+                OR EXISTS(SELECT 1 FROM cita WHERE vehiculo_id = ?)
+                OR EXISTS(SELECT 1 FROM telegram_solicitud_cita WHERE vehiculo_id = ?)) AS in_use
+            """;
+
+        try (Connection con = DataSourceFactory.getDataSource().getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, vehicleId);
+            ps.setLong(2, vehicleId);
+            ps.setLong(3, vehicleId);
+            ps.setLong(4, vehicleId);
+            ps.setLong(5, vehicleId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("in_use");
+                }
+                return false;
+            }
+        } catch (SQLException e) {
+            throw new InfrastructureException("Error al comprobar referencias de vehículo", e);
+        }
+    }
+
+    @Override
     public void delete(long vehicleId, long empresaId) {
         String sql = """
             DELETE FROM vehiculo

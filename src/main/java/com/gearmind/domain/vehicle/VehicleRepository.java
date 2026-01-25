@@ -15,5 +15,7 @@ public interface VehicleRepository {
 
     boolean existsMatriculaInEmpresa(Long empresaId, String matricula, Long excludeId);
 
+    boolean hasAssociatedRecords(long vehicleId);
+
     void delete(long vehicleId, long empresaId);
 }
