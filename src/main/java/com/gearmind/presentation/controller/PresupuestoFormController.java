@@ -21,6 +21,7 @@ import com.gearmind.infrastructure.telegram.MySqlTelegramRepository;
 import com.gearmind.infrastructure.telegram.TelegramBotClient;
 import com.gearmind.infrastructure.telegram.TelegramConfig;
 import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -29,6 +30,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
@@ -373,7 +375,9 @@ public class PresupuestoFormController {
         tblLineas.setItems(lineas);
         tblLineas.setEditable(true);
         tblLineas.setFixedCellSize(28);
+        tblLineas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+        configureColumnWidths();
         colDescripcion.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDescripcion()));
         colDescripcion.setCellFactory(TextFieldTableCell.forTableColumn());
         colDescripcion.setOnEditCommit(event -> {
@@ -430,7 +434,11 @@ public class PresupuestoFormController {
             }
         });
 
-        tblLineas.getItems().addListener((javafx.collections.ListChangeListener<BudgetLine>) c -> updateTotals());
+        tblLineas.getItems().addListener((javafx.collections.ListChangeListener<BudgetLine>) c -> {
+            updateTotals();
+            updateTableHeight();
+        });
+        updateTableHeight();
     }
 
     private void updateTotals() {
@@ -449,6 +457,43 @@ public class PresupuestoFormController {
 
         tblLineas.refresh();
         enableSaveIfReady();
+    }
+
+    private void configureColumnWidths() {
+        if (colDescripcion != null) {
+            colDescripcion.setPrefWidth(55);
+            colDescripcion.setMaxWidth(1f * Integer.MAX_VALUE);
+        }
+        if (colCantidad != null) {
+            colCantidad.setPrefWidth(15);
+            colCantidad.setMaxWidth(1f * Integer.MAX_VALUE);
+        }
+        if (colPrecio != null) {
+            colPrecio.setPrefWidth(15);
+            colPrecio.setMaxWidth(1f * Integer.MAX_VALUE);
+        }
+        if (colTotal != null) {
+            colTotal.setPrefWidth(15);
+            colTotal.setMaxWidth(1f * Integer.MAX_VALUE);
+        }
+    }
+
+    private void updateTableHeight() {
+        if (tblLineas == null) {
+            return;
+        }
+        int maxVisibleRows = 10;
+        int rows = Math.min(lineas.size(), maxVisibleRows);
+        double headerHeight = 28;
+        double tableHeight = headerHeight + rows * tblLineas.getFixedCellSize() + 2;
+        tblLineas.setPrefHeight(tableHeight);
+        tblLineas.setMinHeight(Region.USE_PREF_SIZE);
+        tblLineas.setMaxHeight(Region.USE_PREF_SIZE);
+        Platform.runLater(() -> {
+            if (tblLineas.getScene() != null && tblLineas.getScene().getWindow() instanceof Stage stage) {
+                stage.sizeToScene();
+            }
+        });
     }
 
     private BudgetLine newLine() {

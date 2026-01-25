@@ -66,16 +66,6 @@
                 </HBox>
             </children>
         </VBox>
-        <children>
-            <HBox spacing="8" alignment="CENTER_LEFT">
-                <Label text="Alertas de stock bajo" styleClass="tfx-title"/>
-                <Label fx:id="lblAlertasStock" text="0" styleClass="tfx-badge tfx-badge-danger"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Button text="Actualizar alertas" onAction="#onRefrescarAlertas" styleClass="tfx-btn-ghost"/>
-            </HBox>
-            <ListView fx:id="lstStockBajo" prefHeight="120"/>
-        </children>
-
         <VBox spacing="6" styleClass="tfx-card">
             <children>
                 <TableView fx:id="tblPresupuestos">

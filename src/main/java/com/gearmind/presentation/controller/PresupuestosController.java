@@ -126,12 +126,14 @@ public class PresupuestosController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-warning", "tfx-badge-danger");
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-warning", "tfx-badge-danger");
                 if (empty || item == null) {
                     setText(null);
+                    setAlignment(javafx.geometry.Pos.CENTER);
                 } else {
                     setText(item);
                     getStyleClass().add("tfx-badge");
+                    getStyleClass().add("tfx-table-badge");
                     switch (item) {
                         case "Aceptado" ->
                             getStyleClass().add("tfx-badge-success");
@@ -142,6 +144,7 @@ public class PresupuestosController {
                         default -> {
                         }
                     }
+                    setAlignment(javafx.geometry.Pos.CENTER);
                 }
             }
         });
@@ -156,10 +159,16 @@ public class PresupuestosController {
             private final HBox box = new HBox(8, btnEditar, btnPdf, btnEnviar, btnEliminar);
 
             {
-                btnEditar.getStyleClass().add("tfx-icon-btn");
-                btnPdf.getStyleClass().add("tfx-icon-btn-secondary");
-                btnEnviar.getStyleClass().add("tfx-icon-btn");
-                btnEliminar.getStyleClass().add("tfx-icon-btn-danger");
+                box.getStyleClass().add("tfx-table-actions");
+
+                btnEditar.getStyleClass().add("tfx-table-action-btn");
+                btnPdf.getStyleClass().add("tfx-table-action-btn");
+                btnEnviar.getStyleClass().add("tfx-table-action-btn");
+                btnEliminar.getStyleClass().addAll("tfx-table-action-btn", "tfx-table-action-danger");
+                btnEditar.setTooltip(new Tooltip("Editar presupuesto"));
+                btnPdf.setTooltip(new Tooltip("Generar PDF"));
+                btnEnviar.setTooltip(new Tooltip("Enviar presupuesto"));
+                btnEliminar.setTooltip(new Tooltip("Eliminar presupuesto"));
 
                 btnEditar.setOnAction(e -> {
                     Budget budget = getItem();
@@ -397,10 +406,8 @@ public class PresupuestosController {
     }
 
     private String formatPrice(BigDecimal value) {
-        if (value == null) {
-            return "0,00";
-        }
-        return priceFormat.format(value);
+        BigDecimal resolved = value == null ? BigDecimal.ZERO : value;
+        return priceFormat.format(resolved) + " €";
     }
 
     private String formatDate(java.time.LocalDateTime value) {
