@@ -27,8 +27,8 @@
                         <ComboBox fx:id="cbCliente" editable="true" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Vehículo:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                         <ComboBox fx:id="cbVehiculo" editable="true" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
-                        <Label text="Cita ID (opcional):" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtCitaId" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                        <Label text="Cita (opcional):" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cbCita" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Estado:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                         <ComboBox fx:id="cbEstado" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Importe estimado:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>

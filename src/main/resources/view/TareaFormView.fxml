@@ -26,7 +26,7 @@
                         <HBox fx:id="boxEmpresa" spacing="6" alignment="CENTER_LEFT" GridPane.rowIndex="0" GridPane.columnIndex="1">
                             <ComboBox fx:id="cmbEmpresa" editable="true" HBox.hgrow="ALWAYS"/>
                         </HBox>
-                        <Label text="Empresa:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <Label fx:id="lblEmpresa" text="Empresa:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                         <Label text="Orden de trabajo:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                         <ComboBox fx:id="cbReparacion" editable="true" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Empleado:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>

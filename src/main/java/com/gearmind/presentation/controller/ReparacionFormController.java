@@ -2,12 +2,15 @@ package com.gearmind.presentation.controller;
 
 import com.gearmind.application.repair.SaveRepairRequest;
 import com.gearmind.application.repair.SaveRepairUseCase;
+import com.gearmind.domain.appointment.Appointment;
+import com.gearmind.domain.appointment.AppointmentRepository;
 import com.gearmind.domain.customer.Customer;
 import com.gearmind.domain.customer.CustomerRepository;
 import com.gearmind.domain.repair.Repair;
 import com.gearmind.domain.repair.RepairStatus;
 import com.gearmind.domain.vehicle.Vehicle;
 import com.gearmind.domain.vehicle.VehicleRepository;
+import com.gearmind.infrastructure.appointment.MySqlAppointmentRepository;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
 import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
 import javafx.collections.FXCollections;
@@ -18,6 +21,7 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
@@ -30,7 +34,7 @@ public class ReparacionFormController {
     @FXML
     private ComboBox<VehicleOption> cbVehiculo;
     @FXML
-    private TextField txtCitaId;
+    private ComboBox<AppointmentOption> cbCita;
     @FXML
     private TextField txtImporteEstimado;
     @FXML
@@ -46,10 +50,13 @@ public class ReparacionFormController {
     private boolean saved = false;
     private final ObservableList<CustomerOption> allCustomers = FXCollections.observableArrayList();
     private final ObservableList<VehicleOption> allVehicles = FXCollections.observableArrayList();
+    private final ObservableList<AppointmentOption> allAppointments = FXCollections.observableArrayList();
     private FilteredList<VehicleOption> filteredVehicles;
+    private FilteredList<AppointmentOption> filteredAppointments;
     private boolean settingClienteProgrammatically = false;
     private boolean settingVehiculoProgrammatically = false;
     private String vehiculoSearchText = "";
+    private final DateTimeFormatter appointmentFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     public void init(Long empresaId, SaveRepairUseCase saveRepairUseCase, Repair existingRepair) {
         this.empresaId = empresaId;
@@ -62,7 +69,7 @@ public class ReparacionFormController {
         if (existingRepair != null) {
             lblTitulo.setText("Editar reparación");
             if (existingRepair.getCitaId() != null) {
-                txtCitaId.setText(String.valueOf(existingRepair.getCitaId()));
+                selectAppointmentById(existingRepair.getCitaId());
             }
             if (existingRepair.getDescripcion() != null) {
                 txtDescripcion.setText(existingRepair.getDescripcion());
@@ -235,6 +242,7 @@ public class ReparacionFormController {
 
         cbVehiculo.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null) {
+                updateAppointmentFilter(null);
                 return;
             }
             settingVehiculoProgrammatically = true;
@@ -243,6 +251,7 @@ public class ReparacionFormController {
             } finally {
                 settingVehiculoProgrammatically = false;
             }
+            updateAppointmentFilter(newVal.getId());
         });
 
         cbVehiculo.setButtonCell(new ListCell<>() {
@@ -255,6 +264,49 @@ public class ReparacionFormController {
         cbVehiculo.setCellFactory(listView -> new ListCell<>() {
             @Override
             protected void updateItem(VehicleOption item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.getLabel());
+            }
+        });
+        AppointmentRepository appointmentRepository = new MySqlAppointmentRepository();
+        List<Appointment> appointments = appointmentRepository.findByEmpresa(empresaId);
+        allAppointments.clear();
+        for (Appointment appointment : appointments) {
+            String label = appointment.getDateTime() != null ? appointment.getDateTime().format(appointmentFormatter) : "Sin fecha";
+            allAppointments.add(new AppointmentOption(appointment.getId(), appointment.getVehicleId(), label));
+        }
+
+        filteredAppointments = new FilteredList<>(allAppointments, opt -> true);
+        cbCita.setItems(filteredAppointments);
+        cbCita.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(AppointmentOption object) {
+                return object == null ? "" : object.getLabel();
+            }
+
+            @Override
+            public AppointmentOption fromString(String string) {
+                if (string == null) {
+                    return null;
+                }
+                String s = string.trim().toLowerCase(Locale.ROOT);
+                if (s.isBlank()) {
+                    return null;
+                }
+                return allAppointments.stream().filter(o -> o.getLabel().toLowerCase(Locale.ROOT).equals(s)).findFirst().orElse(null);
+            }
+        });
+
+        cbCita.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(AppointmentOption item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.getLabel());
+            }
+        });
+        cbCita.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(AppointmentOption item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? "" : item.getLabel());
             }
@@ -292,6 +344,23 @@ public class ReparacionFormController {
                 && !selected.getClienteId().equals(clienteId)) {
             cbVehiculo.getSelectionModel().clearSelection();
             cbVehiculo.getEditor().clear();
+            updateAppointmentFilter(null);
+        }
+    }
+
+    private void updateAppointmentFilter(Long vehicleId) {
+        if (filteredAppointments == null) {
+            return;
+        }
+        filteredAppointments.setPredicate(opt -> vehicleId == null || opt.getVehicleId() == null || opt.getVehicleId().equals(vehicleId));
+
+        AppointmentOption selected = cbCita.getSelectionModel().getSelectedItem();
+        boolean selectedMatches = selected != null && (vehicleId == null || selected.getVehicleId() == null || selected.getVehicleId().equals(vehicleId));
+
+        if (filteredAppointments.size() == 1) {
+            cbCita.getSelectionModel().select(filteredAppointments.get(0));
+        } else if (!selectedMatches) {
+            cbCita.getSelectionModel().clearSelection();
         }
     }
 
@@ -324,6 +393,19 @@ public class ReparacionFormController {
             if (opt.getId().equals(vehicleId)) {
                 cbVehiculo.getSelectionModel().select(opt);
                 cbVehiculo.getEditor().setText(opt.getLabel());
+                updateAppointmentFilter(opt.getId());
+                return;
+            }
+        }
+    }
+
+    private void selectAppointmentById(Long appointmentId) {
+        if (appointmentId == null) {
+            return;
+        }
+        for (AppointmentOption opt : allAppointments) {
+            if (opt.getId().equals(appointmentId)) {
+                cbCita.getSelectionModel().select(opt);
                 return;
             }
         }
@@ -361,16 +443,8 @@ public class ReparacionFormController {
             throw new IllegalArgumentException("Debes seleccionar un vehículo.");
         }
 
-        Long citaId = null;
-        String citaStr = txtCitaId.getText();
-        if (citaStr != null && !citaStr.isBlank()) {
-            try {
-                citaId = Long.parseLong(citaStr.trim());
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("El ID de la cita debe ser numérico.");
-            }
-        }
-
+        AppointmentOption citaOpt = cbCita.getValue();
+        Long citaId = citaOpt != null ? citaOpt.getId() : null;
         String descripcion = txtDescripcion.getText();
         if (descripcion == null || descripcion.isBlank()) {
             throw new IllegalArgumentException("La descripción es obligatoria.");
@@ -518,6 +592,36 @@ public class ReparacionFormController {
 
         public Long getClienteId() {
             return clienteId;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
+    private static class AppointmentOption {
+
+        private final Long id;
+        private final Long vehicleId;
+        private final String label;
+
+        private AppointmentOption(Long id, Long vehicleId, String label) {
+            this.id = id;
+            this.vehicleId = vehicleId;
+            this.label = label;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public Long getVehicleId() {
+            return vehicleId;
         }
 
         public String getLabel() {

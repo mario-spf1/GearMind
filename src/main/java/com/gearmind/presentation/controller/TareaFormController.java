@@ -32,6 +32,8 @@ public class TareaFormController {
     @FXML
     private HBox boxEmpresa;
     @FXML
+    private Label lblEmpresa;
+    @FXML
     private ComboBox<EmpresaOption> cmbEmpresa;
     @FXML
     private ComboBox<RepairOption> cbReparacion;
@@ -152,7 +154,20 @@ public class TareaFormController {
                 boxEmpresa.setVisible(false);
                 boxEmpresa.setManaged(false);
             }
+            if (lblEmpresa != null) {
+                lblEmpresa.setVisible(false);
+                lblEmpresa.setManaged(false);
+            }
             return;
+        }
+        
+        if (boxEmpresa != null) {
+            boxEmpresa.setVisible(true);
+            boxEmpresa.setManaged(true);
+        }
+        if (lblEmpresa != null) {
+            lblEmpresa.setVisible(true);
+            lblEmpresa.setManaged(true);
         }
 
         empresas.clear();
@@ -416,7 +431,7 @@ public class TareaFormController {
         List<User> users = userRepository.findByEmpresaId(empresaId);
         allEmployees.add(new EmployeeOption(null, "Sin asignar"));
         for (User user : users) {
-            if (user.getRol() != UserRole.EMPLEADO) {
+            if (user.getRol() != UserRole.EMPLEADO && user.getRol() != UserRole.ADMIN) {
                 continue;
             }
             allEmployees.add(new EmployeeOption(user.getId(), user.getNombre() + " (ID " + user.getId() + ")"));

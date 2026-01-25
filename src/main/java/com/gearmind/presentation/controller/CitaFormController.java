@@ -12,8 +12,11 @@ import com.gearmind.domain.telegram.TelegramAppointmentRequest;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRepository;
 import com.gearmind.domain.user.UserRole;
+import com.gearmind.domain.vehicle.Vehicle;
+import com.gearmind.domain.vehicle.VehicleRepository;
 import com.gearmind.infrastructure.customer.MySqlCustomerRepository;
 import com.gearmind.infrastructure.auth.MySqlUserRepository;
+import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -40,7 +43,7 @@ public class CitaFormController {
     @FXML
     private ComboBox<CustomerOption> cbCliente;
     @FXML
-    private TextField txtVehiculoId;
+    private ComboBox<VehicleOption> cbVehiculo;
     @FXML
     private ComboBox<EmployeeOption> cbEmpleado;
     @FXML
@@ -53,8 +56,12 @@ public class CitaFormController {
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
     private final ObservableList<CustomerOption> allCustomers = FXCollections.observableArrayList();
     private final ObservableList<EmployeeOption> allEmployees = FXCollections.observableArrayList();
+    private final ObservableList<VehicleOption> allVehicles = FXCollections.observableArrayList();
+    private FilteredList<VehicleOption> filteredVehicles;
     private boolean settingClienteProgrammatically = false;
     private boolean settingEmpleadoProgrammatically = false;
+    private boolean settingVehiculoProgrammatically = false;
+    private String vehiculoSearchText = "";
     private AppointmentOrigin originOverride;
     private AppointmentStatus statusOverride;
 
@@ -74,7 +81,7 @@ public class CitaFormController {
             }
 
             if (existingAppointment.getVehicleId() != null) {
-                txtVehiculoId.setText(String.valueOf(existingAppointment.getVehicleId()));
+                selectVehicleById(existingAppointment.getVehicleId());
             }
 
             if (existingAppointment.getNotes() != null) {
@@ -106,7 +113,7 @@ public class CitaFormController {
         }
 
         if (request.getVehiculoId() != null) {
-            txtVehiculoId.setText(String.valueOf(request.getVehiculoId()));
+            selectVehicleById(request.getVehiculoId());
         }
 
         if (requestedDateTime != null) {
@@ -179,6 +186,7 @@ public class CitaFormController {
 
         cbCliente.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null) {
+                updateVehicleFilter(null);
                 return;
             }
             settingClienteProgrammatically = true;
@@ -187,6 +195,7 @@ public class CitaFormController {
             } finally {
                 settingClienteProgrammatically = false;
             }
+            updateVehicleFilter(newVal.getId());
         });
 
         cbCliente.setButtonCell(new ListCell<>() {
@@ -199,6 +208,83 @@ public class CitaFormController {
         cbCliente.setCellFactory(listView -> new ListCell<>() {
             @Override
             protected void updateItem(CustomerOption item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.getLabel());
+            }
+        });
+
+        VehicleRepository vehicleRepository = new MySqlVehicleRepository();
+        List<Vehicle> vehicles = vehicleRepository.findByEmpresaId(empresaId);
+        allVehicles.clear();
+        for (Vehicle v : vehicles) {
+            allVehicles.add(new VehicleOption(v.getId(), v.getClienteId(), buildVehicleLabel(v)));
+        }
+
+        filteredVehicles = new FilteredList<>(allVehicles, opt -> true);
+        cbVehiculo.setItems(filteredVehicles);
+        cbVehiculo.setEditable(true);
+        cbVehiculo.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(VehicleOption object) {
+                return object == null ? "" : object.getLabel();
+            }
+
+            @Override
+            public VehicleOption fromString(String string) {
+                if (string == null) {
+                    return null;
+                }
+                String s = string.trim().toLowerCase(Locale.ROOT);
+                if (s.isBlank()) {
+                    return null;
+                }
+                return allVehicles.stream().filter(o -> o.getLabel().toLowerCase(Locale.ROOT).equals(s)).findFirst().orElse(null);
+            }
+        });
+
+        cbVehiculo.getEditor().textProperty().addListener((obs, oldV, newV) -> {
+            if (settingVehiculoProgrammatically) {
+                return;
+            }
+
+            VehicleOption selected = cbVehiculo.getSelectionModel().getSelectedItem();
+            String nt = (newV == null ? "" : newV).trim();
+
+            if (selected != null && selected.getLabel() != null
+                    && selected.getLabel().equalsIgnoreCase(nt)) {
+                return;
+            }
+
+            vehiculoSearchText = nt.toLowerCase(Locale.ROOT);
+            updateVehicleFilter(cbCliente.getValue() != null ? cbCliente.getValue().getId() : null);
+
+            if (cbVehiculo.isFocused() && !cbVehiculo.isShowing()) {
+                cbVehiculo.show();
+            }
+        });
+
+        cbVehiculo.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null) {
+                return;
+            }
+            settingVehiculoProgrammatically = true;
+            try {
+                cbVehiculo.getEditor().setText(newVal.getLabel());
+            } finally {
+                settingVehiculoProgrammatically = false;
+            }
+        });
+
+        cbVehiculo.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(VehicleOption item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.getLabel());
+            }
+        });
+        cbVehiculo.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(VehicleOption item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? "" : item.getLabel());
             }
@@ -331,6 +417,7 @@ public class CitaFormController {
             } finally {
                 settingClienteProgrammatically = false;
             }
+            updateVehicleFilter(customerId);
         });
     }
 
@@ -343,6 +430,63 @@ public class CitaFormController {
                 settingEmpleadoProgrammatically = false;
             }
         });
+    }
+
+    private void selectVehicleById(Long vehicleId) {
+        if (vehicleId == null) {
+            return;
+        }
+        allVehicles.stream().filter(o -> o.getId().equals(vehicleId)).findFirst().ifPresent(opt -> {
+            settingVehiculoProgrammatically = true;
+            try {
+                cbVehiculo.setValue(opt);
+                cbVehiculo.getEditor().setText(opt.getLabel());
+            } finally {
+                settingVehiculoProgrammatically = false;
+            }
+        });
+    }
+
+    private void updateVehicleFilter(Long clienteId) {
+        if (filteredVehicles == null) {
+            return;
+        }
+        filteredVehicles.setPredicate(opt -> {
+            boolean matchCliente = clienteId == null || opt.getClienteId() == null || opt.getClienteId().equals(clienteId);
+            boolean matchTexto = vehiculoSearchText == null || vehiculoSearchText.isBlank()
+                    || opt.getLabel().toLowerCase(Locale.ROOT).contains(vehiculoSearchText);
+            return matchCliente && matchTexto;
+        });
+
+        VehicleOption selected = cbVehiculo.getSelectionModel().getSelectedItem();
+        if (selected != null && clienteId != null && selected.getClienteId() != null
+                && !selected.getClienteId().equals(clienteId)) {
+            cbVehiculo.getSelectionModel().clearSelection();
+            cbVehiculo.getEditor().clear();
+        }
+    }
+
+    private String buildVehicleLabel(Vehicle vehicle) {
+        if (vehicle == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        if (vehicle.getMatricula() != null && !vehicle.getMatricula().isBlank()) {
+            sb.append(vehicle.getMatricula());
+        }
+        if (vehicle.getMarca() != null && !vehicle.getMarca().isBlank()) {
+            if (sb.length() > 0) {
+                sb.append(" · ");
+            }
+            sb.append(vehicle.getMarca());
+        }
+        if (vehicle.getModelo() != null && !vehicle.getModelo().isBlank()) {
+            if (sb.length() > 0) {
+                sb.append(" ");
+            }
+            sb.append(vehicle.getModelo());
+        }
+        return sb.toString();
     }
 
     @FXML
@@ -373,13 +517,9 @@ public class CitaFormController {
         }
         Long clienteId = clienteOpt.getId();
         Long vehiculoId = null;
-        String vehiculoStr = txtVehiculoId.getText();
-        if (vehiculoStr != null && !vehiculoStr.isBlank()) {
-            try {
-                vehiculoId = Long.parseLong(vehiculoStr.trim());
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("El ID de vehículo debe ser numérico.");
-            }
+        VehicleOption vehiculoOpt = cbVehiculo.getValue();
+        if (vehiculoOpt != null) {
+            vehiculoId = vehiculoOpt.getId();
         }
 
         LocalDate fecha = dpFecha.getValue();
@@ -508,6 +648,36 @@ public class CitaFormController {
 
         public UserRole getRole() {
             return role;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
+    public static class VehicleOption {
+
+        private final Long id;
+        private final Long clienteId;
+        private final String label;
+
+        public VehicleOption(Long id, Long clienteId, String label) {
+            this.id = id;
+            this.clienteId = clienteId;
+            this.label = label;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public Long getClienteId() {
+            return clienteId;
+        }
+
+        public String getLabel() {
+            return label;
         }
 
         @Override

@@ -29,8 +29,8 @@
                         <TextField fx:id="txtHora" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Cliente:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                         <ComboBox fx:id="cbCliente" editable="true" GridPane.rowIndex="2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
-                        <Label text="Vehículo ID:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                        <TextField fx:id="txtVehiculoId" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                        <Label text="Vehículo:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cbVehiculo" editable="true" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Empleado:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
                         <ComboBox fx:id="cbEmpleado" editable="true" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
                         <Label text="Notas:" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.valignment="TOP"/>
