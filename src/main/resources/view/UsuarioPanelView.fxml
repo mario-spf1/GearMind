@@ -12,55 +12,79 @@
 
     <children>
 
-        <HBox alignment="CENTER_LEFT" spacing="12">
-            <children>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <children>
-                        <Label text="Mi panel" styleClass="tfx-title-xl"/>
-                        <Label fx:id="lblUsuarioNombre" text="Usuario" styleClass="tfx-subtitle"/>
-                    </children>
-                </VBox>
-                <Button fx:id="btnEditarUsuario" text="Editar usuario" onAction="#onEditarUsuario" styleClass="button tfx-btn-primary"/>
-            </children>
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="Mi panel" styleClass="tfx-title-xl"/>
+                <Label fx:id="lblUsuarioNombre" text="Usuario" styleClass="tfx-subtitle"/>
+            </VBox>
+            <Button fx:id="btnEditarUsuario" text="Editar perfil" onAction="#onEditarUsuario" styleClass="button tfx-btn-primary"/>
         </HBox>
 
-        <HBox spacing="12">
-            <children>
-                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
-                    <children>
-                        <Label text="Tareas asignadas" styleClass="tfx-kpi-title"/>
-                        <Label fx:id="lblTareasAsignadas" text="0" styleClass="tfx-kpi-number"/>
-                        <Label text="Tareas actuales asignadas a ti" styleClass="tfx-muted"/>
-                    </children>
-                </VBox>
-                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
-                    <children>
-                        <Label text="Reparaciones" styleClass="tfx-kpi-title"/>
-                        <Label fx:id="lblReparaciones" text="0" styleClass="tfx-kpi-number"/>
-                        <Label text="Reparaciones activas de la empresa" styleClass="tfx-muted"/>
-                    </children>
-                </VBox>
-                <VBox styleClass="tfx-card-kpi" HBox.hgrow="ALWAYS">
-                    <children>
-                        <Label text="Tiempo trabajado" styleClass="tfx-kpi-title"/>
-                        <Label fx:id="lblTiempoTrabajado" text="—" styleClass="tfx-kpi-number"/>
-                        <Label text="Calculado desde tu último fichaje" styleClass="tfx-muted"/>
-                    </children>
-                </VBox>
-            </children>
-        </HBox>
+        <GridPane hgap="12" vgap="12">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+            </columnConstraints>
+            <VBox styleClass="tfx-card-kpi tfx-kpi-accent" GridPane.columnIndex="0">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label text="⏱️" styleClass="tfx-kpi-icon"/>
+                    <Label text="Horas hoy" styleClass="tfx-kpi-title"/>
+                </HBox>
+                <Label fx:id="lblHorasHoy" text="00:00 h" styleClass="tfx-kpi-number"/>
+                <Label text="Tiempo total trabajado hoy" styleClass="tfx-muted"/>
+            </VBox>
+            <VBox styleClass="tfx-card-kpi tfx-kpi-success" GridPane.columnIndex="1">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label text="✅" styleClass="tfx-kpi-icon"/>
+                    <Label text="Tareas pendientes" styleClass="tfx-kpi-title"/>
+                </HBox>
+                <Label fx:id="lblTareasAsignadas" text="0" styleClass="tfx-kpi-number"/>
+                <Label text="Tareas que tienes asignadas" styleClass="tfx-muted"/>
+            </VBox>
+            <VBox styleClass="tfx-card-kpi tfx-kpi-warning" GridPane.columnIndex="2">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label text="🛠️" styleClass="tfx-kpi-icon"/>
+                    <Label text="Reparaciones activas" styleClass="tfx-kpi-title"/>
+                </HBox>
+                <Label fx:id="lblReparaciones" text="0" styleClass="tfx-kpi-number"/>
+                <Label text="Reparaciones abiertas del taller" styleClass="tfx-muted"/>
+            </VBox>
+            <VBox styleClass="tfx-card-kpi tfx-kpi-neutral" GridPane.columnIndex="3">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label text="📌" styleClass="tfx-kpi-icon"/>
+                    <Label text="Último fichaje" styleClass="tfx-kpi-title"/>
+                </HBox>
+                <Label fx:id="lblUltimoFichaje" text="—" styleClass="tfx-kpi-number"/>
+                <Label fx:id="lblEstadoFichaje" text="Estado: —" styleClass="tfx-muted"/>
+            </VBox>
+        </GridPane>
 
-        <VBox spacing="10" styleClass="tfx-card">
-            <padding>
-                <Insets top="12" right="12" bottom="12" left="12"/>
-            </padding>
-            <children>
-                <Label text="Resumen de cuenta"/>
+        <GridPane hgap="12" vgap="12">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="65" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="35" hgrow="ALWAYS"/>
+            </columnConstraints>
+            <VBox spacing="10" styleClass="tfx-card" GridPane.columnIndex="0">
+                <Label text="Resumen de cuenta" styleClass="tfx-label-strong"/>
                 <Label fx:id="lblEmail" text="Email" styleClass="tfx-muted"/>
                 <Label fx:id="lblRol" text="Rol" styleClass="tfx-muted"/>
                 <Label fx:id="lblEmpresa" text="Empresa" styleClass="tfx-muted"/>
-            </children>
-        </VBox>
+
+                <Separator/>
+                <Label text="Acciones rápidas" styleClass="tfx-label-strong"/>
+                <Label text="Edita tu perfil para mantener tu información actualizada." styleClass="tfx-muted"/>
+            </VBox>
+            <VBox spacing="10" styleClass="tfx-card tfx-dashboard-side" GridPane.columnIndex="1">
+                <Label text="Actividad de hoy" styleClass="tfx-label-strong"/>
+                <VBox spacing="6" styleClass="tfx-card-subtle">
+                    <Label fx:id="lblHorasDetalle" text="• 00:00 h trabajadas" styleClass="tfx-muted"/>
+                    <Label fx:id="lblTareasDetalle" text="• 0 tareas pendientes" styleClass="tfx-muted"/>
+                    <Label fx:id="lblReparacionesDetalle" text="• 0 reparaciones activas" styleClass="tfx-muted"/>
+                </VBox>
+            </VBox>
+        </GridPane>
 
     </children>
 </VBox>

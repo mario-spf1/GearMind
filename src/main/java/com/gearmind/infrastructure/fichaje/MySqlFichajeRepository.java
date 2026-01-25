@@ -7,12 +7,16 @@ import com.gearmind.infrastructure.database.DataSourceFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -158,6 +162,8 @@ public class MySqlFichajeRepository implements FichajeRepository {
                     fichaje.setId(rs.getLong(1));
                 }
             }
+            LocalDate fecha = fichaje.getFecha() != null ? fichaje.getFecha().toLocalDate() : LocalDate.now();
+            updateDailySummary(fichaje.getEmpresaId(), fichaje.getUserId(), fecha);
         } catch (SQLException e) {
             throw new RuntimeException("Error al registrar fichaje", e);
         }
@@ -175,5 +181,52 @@ public class MySqlFichajeRepository implements FichajeRepository {
         fichaje.setUsuarioNombre(rs.getString("usuario_nombre"));
         fichaje.setEmpresaNombre(rs.getString("empresa_nombre"));
         return fichaje;
+    }
+
+    private void updateDailySummary(Long empresaId, Long userId, LocalDate date) {
+        List<Fichaje> fichajes = findByUserAndDate(userId, date);
+        Duration total = calculateWorkedTotal(fichajes);
+        int totalMinutes = Math.toIntExact(total.toMinutes());
+
+        String sql = """
+                INSERT INTO fichaje_resumen_diario (empresa_id, user_id, fecha, minutos_totales, actualizado_en)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON DUPLICATE KEY UPDATE minutos_totales = VALUES(minutos_totales),
+                                        actualizado_en = CURRENT_TIMESTAMP
+                """;
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, empresaId);
+            ps.setLong(2, userId);
+            ps.setDate(3, Date.valueOf(date));
+            ps.setInt(4, totalMinutes);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al actualizar el resumen diario de fichajes", e);
+        }
+    }
+
+    private Duration calculateWorkedTotal(List<Fichaje> fichajes) {
+        Duration total = Duration.ZERO;
+        LocalDateTime open = null;
+        for (Fichaje fichaje : fichajes) {
+            if (fichaje.getFecha() == null) {
+                continue;
+            }
+            if (fichaje.getMovimiento() == FichajeMovimiento.ENTRADA) {
+                open = fichaje.getFecha();
+            } else if (fichaje.getMovimiento() == FichajeMovimiento.SALIDA) {
+                if (open != null) {
+                    total = total.plus(Duration.between(open, fichaje.getFecha()));
+                    open = null;
+                }
+            }
+        }
+
+        if (open != null) {
+            total = total.plus(Duration.between(open, LocalDateTime.now()));
+        }
+
+        return total;
     }
 }

@@ -34,13 +34,23 @@ public class UsuarioPanelController {
     @FXML
     private Label lblReparaciones;
     @FXML
-    private Label lblTiempoTrabajado;
+    private Label lblHorasHoy;
+    @FXML
+    private Label lblUltimoFichaje;
+    @FXML
+    private Label lblEstadoFichaje;
     @FXML
     private Label lblEmail;
     @FXML
     private Label lblRol;
     @FXML
     private Label lblEmpresa;
+    @FXML
+    private Label lblHorasDetalle;
+    @FXML
+    private Label lblTareasDetalle;
+    @FXML
+    private Label lblReparacionesDetalle;
     @FXML
     private Button btnEditarUsuario;
 
@@ -105,6 +115,12 @@ public class UsuarioPanelController {
         if (lblReparaciones != null) {
             lblReparaciones.setText(String.valueOf(stats.reparacionesEmpresa()));
         }
+        if (lblTareasDetalle != null) {
+            lblTareasDetalle.setText("• " + stats.tareasAsignadas() + " tareas pendientes");
+        }
+        if (lblReparacionesDetalle != null) {
+            lblReparacionesDetalle.setText("• " + stats.reparacionesEmpresa() + " reparaciones activas");
+        }
     }
 
     private void loadFichajeStatus() {
@@ -113,12 +129,35 @@ public class UsuarioPanelController {
         }
 
         Optional<FichajeStatus> status = fichajeStatusUseCase.execute(AuthContext.getCurrentUser().getId());
-        if (lblTiempoTrabajado != null) {
-            if (status.isEmpty()) {
-                lblTiempoTrabajado.setText("—");
-            } else {
-                lblTiempoTrabajado.setText(formatDuration(status.get().tiempoTrabajado(), status.get().fechaUltimoMovimiento()));
+        if (status.isEmpty()) {
+            if (lblHorasHoy != null) {
+                lblHorasHoy.setText("—");
             }
+            if (lblUltimoFichaje != null) {
+                lblUltimoFichaje.setText("—");
+            }
+            if (lblEstadoFichaje != null) {
+                lblEstadoFichaje.setText("Estado: —");
+            }
+            if (lblHorasDetalle != null) {
+                lblHorasDetalle.setText("• 00:00 h trabajadas");
+            }
+            return;
+        }
+
+        FichajeStatus current = status.get();
+        String horasHoy = formatDuration(current.tiempoTrabajado());
+        if (lblHorasHoy != null) {
+            lblHorasHoy.setText(horasHoy);
+        }
+        if (lblUltimoFichaje != null) {
+            lblUltimoFichaje.setText(formatTime(current.fechaUltimoMovimiento()));
+        }
+        if (lblEstadoFichaje != null) {
+            lblEstadoFichaje.setText("Estado: " + formatMovimiento(current.movimientoActual()));
+        }
+        if (lblHorasDetalle != null) {
+            lblHorasDetalle.setText("• " + horasHoy + " trabajadas");
         }
     }
 
@@ -155,7 +194,7 @@ public class UsuarioPanelController {
         }
     }
 
-    private String formatDuration(Duration duration, LocalDateTime from) {
+    private String formatDuration(Duration duration) {
         if (duration == null) {
             return "00:00 h";
         }
@@ -163,5 +202,21 @@ public class UsuarioPanelController {
         long hours = totalMinutes / 60;
         long minutes = totalMinutes % 60;
         return String.format("%02d:%02d h", hours, minutes);
+    }
+
+    private String
+            formatTime(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return "—";
+        }
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
+        return dateTime.format(formatter);
+    }
+
+    private String formatMovimiento(FichajeMovimiento movimiento) {
+        if (movimiento == null) {
+            return "—";
+        }
+        return movimiento == FichajeMovimiento.ENTRADA ? "En sesión" : "Fuera";
     }
 }
