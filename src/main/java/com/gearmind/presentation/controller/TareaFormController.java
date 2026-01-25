@@ -19,9 +19,9 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Locale;
 
@@ -40,7 +40,7 @@ public class TareaFormController {
     @FXML
     private TextField txtTitulo;
     @FXML
-    private TextField txtFechaLimite;
+    private DatePicker dpFechaLimite;
     @FXML
     private TextArea txtDescripcion;
 
@@ -74,7 +74,7 @@ public class TareaFormController {
             txtTitulo.setText(existingTask.getTitulo());
             txtDescripcion.setText(existingTask.getDescripcion());
             if (existingTask.getFechaLimite() != null) {
-                txtFechaLimite.setText(formatFechaLimite(existingTask.getFechaLimite()));
+                dpFechaLimite.setValue(existingTask.getFechaLimite().toLocalDate());
             }
 
             if (AuthContext.isSuperAdmin()) {
@@ -134,7 +134,7 @@ public class TareaFormController {
         request.setTitulo(txtTitulo.getText());
         request.setDescripcion(txtDescripcion.getText());
         request.setEstado(existingTask != null ? existingTask.getEstado() : TaskStatus.PENDIENTE);
-        request.setFechaLimite(parseFechaLimite(txtFechaLimite.getText()));
+        request.setFechaLimite(resolveFechaLimite());
         return request;
     }
 
@@ -532,22 +532,12 @@ public class TareaFormController {
         return repo.findAll().stream().map(c -> new EmpresaOption(c.getId(), c.getNombre())).toList();
     }
 
-    private LocalDateTime parseFechaLimite(String raw) {
-        if (raw == null || raw.isBlank()) {
+    private LocalDateTime resolveFechaLimite() {
+        LocalDate selected = dpFechaLimite != null ? dpFechaLimite.getValue() : null;
+        if (selected == null) {
             return null;
         }
-        try {
-            return LocalDateTime.parse(raw.trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-        } catch (DateTimeParseException ex) {
-            throw new IllegalArgumentException("La fecha límite debe tener el formato dd/MM/yyyy HH:mm.");
-        }
-    }
-
-    private String formatFechaLimite(LocalDateTime fechaLimite) {
-        if (fechaLimite == null) {
-            return "";
-        }
-        return fechaLimite.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        return selected.atTime(LocalTime.MIDNIGHT);
     }
 
     private void close() {

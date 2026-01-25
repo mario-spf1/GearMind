@@ -25,6 +25,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.geometry.Pos;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -159,12 +160,14 @@ public class TareasController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-warning", "tfx-badge-danger");
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-warning", "tfx-badge-danger");
                 if (empty || item == null) {
                     setText(null);
+                    setAlignment(Pos.CENTER);
                 } else {
                     setText(item);
                     getStyleClass().add("tfx-badge");
+                    getStyleClass().add("tfx-table-badge");
                     switch (item) {
                         case "Completada" ->
                             getStyleClass().add("tfx-badge-success");
@@ -177,6 +180,7 @@ public class TareasController {
                         default -> {
                         }
                     }
+                    setAlignment(Pos.CENTER);
                 }
             }
         });
@@ -186,12 +190,14 @@ public class TareasController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-warning", "tfx-badge-danger");
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-warning", "tfx-badge-danger");
                 if (empty || item == null) {
                     setText(null);
+                    setAlignment(Pos.CENTER);
                 } else {
                     setText(item);
                     getStyleClass().add("tfx-badge");
+                    getStyleClass().add("tfx-table-badge");
                     switch (item) {
                         case "Alta" ->
                             getStyleClass().add("tfx-badge-danger");
@@ -202,6 +208,7 @@ public class TareasController {
                         default -> {
                         }
                     }
+                    setAlignment(Pos.CENTER);
                 }
             }
         });
@@ -215,10 +222,11 @@ public class TareasController {
             private final HBox box = new HBox(8, btnEditar, btnEstado, btnAsignar, btnPrioridad);
 
             {
-                btnEditar.getStyleClass().add("tfx-icon-btn");
-                btnEstado.getStyleClass().add("tfx-icon-btn-secondary");
-                btnAsignar.getStyleClass().add("tfx-icon-btn-secondary");
-                btnPrioridad.getStyleClass().add("tfx-icon-btn-secondary");
+                box.getStyleClass().add("tfx-table-actions");
+                btnEditar.getStyleClass().add("tfx-table-action-btn");
+                btnEstado.getStyleClass().add("tfx-table-action-btn");
+                btnAsignar.getStyleClass().add("tfx-table-action-btn");
+                btnPrioridad.getStyleClass().add("tfx-table-action-btn");
 
                 btnEditar.setOnAction(e -> {
                     Task t = (getTableRow() != null) ? getTableRow().getItem() : null;
@@ -268,6 +276,7 @@ public class TareasController {
                 setGraphic(box);
             }
         });
+        colAcciones.setSortable(false);
 
         if (cmbPageSize != null) {
             cmbPageSize.setItems(FXCollections.observableArrayList(10, 25, 50, 100));
@@ -716,8 +725,10 @@ public class TareasController {
     }
 
     private record EmpresaOption(long id, String label) {
+
     }
 
     private record EmployeeOption(Long id, String label) {
+
     }
 }

@@ -22,6 +22,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.geometry.Pos;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javax.sql.DataSource;
@@ -123,14 +124,17 @@ public class UsuariosController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-danger");
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-danger");
 
                 if (empty || item == null) {
                     setText(null);
+                    setAlignment(Pos.CENTER);
                 } else {
                     setText(item);
                     getStyleClass().add("tfx-badge");
+                    getStyleClass().add("tfx-table-badge");
                     getStyleClass().add("Activo".equalsIgnoreCase(item) ? "tfx-badge-success" : "tfx-badge-danger");
+                    setAlignment(Pos.CENTER);
                 }
             }
         });
@@ -247,10 +251,10 @@ public class UsuariosController {
             private final HBox box = new HBox(8, btnEditar, btnToggle, btnEliminar);
 
             {
-                btnEditar.getStyleClass().add("tfx-icon-btn");
-                btnToggle.getStyleClass().add("tfx-icon-btn");
-                btnEliminar.getStyleClass().add("tfx-icon-btn-danger");
-
+                box.getStyleClass().add("tfx-table-actions");
+                btnEditar.getStyleClass().add("tfx-table-action-btn");
+                btnToggle.getStyleClass().add("tfx-table-action-btn");
+                btnEliminar.getStyleClass().addAll("tfx-table-action-btn", "tfx-table-action-danger");
                 btnEditar.setTooltip(new Tooltip("Editar usuario"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
                 btnEliminar.setTooltip(new Tooltip("Eliminar usuario"));
@@ -285,14 +289,14 @@ public class UsuariosController {
                     return;
                 }
 
-                btnToggle.getStyleClass().removeAll("tfx-icon-btn-danger", "tfx-icon-btn-success");
-
+                btnToggle.getStyleClass().removeAll("tfx-table-action-danger", "tfx-table-action-success");
+                
                 if (user.isActivo()) {
                     btnToggle.setText("Desactivar");
-                    btnToggle.getStyleClass().add("tfx-icon-btn-danger");
+                    btnToggle.getStyleClass().add("tfx-table-action-danger");
                 } else {
                     btnToggle.setText("Activar");
-                    btnToggle.getStyleClass().add("tfx-icon-btn-success");
+                    btnToggle.getStyleClass().add("tfx-table-action-success");
                 }
 
                 btnEliminar.setVisible(AuthContext.isAdminOrSuperAdmin());

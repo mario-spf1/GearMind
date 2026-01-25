@@ -19,6 +19,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.geometry.Pos;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -129,18 +130,20 @@ public class EmpresasController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-danger");
-
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-danger");
                 if (empty || item == null) {
                     setText(null);
+                    setAlignment(Pos.CENTER);
                 } else {
                     setText(item);
                     getStyleClass().add("tfx-badge");
+                    getStyleClass().add("tfx-table-badge");
                     if ("Activa".equalsIgnoreCase(item)) {
                         getStyleClass().add("tfx-badge-success");
                     } else {
                         getStyleClass().add("tfx-badge-danger");
                     }
+                    setAlignment(Pos.CENTER);
                 }
             }
         });
@@ -229,9 +232,9 @@ public class EmpresasController {
             private final HBox container = new HBox(8, btnEditar, btnToggle);
 
             {
-                btnEditar.getStyleClass().add("tfx-icon-btn");
-                btnToggle.getStyleClass().add("tfx-icon-btn");
-
+                container.getStyleClass().add("tfx-table-actions");
+                btnEditar.getStyleClass().add("tfx-table-action-btn");
+                btnToggle.getStyleClass().add("tfx-table-action-btn");
                 btnEditar.setTooltip(new Tooltip("Editar empresa"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
 
@@ -259,15 +262,15 @@ public class EmpresasController {
                     return;
                 }
 
-                btnToggle.getStyleClass().removeAll("tfx-icon-btn-danger", "tfx-icon-btn-success");
-
+                btnToggle.getStyleClass().removeAll("tfx-table-action-danger", "tfx-table-action-success");
+                
                 if (empresa.isActiva()) {
                     btnToggle.setText("Desactivar");
-                    btnToggle.getStyleClass().add("tfx-icon-btn-danger");
+                    btnToggle.getStyleClass().add("tfx-table-action-danger");
                     btnToggle.setTooltip(new Tooltip("Desactivar empresa"));
                 } else {
                     btnToggle.setText("Activar");
-                    btnToggle.getStyleClass().add("tfx-icon-btn-success");
+                    btnToggle.getStyleClass().add("tfx-table-action-success");
                     btnToggle.setTooltip(new Tooltip("Activar empresa"));
                 }
 
