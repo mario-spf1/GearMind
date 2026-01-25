@@ -33,23 +33,23 @@
 }
 
 .tfx-btn-reload {
-    -fx-background-color: #151e2d;
+    -fx-background-color: rgba(54,208,178,0.14);
     -fx-text-fill: -tfx-text;
-    -fx-border-color: rgba(91,139,255,0.28);
+    -fx-border-color: rgba(54,208,178,0.45);
     -fx-border-width: 1;
-    -fx-padding: 8 12;
-    -fx-font-size: 12px;
-    -fx-font-weight: 600;
+    -fx-padding: 10 14;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
     -fx-background-radius: 10;
     -fx-border-radius: 10;
 }
 
 .tfx-btn-reload:hover {
-    -fx-background-color: #1a2436;
+    -fx-background-color: rgba(54,208,178,0.22);
 }
 
 .tfx-btn-reload:armed {
-    -fx-background-color: #111827;
+    -fx-background-color: rgba(54,208,178,0.3);
 }
 
 .tfx-icon-btn {

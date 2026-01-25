@@ -19,7 +19,7 @@
                 <ComboBox fx:id="cmbPageSize" prefWidth="90.0"/>
                 <Label text="por página"/>
                 <Button fx:id="btnSolicitudesBot" text="Solicitudes bot" onAction="#onSolicitudesBot" styleClass="button-secondary"/>
-                <Button text="Refrescar" onAction="#onRefrescar" styleClass="button-secondary tfx-btn-reload"/>
+                <Button text="Refrescar" onAction="#onRefrescar" styleClass="tfx-btn-reload"/>
                 <Button text="Nueva cita" onAction="#onNuevaCita" styleClass="tfx-btn-primary"/>
             </children>
             <padding>
