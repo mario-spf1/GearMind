@@ -31,6 +31,7 @@ import com.gearmind.infrastructure.telegram.TelegramConfig;
 import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
 import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -40,6 +41,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
@@ -408,7 +410,8 @@ public class FacturaFormController {
         tblLineas.setItems(lineas);
         tblLineas.setEditable(true);
         tblLineas.setFixedCellSize(28);
-
+        tblLineas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        configureColumnWidths();
         if (colProducto != null) {
             colProducto.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(getProductOption(c.getValue().getProductoId())));
             colProducto.setCellFactory(col -> new ComboBoxTableCell<>(new StringConverter<>() {
@@ -467,6 +470,27 @@ public class FacturaFormController {
             }
         };
 
+        StringConverter<BigDecimal> currencyConverter = new StringConverter<>() {
+            @Override
+            public String toString(BigDecimal value) {
+                return formatMoney(value);
+            }
+
+            @Override
+            public BigDecimal fromString(String string) {
+                if (string == null || string.isBlank()) {
+                    return BigDecimal.ZERO;
+                }
+                String sanitized = string.replace("€", "").replace(" ", "");
+                sanitized = sanitized.replace(".", "").replace(",", ".");
+                try {
+                    return new BigDecimal(sanitized);
+                } catch (NumberFormatException e) {
+                    return BigDecimal.ZERO;
+                }
+            }
+        };
+
         colCantidad.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getCantidad()));
         colCantidad.setCellFactory(TextFieldTableCell.forTableColumn(decimalConverter));
         colCantidad.setOnEditCommit(event -> {
@@ -475,7 +499,7 @@ public class FacturaFormController {
         });
 
         colPrecio.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getPrecio()));
-        colPrecio.setCellFactory(TextFieldTableCell.forTableColumn(decimalConverter));
+        colPrecio.setCellFactory(TextFieldTableCell.forTableColumn(currencyConverter));
         colPrecio.setOnEditCommit(event -> {
             event.getRowValue().setPrecio(event.getNewValue());
             updateTotals();
@@ -489,12 +513,16 @@ public class FacturaFormController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(moneyFormat.format(item));
+                    setText(formatMoney(item));
                 }
             }
         });
 
-        tblLineas.getItems().addListener((javafx.collections.ListChangeListener<InvoiceLine>) c -> updateTotals());
+        tblLineas.getItems().addListener((javafx.collections.ListChangeListener<InvoiceLine>) c -> {
+            updateTotals();
+            updateTableHeight();
+        });
+        updateTableHeight();
     }
 
     private void updateTotals() {
@@ -512,17 +540,64 @@ public class FacturaFormController {
         BigDecimal total = subtotal.add(iva);
 
         if (lblSubtotal != null) {
-            lblSubtotal.setText(moneyFormat.format(subtotal));
+            lblSubtotal.setText(formatMoney(subtotal));
         }
         if (lblIva != null) {
-            lblIva.setText(moneyFormat.format(iva));
+            lblIva.setText(formatMoney(iva));
+
         }
         if (lblTotal != null) {
-            lblTotal.setText(moneyFormat.format(total));
+            lblTotal.setText(formatMoney(total));
         }
 
         tblLineas.refresh();
         enableSaveIfReady();
+    }
+
+    private void configureColumnWidths() {
+        if (colProducto != null) {
+            colProducto.setPrefWidth(30);
+            colProducto.setMaxWidth(1f * Integer.MAX_VALUE);
+        }
+        if (colDescripcion != null) {
+            colDescripcion.setPrefWidth(30);
+            colDescripcion.setMaxWidth(1f * Integer.MAX_VALUE);
+        }
+        if (colCantidad != null) {
+            colCantidad.setPrefWidth(10);
+            colCantidad.setMaxWidth(1f * Integer.MAX_VALUE);
+        }
+        if (colPrecio != null) {
+            colPrecio.setPrefWidth(15);
+            colPrecio.setMaxWidth(1f * Integer.MAX_VALUE);
+        }
+        if (colTotal != null) {
+            colTotal.setPrefWidth(15);
+            colTotal.setMaxWidth(1f * Integer.MAX_VALUE);
+        }
+    }
+
+    private void updateTableHeight() {
+        if (tblLineas == null) {
+            return;
+        }
+        int maxVisibleRows = 10;
+        int rows = Math.min(lineas.size(), maxVisibleRows);
+        double headerHeight = 28;
+        double tableHeight = headerHeight + rows * tblLineas.getFixedCellSize() + 2;
+        tblLineas.setPrefHeight(tableHeight);
+        tblLineas.setMinHeight(Region.USE_PREF_SIZE);
+        tblLineas.setMaxHeight(Region.USE_PREF_SIZE);
+        Platform.runLater(() -> {
+            if (tblLineas.getScene() != null && tblLineas.getScene().getWindow() instanceof Stage stage) {
+                stage.sizeToScene();
+            }
+        });
+    }
+
+    private String formatMoney(BigDecimal value) {
+        BigDecimal resolved = value == null ? BigDecimal.ZERO : value;
+        return moneyFormat.format(resolved) + " €";
     }
 
     private int parseIvaPercent() {

@@ -407,6 +407,27 @@ public class PresupuestoFormController {
             }
         };
 
+        StringConverter<BigDecimal> currencyConverter = new StringConverter<>() {
+            @Override
+            public String toString(BigDecimal value) {
+                return formatMoney(value);
+            }
+
+            @Override
+            public BigDecimal fromString(String string) {
+                if (string == null || string.isBlank()) {
+                    return BigDecimal.ZERO;
+                }
+                String sanitized = string.replace("€", "").replace(" ", "");
+                sanitized = sanitized.replace(".", "").replace(",", ".");
+                try {
+                    return new BigDecimal(sanitized);
+                } catch (NumberFormatException e) {
+                    return BigDecimal.ZERO;
+                }
+            }
+        };
+
         colCantidad.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getCantidad()));
         colCantidad.setCellFactory(TextFieldTableCell.forTableColumn(decimalConverter));
         colCantidad.setOnEditCommit(event -> {
@@ -415,7 +436,7 @@ public class PresupuestoFormController {
         });
 
         colPrecio.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getPrecio()));
-        colPrecio.setCellFactory(TextFieldTableCell.forTableColumn(decimalConverter));
+        colPrecio.setCellFactory(TextFieldTableCell.forTableColumn(currencyConverter));
         colPrecio.setOnEditCommit(event -> {
             event.getRowValue().setPrecio(event.getNewValue());
             updateTotals();
@@ -429,7 +450,7 @@ public class PresupuestoFormController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(moneyFormat.format(item));
+                    setText(formatMoney(item));
                 }
             }
         });
@@ -452,11 +473,16 @@ public class PresupuestoFormController {
         }
 
         if (lblTotal != null) {
-            lblTotal.setText(moneyFormat.format(total));
+            lblTotal.setText(formatMoney(total));
         }
 
         tblLineas.refresh();
         enableSaveIfReady();
+    }
+
+    private String formatMoney(BigDecimal value) {
+        BigDecimal resolved = value == null ? BigDecimal.ZERO : value;
+        return moneyFormat.format(resolved) + " €";
     }
 
     private void configureColumnWidths() {
