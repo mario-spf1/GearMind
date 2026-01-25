@@ -56,7 +56,6 @@
                             </HBox>
                             <TextField fx:id="filterClienteField" promptText="Cliente" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
                             <TextField fx:id="filterVehiculoField" promptText="Vehículo" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
-                            <TextField fx:id="filterCitaField" promptText="Cita" styleClass="tfx-filter-field" HBox.hgrow="ALWAYS"/>
                             <HBox spacing="8" alignment="CENTER_LEFT">
                                 <Label text="Estado" styleClass="tfx-filter-label"/>
                                 <ComboBox fx:id="filterEstadoCombo" prefWidth="170" styleClass="tfx-filter-field"/>
@@ -88,11 +87,10 @@
                         <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="160"/>
                         <TableColumn fx:id="colCliente" text="Cliente"/>
                         <TableColumn fx:id="colVehiculo" text="Vehículo"/>
-                        <TableColumn fx:id="colCita" text="Cita" prefWidth="90"/>
-                        <TableColumn fx:id="colDescripcion" text="Descripción"/>
+                        <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="220"/>
                         <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
-                        <TableColumn fx:id="colImporteEstimado" text="Estimado" prefWidth="110"/>
-                        <TableColumn fx:id="colImporteFinal" text="Final" prefWidth="110"/>
+                        <TableColumn fx:id="colImporteEstimado" text="Estimado" prefWidth="75"/>
+                        <TableColumn fx:id="colImporteFinal" text="Final" prefWidth="75"/>
                         <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="220"/>
                     </columns>
                 </TableView>

@@ -20,6 +20,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -47,8 +48,6 @@ public class ReparacionesController {
     @FXML
     private TableColumn<Repair, String> colVehiculo;
     @FXML
-    private TableColumn<Repair, String> colCita;
-    @FXML
     private TableColumn<Repair, String> colDescripcion;
     @FXML
     private TableColumn<Repair, String> colEstado;
@@ -70,8 +69,6 @@ public class ReparacionesController {
     private TextField filterClienteField;
     @FXML
     private TextField filterVehiculoField;
-    @FXML
-    private TextField filterCitaField;
     @FXML
     private TextField filterDescripcionField;
     @FXML
@@ -124,16 +121,7 @@ public class ReparacionesController {
 
         colCliente.setCellValueFactory(c -> new SimpleStringProperty(safeRaw(c.getValue().getClienteNombre())));
         colVehiculo.setCellValueFactory(c -> new SimpleStringProperty(vehicleLabel(c.getValue())));
-        colCita.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCitaId() == null ? "" : String.valueOf(c.getValue().getCitaId())));
-
-        colDescripcion.setCellValueFactory(c -> {
-            String desc = c.getValue().getDescripcion();
-            if (desc == null) {
-                return new SimpleStringProperty("");
-            }
-            String trimmed = desc.length() > 40 ? desc.substring(0, 37) + "..." : desc;
-            return new SimpleStringProperty(trimmed);
-        });
+        colDescripcion.setCellValueFactory(c -> new SimpleStringProperty(safeRaw(c.getValue().getDescripcion())));
         colDescripcion.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -158,12 +146,14 @@ public class ReparacionesController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-warning", "tfx-badge-danger");
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-warning", "tfx-badge-danger");
                 if (empty || item == null) {
                     setText(null);
+                    setAlignment(Pos.CENTER);
                 } else {
                     setText(item);
                     getStyleClass().add("tfx-badge");
+                    getStyleClass().add("tfx-table-badge");
                     switch (item) {
                         case "Finalizada", "Facturada" ->
                             getStyleClass().add("tfx-badge-success");
@@ -174,6 +164,7 @@ public class ReparacionesController {
                         default -> {
                         }
                     }
+                    setAlignment(Pos.CENTER);
                 }
             }
         });
@@ -189,9 +180,14 @@ public class ReparacionesController {
             private final HBox box = new HBox(8, btnEditar, btnEstado, btnDocumentos);
 
             {
-                btnEditar.getStyleClass().add("tfx-icon-btn");
-                btnEstado.getStyleClass().add("tfx-icon-btn-secondary");
-                btnDocumentos.getStyleClass().add("tfx-icon-btn-secondary");
+                box.getStyleClass().add("tfx-table-actions");
+
+                btnEditar.getStyleClass().add("tfx-table-action-btn");
+                btnEstado.getStyleClass().add("tfx-table-action-btn");
+                btnDocumentos.getStyleClass().add("tfx-table-action-btn");
+                btnEditar.setTooltip(new Tooltip("Editar reparación"));
+                btnEstado.setTooltip(new Tooltip("Cambiar estado"));
+                btnDocumentos.setTooltip(new Tooltip("Ver documentos"));
 
                 btnEditar.setOnAction(e -> {
                     Repair r = (getTableRow() != null) ? getTableRow().getItem() : null;
@@ -228,6 +224,7 @@ public class ReparacionesController {
             cmbPageSize.getSelectionModel().select(Integer.valueOf(25));
         }
 
+        applyColumnSizing(isSuperAdmin);
         smartTable = new SmartTable<>(tblReparaciones, masterData, null, cmbPageSize, lblResumen, "reparaciones", null);
         smartTable.setAfterRefreshCallback(() -> {
             int rows = Math.max(smartTable.getLastVisibleCount(), 1);
@@ -240,7 +237,6 @@ public class ReparacionesController {
 
         smartTable.addColumnFilter(filterClienteField, (r, text) -> safe(r.getClienteNombre()).contains(text));
         smartTable.addColumnFilter(filterVehiculoField, (r, text) -> safe(vehicleLabel(r)).contains(text));
-        smartTable.addColumnFilter(filterCitaField, (r, text) -> safe(r.getCitaId() == null ? "" : String.valueOf(r.getCitaId())).contains(text));
         smartTable.addColumnFilter(filterDescripcionField, (r, text) -> safe(r.getDescripcion()).contains(text));
 
         if (filterEstadoCombo != null) {
@@ -289,9 +285,6 @@ public class ReparacionesController {
         }
         if (filterVehiculoField != null) {
             filterVehiculoField.clear();
-        }
-        if (filterCitaField != null) {
-            filterCitaField.clear();
         }
         if (filterDescripcionField != null) {
             filterDescripcionField.clear();
@@ -466,7 +459,37 @@ public class ReparacionesController {
         if (value == null) {
             return "";
         }
-        return priceFormat.format(value);
+        return priceFormat.format(value) + " €";
+    }
+
+    private void applyColumnSizing(boolean isSuperAdmin) {
+        double baseWidth = 150;
+        double compactWidth = 110;
+
+        if (isSuperAdmin && colEmpresa != null) {
+            colEmpresa.setPrefWidth(baseWidth);
+        }
+        if (colCliente != null) {
+            colCliente.setPrefWidth(baseWidth);
+        }
+        if (colVehiculo != null) {
+            colVehiculo.setPrefWidth(baseWidth);
+        }
+        if (colDescripcion != null) {
+            colDescripcion.setPrefWidth(baseWidth);
+        }
+        if (colEstado != null) {
+            colEstado.setPrefWidth(baseWidth);
+        }
+        if (colAcciones != null) {
+            colAcciones.setPrefWidth(baseWidth);
+        }
+        if (colImporteEstimado != null) {
+            colImporteEstimado.setPrefWidth(compactWidth);
+        }
+        if (colImporteFinal != null) {
+            colImporteFinal.setPrefWidth(compactWidth);
+        }
     }
 
     private String vehicleLabel(Repair repair) {
