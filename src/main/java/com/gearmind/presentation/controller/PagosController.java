@@ -116,13 +116,16 @@ public class PagosController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-warning");
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-warning");
                 if (empty || item == null) {
                     setText(null);
+                    setAlignment(javafx.geometry.Pos.CENTER);
                 } else {
                     setText(item);
                     getStyleClass().add("tfx-badge");
+                    getStyleClass().addAll("tfx-badge", "tfx-table-badge");
                     getStyleClass().add("Contado".equalsIgnoreCase(item) ? "tfx-badge-success" : "tfx-badge-warning");
+                    setAlignment(javafx.geometry.Pos.CENTER);
                 }
             }
         });
@@ -131,13 +134,14 @@ public class PagosController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-warning");
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-warning");
                 if (empty || item == null) {
                     setText(null);
                 } else {
                     setText(item);
-                    getStyleClass().add("tfx-badge");
+                    getStyleClass().addAll("tfx-badge", "tfx-table-badge");
                     getStyleClass().add("Completado".equalsIgnoreCase(item) ? "tfx-badge-success" : "tfx-badge-warning");
+                    setAlignment(javafx.geometry.Pos.CENTER);
                 }
             }
         });
@@ -152,7 +156,9 @@ public class PagosController {
             private final HBox box = new HBox(8, btnGestionar);
 
             {
-                btnGestionar.getStyleClass().add("tfx-icon-btn");
+                box.getStyleClass().add("tfx-table-actions");
+                btnGestionar.getStyleClass().add("tfx-table-action-btn");
+                btnGestionar.setTooltip(new javafx.scene.control.Tooltip("Gestionar pago"));
                 btnGestionar.setOnAction(e -> {
                     Payment payment = getItem();
                     if (payment != null) {
@@ -304,10 +310,8 @@ public class PagosController {
     }
 
     private String formatPrice(BigDecimal value) {
-        if (value == null) {
-            return "0,00";
-        }
-        return priceFormat.format(value);
+        BigDecimal resolved = value == null ? BigDecimal.ZERO : value;
+        return priceFormat.format(resolved) + " €";
     }
 
     private String mapStatusToLabel(PaymentStatus status) {

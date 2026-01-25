@@ -12,10 +12,12 @@ import com.gearmind.domain.payment.PaymentStatus;
 import com.gearmind.domain.payment.PaymentType;
 import com.gearmind.infrastructure.invoice.MySqlInvoiceRepository;
 import com.gearmind.infrastructure.payment.MySqlPaymentRepository;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -25,6 +27,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 
 import java.math.BigDecimal;
@@ -109,8 +112,10 @@ public class PagoPlazosController {
     private void initialize() {
         tblPlazos.setItems(installments);
         tblPlazos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblPlazos.setFixedCellSize(28);
         tblRegistros.setItems(records);
         tblRegistros.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblRegistros.setFixedCellSize(28);
 
         colNumero.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getNumero() != null ? c.getValue().getNumero() : 0)));
         colVencimiento.setCellValueFactory(c -> new SimpleStringProperty(formatDate(c.getValue().getFechaVencimiento())));
@@ -120,13 +125,15 @@ public class PagoPlazosController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                getStyleClass().removeAll("tfx-badge", "tfx-badge-success", "tfx-badge-warning");
+                getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-warning");
                 if (empty || item == null) {
                     setText(null);
+                    setAlignment(javafx.geometry.Pos.CENTER);
                 } else {
                     setText(item);
-                    getStyleClass().add("tfx-badge");
+                    getStyleClass().addAll("tfx-badge", "tfx-table-badge");
                     getStyleClass().add("Pagado".equalsIgnoreCase(item) ? "tfx-badge-success" : "tfx-badge-warning");
+                    setAlignment(javafx.geometry.Pos.CENTER);
                 }
             }
         });
@@ -138,7 +145,9 @@ public class PagoPlazosController {
             private final HBox box = new HBox(8, btnPagar);
 
             {
-                btnPagar.getStyleClass().add("tfx-icon-btn");
+                box.getStyleClass().add("tfx-table-actions");
+                btnPagar.getStyleClass().add("tfx-table-action-btn");
+                btnPagar.setTooltip(new javafx.scene.control.Tooltip("Registrar pago"));
                 btnPagar.setOnAction(e -> {
                     PaymentInstallment installment = getItem();
                     if (installment != null) {
@@ -164,6 +173,9 @@ public class PagoPlazosController {
         colRegistroFecha.setCellValueFactory(c -> new SimpleStringProperty(formatDateTime(c.getValue().getFecha())));
         colRegistroImporte.setCellValueFactory(c -> new SimpleStringProperty(formatPrice(c.getValue().getImporte())));
         colRegistroObs.setCellValueFactory(c -> new SimpleStringProperty(safeRaw(c.getValue().getObservaciones())));
+        installments.addListener((ListChangeListener<PaymentInstallment>) change -> updateTablesHeight());
+        records.addListener((ListChangeListener<PaymentRecord>) change -> updateTablesHeight());
+        updateTablesHeight();
     }
 
     @FXML
@@ -226,10 +238,30 @@ public class PagoPlazosController {
     }
 
     private String formatPrice(BigDecimal value) {
-        if (value == null) {
-            return "0,00";
+        BigDecimal resolved = value == null ? BigDecimal.ZERO : value;
+        return priceFormat.format(resolved) + " €";
+    }
+
+    private void updateTablesHeight() {
+        updateTableHeight(tblPlazos, installments.size(), 8);
+        updateTableHeight(tblRegistros, records.size(), 6);
+        Platform.runLater(() -> {
+            if (tblPlazos.getScene() != null && tblPlazos.getScene().getWindow() instanceof Stage stage) {
+                stage.sizeToScene();
+            }
+        });
+    }
+
+    private void updateTableHeight(TableView<?> table, int rowCount, int maxVisibleRows) {
+        if (table == null) {
+            return;
         }
-        return priceFormat.format(value);
+        int rows = Math.max(1, Math.min(rowCount, maxVisibleRows));
+        double headerHeight = 28;
+        double tableHeight = headerHeight + rows * table.getFixedCellSize() + 2;
+        table.setPrefHeight(tableHeight);
+        table.setMinHeight(Region.USE_PREF_SIZE);
+        table.setMaxHeight(Region.USE_PREF_SIZE);
     }
 
     private String formatDate(LocalDate value) {
