@@ -37,7 +37,7 @@
 
         <VBox spacing="8" styleClass="tfx-card" VBox.vgrow="ALWAYS">
             <children>
-                <TableView fx:id="tblFichajes">
+                <TableView fx:id="tblFichajes" VBox.vgrow="ALWAYS">
                     <columns>
                         <TableColumn fx:id="colFecha" text="Fecha" prefWidth="160"/>
                         <TableColumn fx:id="colMovimiento" text="Movimiento" prefWidth="140"/>

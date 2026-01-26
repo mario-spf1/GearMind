@@ -24,6 +24,11 @@ public class BudgetPdfGenerator {
 
     private static final DecimalFormat MONEY_FORMAT = new DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance(new Locale("es", "ES")));
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final BigDecimal DEFAULT_IVA_RATE = new BigDecimal("0.21");
+    private static final Color META_BACKGROUND = new Color(246, 247, 251);
+    private static final Color META_BORDER = new Color(221, 225, 232);
+    private static final Color HEADER_BACKGROUND = new Color(38, 44, 58);
+    private static final Color ROW_ALT_BACKGROUND = new Color(248, 250, 253);
 
     public Path generate(Budget budget, List<BudgetLine> lines, Empresa empresa, Customer customer, Vehicle vehicle) {
         try {
@@ -36,8 +41,8 @@ public class BudgetPdfGenerator {
             addHeader(document, budget, empresa);
             addCustomerSection(document, customer, vehicle);
             addLinesTable(document, lines);
-            addTotals(document, budget.getTotalEstimado());
-            addObservations(document, budget.getObservaciones());
+            addTotals(document, budget, lines);
+            addFooter(document, budget);
             document.close();
             return outputPath;
         } catch (Exception e) {
@@ -46,15 +51,17 @@ public class BudgetPdfGenerator {
     }
 
     private void addHeader(Document document, Budget budget, Empresa empresa) throws DocumentException {
-        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-        Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 10, Color.GRAY);
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20);
+        Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.GRAY);
+        Font badgeFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, new Color(70, 90, 130));
         PdfPTable header = new PdfPTable(2);
         header.setWidthPercentage(100);
         header.setWidths(new float[]{60, 40});
         PdfPCell left = new PdfPCell();
         left.setBorder(Rectangle.NO_BORDER);
-        Paragraph companyName = new Paragraph(empresa != null ? empresa.getNombre() : "Empresa", titleFont);
+        Paragraph companyName = new Paragraph(empresa != null ? empresa.getNombre() : "GearMind", titleFont);
         left.addElement(companyName);
+        left.addElement(new Paragraph("PRESUPUESTO", badgeFont));
         if (empresa != null) {
             left.addElement(new Paragraph("CIF: " + nullSafe(empresa.getCif()), subtitleFont));
             left.addElement(new Paragraph(nullSafe(empresa.getDireccion()), subtitleFont));
@@ -64,14 +71,7 @@ public class BudgetPdfGenerator {
         PdfPCell right = new PdfPCell();
         right.setBorder(Rectangle.NO_BORDER);
         right.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        Paragraph docTitle = new Paragraph("Presupuesto", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16));
-        docTitle.setAlignment(Element.ALIGN_RIGHT);
-        right.addElement(docTitle);
-        right.addElement(new Paragraph("Nº " + budget.getId(), subtitleFont));
-        if (budget.getFecha() != null) {
-            right.addElement(new Paragraph("Fecha: " + budget.getFecha().format(DATE_FORMAT), subtitleFont));
-        }
-        right.addElement(new Paragraph("Estado: " + formatStatus(budget), subtitleFont));
+        right.addElement(buildMetaBox(budget));
         header.addCell(left);
         header.addCell(right);
         header.setSpacingAfter(18);
@@ -84,8 +84,7 @@ public class BudgetPdfGenerator {
         PdfPTable info = new PdfPTable(2);
         info.setWidthPercentage(100);
         info.setWidths(new float[]{50, 50});
-        PdfPCell clienteCell = new PdfPCell();
-        clienteCell.setBorder(Rectangle.NO_BORDER);
+        PdfPCell clienteCell = cardCell();
         clienteCell.addElement(new Paragraph("Cliente", labelFont));
         if (customer != null) {
             clienteCell.addElement(new Paragraph(customer.getNombre(), textFont));
@@ -101,8 +100,7 @@ public class BudgetPdfGenerator {
             }
         }
 
-        PdfPCell vehiculoCell = new PdfPCell();
-        vehiculoCell.setBorder(Rectangle.NO_BORDER);
+        PdfPCell vehiculoCell = cardCell();
         vehiculoCell.addElement(new Paragraph("Vehículo", labelFont));
         if (vehicle != null) {
             vehiculoCell.addElement(new Paragraph(vehicleLabel(vehicle), textFont));
@@ -118,71 +116,88 @@ public class BudgetPdfGenerator {
     }
 
     private void addLinesTable(Document document, List<BudgetLine> lines) throws DocumentException {
-        PdfPTable table = new PdfPTable(4);
+        PdfPTable table = new PdfPTable(5);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{50, 15, 17, 18});
-        addHeaderCell(table, "Descripción");
-        addHeaderCell(table, "Cantidad");
+        table.setWidths(new float[]{46, 10, 14, 12, 18});
+        addHeaderCell(table, "Concepto");
+        addHeaderCell(table, "Cant.");
         addHeaderCell(table, "Precio");
-        addHeaderCell(table, "Total");
+        addHeaderCell(table, "Dto %");
+        addHeaderCell(table, "Importe");
         Font rowFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+        int index = 0;
         for (BudgetLine line : lines) {
-            table.addCell(new PdfPCell(new Phrase(line.getDescripcion(), rowFont)));
-            table.addCell(cellRight(formatDecimal(line.getCantidad()), rowFont));
-            table.addCell(cellRight(formatMoney(line.getPrecio()), rowFont));
-            table.addCell(cellRight(formatMoney(line.getTotal()), rowFont));
+            boolean altRow = index % 2 == 1;
+            table.addCell(bodyCell(line.getDescripcion(), rowFont, altRow, Element.ALIGN_LEFT));
+            table.addCell(bodyCell(formatDecimal(line.getCantidad()), rowFont, altRow, Element.ALIGN_RIGHT));
+            table.addCell(bodyCell(formatMoney(line.getPrecio()), rowFont, altRow, Element.ALIGN_RIGHT));
+            table.addCell(bodyCell("0%", rowFont, altRow, Element.ALIGN_RIGHT));
+            table.addCell(bodyCell(formatMoney(line.getTotal()), rowFont, altRow, Element.ALIGN_RIGHT));
+            index++;
         }
         table.setSpacingAfter(10);
         document.add(table);
     }
 
-    private void addTotals(Document document, BigDecimal total) throws DocumentException {
+    private void addTotals(Document document, Budget budget, List<BudgetLine> lines) throws DocumentException {
+        BigDecimal total = budget.getTotalEstimado();
+        BigDecimal subtotal = calculateSubtotal(lines, total);
+        BigDecimal iva = subtotal.multiply(DEFAULT_IVA_RATE);
+        BigDecimal descuento = BigDecimal.ZERO;
+        BigDecimal totalEstimado = total != null ? total : subtotal.add(iva);
         PdfPTable totals = new PdfPTable(2);
-        totals.setWidthPercentage(40);
+        totals.setWidthPercentage(42);
         totals.setHorizontalAlignment(Element.ALIGN_RIGHT);
         totals.setWidths(new float[]{60, 40});
-        PdfPCell label = new PdfPCell(new Phrase("Total estimado", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11)));
-        label.setBorder(Rectangle.NO_BORDER);
-        label.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        PdfPCell value = new PdfPCell(new Phrase(formatMoney(total), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11)));
-        value.setBorder(Rectangle.NO_BORDER);
-        value.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        totals.addCell(label);
-        totals.addCell(value);
+        totals.addCell(totalRow("Subtotal", false));
+        totals.addCell(totalRowValue(subtotal, false));
+        totals.addCell(totalRow("Descuento", false));
+        totals.addCell(totalRowValue(descuento, false));
+        totals.addCell(totalRow("IVA (21%)", false));
+        totals.addCell(totalRowValue(iva, false));
+        totals.addCell(totalRow("TOTAL ESTIMADO", true));
+        totals.addCell(totalRowValue(totalEstimado, true));
         totals.setSpacingAfter(12);
         document.add(totals);
     }
 
-    private void addObservations(Document document, String observaciones) throws DocumentException {
-        if (observaciones == null || observaciones.isBlank()) {
-            return;
-        }
-        Paragraph obsTitle = new Paragraph("Observaciones", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11));
-        Paragraph obsText = new Paragraph(observaciones, FontFactory.getFont(FontFactory.HELVETICA, 10));
+    private void addFooter(Document document, Budget budget) throws DocumentException {
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, Color.DARK_GRAY);
+        Font textFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+        String observaciones = budget.getObservaciones();
+        Paragraph obsTitle = new Paragraph("Observaciones", titleFont);
+        Paragraph obsText = new Paragraph(observaciones == null || observaciones.isBlank() ? "—" : observaciones, textFont);
         document.add(obsTitle);
         document.add(obsText);
+        Paragraph condicionesTitle = new Paragraph("Condiciones", titleFont);
+        Paragraph condicionesText = new Paragraph("Validez: 15 días. Forma de pago: transferencia bancaria o tarjeta.", textFont);
+        condicionesTitle.setSpacingBefore(8);
+        document.add(condicionesTitle);
+        document.add(condicionesText);
+
+        PdfPTable firma = new PdfPTable(2);
+        firma.setWidthPercentage(100);
+        firma.setSpacingBefore(18);
+        firma.setWidths(new float[]{50, 50});
+        firma.addCell(signatureCell("Firma / sello cliente"));
+        firma.addCell(signatureCell("Firma / sello empresa"));
+        document.add(firma);
     }
 
     private void addHeaderCell(PdfPTable table, String text) {
         Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setBackgroundColor(new Color(60, 64, 67));
+        cell.setBackgroundColor(HEADER_BACKGROUND);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         cell.setPadding(6);
         table.addCell(cell);
     }
 
-    private PdfPCell cellRight(String text, Font font) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        return cell;
-    }
-
     private String formatMoney(BigDecimal value) {
         if (value == null) {
-            return "0,00";
+            return "0,00 €";
         }
-        return MONEY_FORMAT.format(value);
+        return MONEY_FORMAT.format(value) + " €";
     }
 
     private String formatDecimal(BigDecimal value) {
@@ -237,6 +252,114 @@ public class BudgetPdfGenerator {
             sb.append(empresa.getProvincia());
         }
         return sb.toString().trim();
+    }
+
+    private PdfPTable buildMetaBox(Budget budget) throws DocumentException {
+        Font labelFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, new Color(90, 96, 110));
+        Font valueFont = FontFactory.getFont(FontFactory.HELVETICA, 9);
+        PdfPTable meta = new PdfPTable(2);
+        meta.setWidthPercentage(100);
+        meta.setWidths(new float[]{40, 60});
+        meta.addCell(metaCell("Nº", labelFont));
+        meta.addCell(metaCell(formatBudgetNumber(budget.getId()), valueFont));
+        meta.addCell(metaCell("Fecha", labelFont));
+        meta.addCell(metaCell(budget.getFecha() != null ? budget.getFecha().format(DATE_FORMAT) : "—", valueFont));
+        meta.addCell(metaCell("Estado", labelFont));
+        meta.addCell(metaCell(formatStatus(budget), valueFont));
+        meta.addCell(metaCell("Validez", labelFont));
+        meta.addCell(metaCell("15 días", valueFont));
+
+        PdfPCell container = new PdfPCell(meta);
+        container.setPadding(8);
+        container.setBackgroundColor(META_BACKGROUND);
+        container.setBorderColor(META_BORDER);
+        container.setBorderWidth(1f);
+
+        PdfPTable wrapper = new PdfPTable(1);
+        wrapper.setWidthPercentage(100);
+        wrapper.addCell(container);
+        return wrapper;
+    }
+
+    private PdfPCell metaCell(String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setPadding(3);
+        return cell;
+    }
+
+    private PdfPCell cardCell() {
+        PdfPCell cell = new PdfPCell();
+        cell.setBackgroundColor(META_BACKGROUND);
+        cell.setBorderColor(META_BORDER);
+        cell.setBorderWidth(1f);
+        cell.setPadding(10);
+        return cell;
+    }
+
+    private PdfPCell bodyCell(String text, Font font, boolean altRow, int alignment) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setHorizontalAlignment(alignment);
+        cell.setPadding(6);
+        if (altRow) {
+            cell.setBackgroundColor(ROW_ALT_BACKGROUND);
+        }
+        return cell;
+    }
+
+    private PdfPCell totalRow(String label, boolean highlight) {
+        Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, highlight ? 12 : 10);
+        PdfPCell cell = new PdfPCell(new Phrase(label, font));
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        if (highlight) {
+            cell.setBackgroundColor(META_BACKGROUND);
+            cell.setPadding(6);
+        }
+        return cell;
+    }
+
+    private PdfPCell totalRowValue(BigDecimal value, boolean highlight) {
+        Font font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, highlight ? 12 : 10);
+        PdfPCell cell = new PdfPCell(new Phrase(formatMoney(value), font));
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        if (highlight) {
+            cell.setBackgroundColor(META_BACKGROUND);
+            cell.setPadding(6);
+        }
+        return cell;
+    }
+
+    private PdfPCell signatureCell(String label) {
+        Font font = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.GRAY);
+        PdfPCell cell = new PdfPCell(new Phrase(label, font));
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setPaddingTop(18);
+        cell.setPaddingBottom(10);
+        cell.setBorderWidthTop(1f);
+        cell.setBorderColorTop(META_BORDER);
+        return cell;
+    }
+
+    private BigDecimal calculateSubtotal(List<BudgetLine> lines, BigDecimal totalEstimado) {
+        if (totalEstimado != null) {
+            return totalEstimado.divide(BigDecimal.ONE.add(DEFAULT_IVA_RATE), 2, java.math.RoundingMode.HALF_UP);
+        }
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (BudgetLine line : lines) {
+            if (line.getTotal() != null) {
+                subtotal = subtotal.add(line.getTotal());
+            }
+        }
+        return subtotal;
+    }
+
+    private String formatBudgetNumber(Long id) {
+        if (id == null) {
+            return "—";
+        }
+        return String.format("%06d", id);
     }
 
     private String nullSafe(String value) {
