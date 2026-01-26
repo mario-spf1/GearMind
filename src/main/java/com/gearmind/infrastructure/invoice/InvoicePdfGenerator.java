@@ -50,9 +50,13 @@ public class InvoicePdfGenerator {
     }
 
     private void addHeader(Document document, Invoice invoice, Empresa empresa) throws DocumentException {
-        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20);
+        Font documentTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 26);
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
         Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.GRAY);
-        Font badgeFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, new Color(70, 90, 130));
+        Paragraph documentTitle = new Paragraph("FACTURA", documentTitleFont);
+        documentTitle.setAlignment(Element.ALIGN_CENTER);
+        documentTitle.setSpacingAfter(12);
+        document.add(documentTitle);
         PdfPTable header = new PdfPTable(2);
         header.setWidthPercentage(100);
         header.setWidths(new float[]{60, 40});
@@ -60,7 +64,6 @@ public class InvoicePdfGenerator {
         left.setBorder(Rectangle.NO_BORDER);
         Paragraph companyName = new Paragraph(empresa != null ? empresa.getNombre() : "GearMind", titleFont);
         left.addElement(companyName);
-        left.addElement(new Paragraph("FACTURA", badgeFont));
         if (empresa != null) {
             left.addElement(new Paragraph("CIF: " + nullSafe(empresa.getCif()), subtitleFont));
             left.addElement(new Paragraph(nullSafe(empresa.getDireccion()), subtitleFont));

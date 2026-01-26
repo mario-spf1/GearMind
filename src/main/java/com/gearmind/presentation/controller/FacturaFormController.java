@@ -8,7 +8,6 @@ import com.gearmind.application.inventory.AdjustInventoryUseCase;
 import com.gearmind.application.invoice.GetInvoiceUseCase;
 import com.gearmind.application.invoice.SaveInvoiceRequest;
 import com.gearmind.application.invoice.SaveInvoiceUseCase;
-import com.gearmind.application.product.ListProductsUseCase;
 import com.gearmind.domain.budget.Budget;
 import com.gearmind.domain.budget.BudgetLine;
 import com.gearmind.domain.company.Empresa;
@@ -16,7 +15,6 @@ import com.gearmind.domain.customer.Customer;
 import com.gearmind.domain.invoice.Invoice;
 import com.gearmind.domain.invoice.InvoiceLine;
 import com.gearmind.domain.invoice.InvoiceStatus;
-import com.gearmind.domain.product.Product;
 import com.gearmind.domain.vehicle.Vehicle;
 import com.gearmind.infrastructure.budget.MySqlBudgetRepository;
 import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
@@ -38,7 +36,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -79,8 +76,6 @@ public class FacturaFormController {
     @FXML
     private TableView<InvoiceLine> tblLineas;
     @FXML
-    private TableColumn<InvoiceLine, ProductOption> colProducto;
-    @FXML
     private TableColumn<InvoiceLine, String> colDescripcion;
     @FXML
     private TableColumn<InvoiceLine, BigDecimal> colCantidad;
@@ -103,8 +98,6 @@ public class FacturaFormController {
     private final ObservableList<VehiculoOption> vehiculos = FXCollections.observableArrayList();
     private final ObservableList<InvoiceLine> lineas = FXCollections.observableArrayList();
     private final List<VehiculoOption> vehiculosEmpresa = new java.util.ArrayList<>();
-    private final ObservableList<ProductOption> productos = FXCollections.observableArrayList();
-    private final java.util.Map<Long, ProductOption> productosById = new java.util.HashMap<>();
 
     private Long editingId;
     private boolean saved = false;
@@ -118,7 +111,6 @@ public class FacturaFormController {
     private final MySqlEmpresaRepository empresaRepository;
     private final MySqlCustomerRepository customerRepository;
     private final MySqlVehicleRepository vehicleRepository;
-    private final ListProductsUseCase listProductsUseCase;
 
     private final java.text.DecimalFormat moneyFormat = new java.text.DecimalFormat("#,##0.00", new java.text.DecimalFormatSymbols(Locale.getDefault()));
 
@@ -131,7 +123,6 @@ public class FacturaFormController {
         this.customerRepository = new MySqlCustomerRepository();
         this.vehicleRepository = new MySqlVehicleRepository();
         MySqlProductRepository productRepository = new MySqlProductRepository();
-        this.listProductsUseCase = new ListProductsUseCase(productRepository);
         TelegramConfig telegramConfig = new TelegramConfig();
         TelegramBotClient botClient = new TelegramBotClient(telegramConfig, new ObjectMapper());
         MySqlTelegramRepository telegramRepository = new MySqlTelegramRepository();
@@ -385,7 +376,6 @@ public class FacturaFormController {
         List<Vehicle> vehicles = vehicleRepository.findByEmpresaId(empresaId);
         vehiculosEmpresa.clear();
         vehiculosEmpresa.addAll(vehicles.stream().sorted(Comparator.comparing(Vehicle::getMatricula, String.CASE_INSENSITIVE_ORDER)).map(v -> new VehiculoOption(v.getId(), vehicleLabel(v), v.getClienteId())).toList());
-        loadProductosForEmpresa(empresaId);
 
         if (cmbPresupuesto != null && !presupuestos.isEmpty() && cmbPresupuesto.getValue() == null) {
             cmbPresupuesto.getSelectionModel().selectFirst();
@@ -412,34 +402,6 @@ public class FacturaFormController {
         tblLineas.setFixedCellSize(28);
         tblLineas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         configureColumnWidths();
-        if (colProducto != null) {
-            colProducto.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(getProductOption(c.getValue().getProductoId())));
-            colProducto.setCellFactory(col -> new ComboBoxTableCell<>(new StringConverter<>() {
-                @Override
-                public String toString(ProductOption value) {
-                    return value == null ? "" : value.label;
-                }
-
-                @Override
-                public ProductOption fromString(String string) {
-                    return null;
-                }
-            }, productos));
-            colProducto.setOnEditCommit(event -> {
-                InvoiceLine line = event.getRowValue();
-                ProductOption selected = event.getNewValue();
-                line.setProductoId(selected != null ? selected.id : null);
-                if (selected != null) {
-                    if (line.getDescripcion() == null || line.getDescripcion().isBlank()) {
-                        line.setDescripcion(selected.label);
-                    }
-                    if (line.getPrecio() == null || BigDecimal.ZERO.compareTo(line.getPrecio()) == 0) {
-                        line.setPrecio(selected.precioVenta != null ? selected.precioVenta : BigDecimal.ZERO);
-                    }
-                }
-                updateTotals();
-            });
-        }
 
         colDescripcion.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDescripcion()));
         colDescripcion.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -550,21 +512,19 @@ public class FacturaFormController {
             lblTotal.setText(formatMoney(total));
         }
 
-        tblLineas.refresh();
+        if (tblLineas != null) {
+            tblLineas.refresh();
+        }
         enableSaveIfReady();
     }
 
     private void configureColumnWidths() {
-        if (colProducto != null) {
-            colProducto.setPrefWidth(30);
-            colProducto.setMaxWidth(1f * Integer.MAX_VALUE);
-        }
         if (colDescripcion != null) {
-            colDescripcion.setPrefWidth(30);
+            colDescripcion.setPrefWidth(40);
             colDescripcion.setMaxWidth(1f * Integer.MAX_VALUE);
         }
         if (colCantidad != null) {
-            colCantidad.setPrefWidth(10);
+            colCantidad.setPrefWidth(12);
             colCantidad.setMaxWidth(1f * Integer.MAX_VALUE);
         }
         if (colPrecio != null) {
@@ -609,45 +569,6 @@ public class FacturaFormController {
         } catch (NumberFormatException e) {
             return 21;
         }
-    }
-
-    private InvoiceLine newLine() {
-        InvoiceLine line = new InvoiceLine();
-        line.setDescripcion("");
-        line.setCantidad(BigDecimal.ONE);
-        line.setPrecio(BigDecimal.ZERO);
-        line.setTotal(BigDecimal.ZERO);
-        return line;
-    }
-
-    private void loadProductosForEmpresa(long empresaId) {
-        List<Product> productList = listProductsUseCase.listByEmpresa(empresaId).stream().filter(Product::isActivo).sorted(Comparator.comparing(Product::getNombre, String.CASE_INSENSITIVE_ORDER)).toList();
-        productosById.clear();
-        productos.clear();
-        for (Product product : productList) {
-            ProductOption option = new ProductOption(product.getId(), productLabel(product), product.getPrecioVenta());
-            productos.add(option);
-            productosById.put(option.id, option);
-        }
-        if (tblLineas != null) {
-            tblLineas.refresh();
-        }
-    }
-
-    private String productLabel(Product product) {
-        String nombre = product.getNombre() == null ? "" : product.getNombre();
-        String referencia = product.getReferencia() == null ? "" : product.getReferencia();
-        if (!referencia.isBlank()) {
-            return nombre + " · Ref " + referencia;
-        }
-        return nombre;
-    }
-
-    private ProductOption getProductOption(Long productId) {
-        if (productId == null) {
-            return null;
-        }
-        return productosById.get(productId);
     }
 
     private long getEmpresaId() {
@@ -715,6 +636,15 @@ public class FacturaFormController {
             lineas.add(newLine());
         }
         updateTotals();
+    }
+
+    private InvoiceLine newLine() {
+        InvoiceLine line = new InvoiceLine();
+        line.setDescripcion("");
+        line.setCantidad(BigDecimal.ONE);
+        line.setPrecio(BigDecimal.ZERO);
+        line.setTotal(BigDecimal.ZERO);
+        return line;
     }
 
     private InvoiceLine mapLine(BudgetLine line) {
@@ -846,24 +776,6 @@ public class FacturaFormController {
         @Override
         public String toString() {
             return nombre;
-        }
-    }
-
-    private static class ProductOption {
-
-        private final long id;
-        private final String label;
-        private final BigDecimal precioVenta;
-
-        private ProductOption(long id, String label, BigDecimal precioVenta) {
-            this.id = id;
-            this.label = label;
-            this.precioVenta = precioVenta;
-        }
-
-        @Override
-        public String toString() {
-            return label;
         }
     }
 

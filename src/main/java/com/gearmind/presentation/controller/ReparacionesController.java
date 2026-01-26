@@ -176,17 +176,20 @@ public class ReparacionesController {
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnEditar = new Button("Editar");
             private final Button btnEstado = new Button("Estado");
+            private final Button btnProductos = new Button("Productos");
             private final Button btnDocumentos = new Button("Docs");
-            private final HBox box = new HBox(8, btnEditar, btnEstado, btnDocumentos);
+            private final HBox box = new HBox(8, btnEditar, btnEstado, btnProductos, btnDocumentos);
 
             {
                 box.getStyleClass().add("tfx-table-actions");
 
                 btnEditar.getStyleClass().add("tfx-table-action-btn");
                 btnEstado.getStyleClass().add("tfx-table-action-btn");
+                btnProductos.getStyleClass().add("tfx-table-action-btn");
                 btnDocumentos.getStyleClass().add("tfx-table-action-btn");
                 btnEditar.setTooltip(new Tooltip("Editar reparación"));
                 btnEstado.setTooltip(new Tooltip("Cambiar estado"));
+                btnProductos.setTooltip(new Tooltip("Productos usados"));
                 btnDocumentos.setTooltip(new Tooltip("Ver documentos"));
 
                 btnEditar.setOnAction(e -> {
@@ -200,6 +203,13 @@ public class ReparacionesController {
                     Repair r = (getTableRow() != null) ? getTableRow().getItem() : null;
                     if (r != null) {
                         cambiarEstado(r);
+                    }
+                });
+
+                btnProductos.setOnAction(e -> {
+                    Repair r = (getTableRow() != null) ? getTableRow().getItem() : null;
+                    if (r != null) {
+                        openProductos(r);
                     }
                 });
 
@@ -417,6 +427,30 @@ public class ReparacionesController {
         }
     }
 
+    private void openProductos(Repair repair) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/ReparacionProductosView.fxml"));
+            Parent root = loader.load();
+            ReparacionProductosController controller = loader.getController();
+            controller.init(repair);
+
+            Stage stage = new Stage();
+            stage.setTitle("Productos usados");
+            stage.initOwner(tblReparaciones.getScene().getWindow());
+            stage.initModality(Modality.WINDOW_MODAL);
+            stage.setResizable(false);
+
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
+            stage.setScene(scene);
+            stage.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "No se pudo abrir productos: " + ex.getMessage()).showAndWait();
+        }
+    }
+
     private String mapStatusToLabel(RepairStatus status) {
         if (status == null) {
             return "Abierta";
@@ -482,7 +516,7 @@ public class ReparacionesController {
             colEstado.setPrefWidth(baseWidth);
         }
         if (colAcciones != null) {
-            colAcciones.setPrefWidth(baseWidth);
+            colAcciones.setPrefWidth(baseWidth + 120);
         }
         if (colImporteEstimado != null) {
             colImporteEstimado.setPrefWidth(compactWidth);

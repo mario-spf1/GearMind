@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.ReparacionProductosController"
+      spacing="12"
+      styleClass="tfx-page">
+
+    <children>
+        <Label fx:id="lblTitulo" text="Productos usados en reparación" styleClass="tfx-title-xl"/>
+
+        <VBox styleClass="tfx-card" spacing="10">
+            <padding>
+                <Insets top="8" right="8" bottom="8" left="8"/>
+            </padding>
+            <children>
+                <Label text="Agregar producto" styleClass="tfx-title"/>
+                <GridPane hgap="10" vgap="8">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="30"/>
+                        <ColumnConstraints percentWidth="70"/>
+                    </columnConstraints>
+                    <children>
+                        <Label text="Producto" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cmbProducto" prefWidth="260" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <Label text="Cantidad" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtCantidad" prefWidth="120" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label text="Notas" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextArea fx:id="txtNotas" prefRowCount="2" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                    </children>
+                </GridPane>
+                <HBox spacing="8" alignment="CENTER_RIGHT">
+                    <children>
+                        <Button fx:id="btnAgregar" text="Agregar" onAction="#onAgregarProducto" styleClass="tfx-btn-primary"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+
+        <VBox styleClass="tfx-card" spacing="8">
+            <children>
+                <Label text="Productos usados" styleClass="tfx-title"/>
+                <TableView fx:id="tblMovimientos" fixedCellSize="28">
+                    <columns>
+                        <TableColumn fx:id="colProducto" text="Producto" prefWidth="240"/>
+                        <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="100"/>
+                        <TableColumn fx:id="colFecha" text="Fecha" prefWidth="160"/>
+                        <TableColumn fx:id="colNotas" text="Notas" prefWidth="220"/>
+                    </columns>
+                </TableView>
+            </children>
+        </VBox>
+    </children>
+</VBox>

@@ -9,4 +9,6 @@ public interface InventoryMovementRepository {
     List<InventoryMovement> findByEmpresa(long empresaId);
 
     List<InventoryMovement> findAllWithEmpresa();
+
+    List<InventoryMovement> findByEmpresaAndReferencia(long empresaId, String referencia);
 }

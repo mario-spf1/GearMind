@@ -51,9 +51,13 @@ public class BudgetPdfGenerator {
     }
 
     private void addHeader(Document document, Budget budget, Empresa empresa) throws DocumentException {
-        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20);
+        Font documentTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 26);
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
         Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.GRAY);
-        Font badgeFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, new Color(70, 90, 130));
+        Paragraph documentTitle = new Paragraph("PRESUPUESTO", documentTitleFont);
+        documentTitle.setAlignment(Element.ALIGN_CENTER);
+        documentTitle.setSpacingAfter(12);
+        document.add(documentTitle);
         PdfPTable header = new PdfPTable(2);
         header.setWidthPercentage(100);
         header.setWidths(new float[]{60, 40});
@@ -61,7 +65,6 @@ public class BudgetPdfGenerator {
         left.setBorder(Rectangle.NO_BORDER);
         Paragraph companyName = new Paragraph(empresa != null ? empresa.getNombre() : "GearMind", titleFont);
         left.addElement(companyName);
-        left.addElement(new Paragraph("PRESUPUESTO", badgeFont));
         if (empresa != null) {
             left.addElement(new Paragraph("CIF: " + nullSafe(empresa.getCif()), subtitleFont));
             left.addElement(new Paragraph(nullSafe(empresa.getDireccion()), subtitleFont));
@@ -91,22 +94,12 @@ public class BudgetPdfGenerator {
             if (customer.getDni() != null && !customer.getDni().isBlank()) {
                 clienteCell.addElement(new Paragraph("DNI: " + customer.getDni(), textFont));
             }
-
-            if (customer.getEmail() != null) {
-                clienteCell.addElement(new Paragraph(customer.getEmail(), textFont));
-            }
-            if (customer.getTelefono() != null) {
-                clienteCell.addElement(new Paragraph("Tel: " + customer.getTelefono(), textFont));
-            }
         }
 
         PdfPCell vehiculoCell = cardCell();
         vehiculoCell.addElement(new Paragraph("Vehículo", labelFont));
         if (vehicle != null) {
             vehiculoCell.addElement(new Paragraph(vehicleLabel(vehicle), textFont));
-            if (vehicle.getVin() != null && !vehicle.getVin().isBlank()) {
-                vehiculoCell.addElement(new Paragraph("VIN: " + vehicle.getVin(), textFont));
-            }
         }
 
         info.addCell(clienteCell);

@@ -100,6 +100,34 @@ public class MySqlInventoryMovementRepository implements InventoryMovementReposi
         return result;
     }
 
+    @Override
+    public List<InventoryMovement> findByEmpresaAndReferencia(long empresaId, String referencia) {
+        List<InventoryMovement> result = new ArrayList<>();
+
+        String sql = """
+                SELECT im.id, im.empresa_id, im.producto_id, im.tipo, im.cantidad, im.referencia, im.notas, im.created_at,
+                       p.nombre AS producto_nombre, p.referencia AS producto_referencia
+                FROM inventario_movimiento im
+                JOIN producto p ON p.id = im.producto_id
+                WHERE im.empresa_id = ? AND im.referencia = ?
+                ORDER BY im.created_at DESC
+                """;
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, empresaId);
+            ps.setString(2, referencia);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error listando movimientos de inventario por referencia", e);
+        }
+
+        return result;
+    }
+
     private InventoryMovement mapRow(ResultSet rs) throws SQLException {
         InventoryMovement movement = new InventoryMovement();
         movement.setId(rs.getLong("id"));
