@@ -169,8 +169,8 @@ public class MySqlRepairRepository implements RepairRepository {
         String sql = """
                 INSERT INTO reparacion
                     (empresa_id, cita_id, cliente_id, vehiculo_id,
-                     descripcion, estado, importe_estimado, importe_final)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    descripcion, estado, importe_estimado, importe_final, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -198,9 +198,17 @@ public class MySqlRepairRepository implements RepairRepository {
             if (repair.getImporteFinal() != null) {
                 ps.setBigDecimal(i++, repair.getImporteFinal());
             } else {
-                ps.setNull(i, Types.DECIMAL);
+                ps.setNull(i++, Types.DECIMAL);
             }
 
+            LocalDateTime createdAt = repair.getCreatedAt() != null ? repair.getCreatedAt() : LocalDateTime.now();
+            ps.setTimestamp(i++, Timestamp.valueOf(createdAt));
+            if (repair.getUpdatedAt() != null) {
+                ps.setTimestamp(i, Timestamp.valueOf(repair.getUpdatedAt()));
+            } else {
+                ps.setNull(i, Types.TIMESTAMP);
+
+            }
             ps.executeUpdate();
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -224,7 +232,8 @@ public class MySqlRepairRepository implements RepairRepository {
                     descripcion = ?,
                     estado = ?,
                     importe_estimado = ?,
-                    importe_final = ?
+                    importe_final = ?,
+                    updated_at = ?
                 WHERE id = ?
                 """;
 
@@ -255,7 +264,8 @@ public class MySqlRepairRepository implements RepairRepository {
             } else {
                 ps.setNull(i++, Types.DECIMAL);
             }
-
+            LocalDateTime updatedAt = repair.getUpdatedAt() != null ? repair.getUpdatedAt() : LocalDateTime.now();
+            ps.setTimestamp(i++, Timestamp.valueOf(updatedAt));
             ps.setLong(i, repair.getId());
 
             ps.executeUpdate();

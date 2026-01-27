@@ -269,11 +269,7 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
             int i = 1;
             ps.setLong(i++, log.getEmpresaId());
             ps.setLong(i++, log.getClienteId());
-            if (log.getChatId() > 0) {
-                ps.setLong(i++, log.getChatId());
-            } else {
-                ps.setNull(i++, Types.BIGINT);
-            }
+            ps.setLong(i++, log.getChatId());
             ps.setString(i++, log.getTipoEvento() != null ? log.getTipoEvento() : "DESCONOCIDO");
             ps.setString(i++, log.getPayload() != null ? log.getPayload() : "");
             ps.setTimestamp(i++, Timestamp.valueOf(log.getEnviadoAt()));
@@ -346,7 +342,7 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
                 FROM reparacion r
                 JOIN vehiculo v ON v.id = r.vehiculo_id
                 WHERE r.empresa_id = ? AND r.cliente_id = ? AND r.estado <> 'FINALIZADA'
-                ORDER BY created_at DESC
+                ORDER BY r.created_at DESC
                 LIMIT ?
                 """;
 
