@@ -135,9 +135,14 @@ public class BudgetPdfGenerator {
     private void addTotals(Document document, Budget budget, List<BudgetLine> lines) throws DocumentException {
         BigDecimal total = budget.getTotalEstimado();
         BigDecimal subtotal = calculateSubtotal(lines, total);
-        BigDecimal iva = subtotal.multiply(DEFAULT_IVA_RATE);
+        BigDecimal iva;
         BigDecimal descuento = BigDecimal.ZERO;
-        BigDecimal totalEstimado = total != null ? total : subtotal.add(iva);
+        BigDecimal totalEstimado = total != null ? total : subtotal.add(subtotal.multiply(DEFAULT_IVA_RATE).setScale(2, java.math.RoundingMode.HALF_UP));
+        if (total != null) {
+            iva = totalEstimado.subtract(subtotal);
+        } else {
+            iva = subtotal.multiply(DEFAULT_IVA_RATE).setScale(2, java.math.RoundingMode.HALF_UP);
+        }
         PdfPTable totals = new PdfPTable(2);
         totals.setWidthPercentage(42);
         totals.setHorizontalAlignment(Element.ALIGN_RIGHT);

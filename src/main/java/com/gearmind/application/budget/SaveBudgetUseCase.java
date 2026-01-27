@@ -26,6 +26,7 @@ public class SaveBudgetUseCase {
     private final VehicleRepository vehicleRepository;
     private final BudgetPdfGenerator pdfGenerator;
     private final SendTelegramNotificationUseCase notificationUseCase;
+    private static final BigDecimal IVA_RATE = new BigDecimal("0.21");
 
     public SaveBudgetUseCase(BudgetRepository budgetRepository, EmpresaRepository empresaRepository, CustomerRepository customerRepository, VehicleRepository vehicleRepository, BudgetPdfGenerator pdfGenerator) {
         this.budgetRepository = budgetRepository;
@@ -63,8 +64,8 @@ public class SaveBudgetUseCase {
         }
 
         List<BudgetLine> normalizedLines = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
-
+        BigDecimal subtotal = BigDecimal.ZERO;
+        
         for (BudgetLine line : request.getLineas()) {
             if (line.getDescripcion() == null || line.getDescripcion().isBlank()) {
                 throw new IllegalArgumentException("Todas las líneas deben tener descripción.");
@@ -84,10 +85,12 @@ public class SaveBudgetUseCase {
             normalized.setPrecio(line.getPrecio());
             BigDecimal lineTotal = line.getCantidad().multiply(line.getPrecio());
             normalized.setTotal(lineTotal);
-            total = total.add(lineTotal);
+            subtotal = subtotal.add(lineTotal);
             normalizedLines.add(normalized);
         }
-
+        
+        BigDecimal iva = subtotal.multiply(IVA_RATE).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal total = subtotal.add(iva);
         BudgetStatus previousStatus = null;
         if (request.getId() != null) {
             Optional<Budget> existing = budgetRepository.findById(request.getId());

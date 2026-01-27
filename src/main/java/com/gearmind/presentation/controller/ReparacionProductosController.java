@@ -12,6 +12,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -20,6 +21,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Region;
+import javafx.stage.Stage;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
@@ -82,6 +85,7 @@ public class ReparacionProductosController {
         }
         if (tblMovimientos != null) {
             tblMovimientos.setItems(movimientos);
+            tblMovimientos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         }
 
         if (colProducto != null) {
@@ -100,6 +104,8 @@ public class ReparacionProductosController {
         if (txtCantidad != null) {
             txtCantidad.setText("1");
         }
+        movimientos.addListener((javafx.collections.ListChangeListener<InventoryMovement>) change -> updateTableHeight());
+        updateTableHeight();
     }
 
     @FXML
@@ -156,6 +162,25 @@ public class ReparacionProductosController {
         if (tblMovimientos != null) {
             tblMovimientos.refresh();
         }
+        updateTableHeight();
+    }
+
+    private void updateTableHeight() {
+        if (tblMovimientos == null) {
+            return;
+        }
+        int maxVisibleRows = 8;
+        int rows = Math.min(movimientos.size(), maxVisibleRows);
+        double headerHeight = 28;
+        double tableHeight = headerHeight + rows * tblMovimientos.getFixedCellSize() + 2;
+        tblMovimientos.setPrefHeight(tableHeight);
+        tblMovimientos.setMinHeight(Region.USE_PREF_SIZE);
+        tblMovimientos.setMaxHeight(Region.USE_PREF_SIZE);
+        Platform.runLater(() -> {
+            if (tblMovimientos.getScene() != null && tblMovimientos.getScene().getWindow() instanceof Stage stage) {
+                stage.sizeToScene();
+            }
+        });
     }
 
     private String referencia() {

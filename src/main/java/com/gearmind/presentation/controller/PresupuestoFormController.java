@@ -36,6 +36,7 @@ import javafx.util.StringConverter;
 import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -75,6 +76,10 @@ public class PresupuestoFormController {
     @FXML
     private TableColumn<BudgetLine, BigDecimal> colTotal;
     @FXML
+    private Label lblSubtotal;
+    @FXML
+    private Label lblIva;
+    @FXML
     private Label lblTotal;
     @FXML
     private Button btnGuardar;
@@ -95,6 +100,7 @@ public class PresupuestoFormController {
     private final MySqlVehicleRepository vehicleRepository;
     private final MySqlRepairRepository repairRepository;
     private final DecimalFormat moneyFormat = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(Locale.getDefault()));
+    private static final BigDecimal IVA_RATE = new BigDecimal("0.21");
 
     public PresupuestoFormController() {
         this.budgetRepository = new MySqlBudgetRepository();
@@ -463,13 +469,22 @@ public class PresupuestoFormController {
     }
 
     private void updateTotals() {
-        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal subtotal = BigDecimal.ZERO;
         for (BudgetLine line : lineas) {
             BigDecimal cantidad = line.getCantidad() == null ? BigDecimal.ZERO : line.getCantidad();
             BigDecimal precio = line.getPrecio() == null ? BigDecimal.ZERO : line.getPrecio();
             BigDecimal lineTotal = cantidad.multiply(precio);
             line.setTotal(lineTotal);
-            total = total.add(lineTotal);
+            subtotal = subtotal.add(lineTotal);
+        }
+        BigDecimal iva = subtotal.multiply(IVA_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal total = subtotal.add(iva);
+
+        if (lblSubtotal != null) {
+            lblSubtotal.setText(formatMoney(subtotal));
+        }
+        if (lblIva != null) {
+            lblIva.setText(formatMoney(iva));
         }
 
         if (lblTotal != null) {

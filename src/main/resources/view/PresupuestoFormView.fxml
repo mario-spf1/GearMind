@@ -59,9 +59,12 @@
                         <TableColumn fx:id="colTotal" text="Total" prefWidth="120"/>
                     </columns>
                 </TableView>
-                <HBox spacing="8">
+                <HBox spacing="10" alignment="CENTER_RIGHT">
                     <children>
-                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="Subtotal:" styleClass="tfx-muted"/>
+                        <Label fx:id="lblSubtotal" text="0,00" styleClass="tfx-title"/>
+                        <Label text="IVA (21%):" styleClass="tfx-muted"/>
+                        <Label fx:id="lblIva" text="0,00" styleClass="tfx-title"/>
                         <Label text="Total estimado:" styleClass="tfx-muted"/>
                         <Label fx:id="lblTotal" text="0,00" styleClass="tfx-title"/>
                     </children>
