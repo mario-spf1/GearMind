@@ -32,11 +32,18 @@ public class SendTelegramNotificationUseCase {
         String safeTipoEvento = tipoEvento != null ? tipoEvento : "DESCONOCIDO";
         String safePayload = payload != null ? payload : "";
         if (link.isEmpty()) {
-            notificationLogRepository.save(new TelegramNotificationLog(null, config.getEmpresaId(), clienteId, 0L, safeTipoEvento, safePayload, LocalDateTime.now(), "SIN_VINCULO"));
-            return;
+            persistLog(new TelegramNotificationLog(null, config.getEmpresaId(), clienteId, 0L, safeTipoEvento, safePayload, LocalDateTime.now(), "SIN_VINCULO"));            return;
         }
 
         boolean ok = botClient.sendMessage(link.get().getChatId(), mensaje);
-        notificationLogRepository.save(new TelegramNotificationLog(null, config.getEmpresaId(), clienteId, link.get().getChatId(), safeTipoEvento, safePayload, LocalDateTime.now(), ok ? "ENVIADO" : "ERROR"));
+        persistLog(new TelegramNotificationLog(null, config.getEmpresaId(), clienteId, link.get().getChatId(), safeTipoEvento, safePayload, LocalDateTime.now(), ok ? "ENVIADO" : "ERROR"));
+    }
+    
+    private void persistLog(TelegramNotificationLog log) {
+        try {
+            notificationLogRepository.save(log);
+        } catch (RuntimeException e) {
+            System.err.println("No se pudo guardar el log de Telegram: " + e.getMessage());
+        }
     }
 }
