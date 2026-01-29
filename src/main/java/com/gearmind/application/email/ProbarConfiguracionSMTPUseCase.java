@@ -1,6 +1,7 @@
 package com.gearmind.application.email;
 
 import com.gearmind.domain.email.EmailMessage;
+import com.gearmind.common.exception.ValidationException;
 
 public class ProbarConfiguracionSMTPUseCase {
 
@@ -12,12 +13,12 @@ public class ProbarConfiguracionSMTPUseCase {
 
     public void execute(long empresaId, String destinatario) {
         if (destinatario == null || destinatario.isBlank()) {
-            throw new IllegalArgumentException("El destinatario de prueba es obligatorio.");
+            throw new ValidationException("El destinatario de prueba es obligatorio.");
         }
         EmailMessage message = new EmailMessage(
                 destinatario.trim(),
                 "Prueba de configuración SMTP",
-                "Este es un correo de prueba de la configuración SMTP de GearMind."
+                "Hola,\n\nEste es un correo de prueba para confirmar la configuración SMTP de GearMind.\n\nUn saludo,\nGearMind"
         );
         enviarEmailEmpresaUseCase.execute(empresaId, message);
     }

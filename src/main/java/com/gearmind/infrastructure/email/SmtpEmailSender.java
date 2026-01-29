@@ -1,5 +1,7 @@
 package com.gearmind.infrastructure.email;
 
+import com.gearmind.common.exception.InfrastructureException;
+import com.gearmind.common.exception.ValidationException;
 import com.gearmind.domain.email.EmailAttachment;
 import com.gearmind.domain.email.EmailConfig;
 import com.gearmind.domain.email.EmailMessage;
@@ -23,7 +25,7 @@ public class SmtpEmailSender implements EmailSender {
 
     public SmtpEmailSender(EmailConfig config) {
         if (config == null) {
-            throw new IllegalArgumentException("La configuración de correo es obligatoria.");
+            throw new ValidationException("La configuración de correo es obligatoria.");
         }
         this.config = config;
     }
@@ -53,9 +55,9 @@ public class SmtpEmailSender implements EmailSender {
             }
             Transport.send(mimeMessage);
         } catch (MessagingException e) {
-            throw new RuntimeException("Error enviando el correo.", e);
+            throw new InfrastructureException("Error enviando el correo.", e);
         } catch (Exception e) {
-            throw new RuntimeException("Error preparando el correo.", e);
+            throw new InfrastructureException("Error preparando el correo.", e);
         }
     }
 

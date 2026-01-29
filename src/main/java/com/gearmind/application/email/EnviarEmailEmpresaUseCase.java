@@ -1,5 +1,6 @@
 package com.gearmind.application.email;
 
+import com.gearmind.common.exception.ValidationException;
 import com.gearmind.domain.email.EmailConfig;
 import com.gearmind.domain.email.EmailMessage;
 import com.gearmind.domain.email.EmailSender;
@@ -18,7 +19,7 @@ public class EnviarEmailEmpresaUseCase {
 
     public void execute(long empresaId, EmailMessage message) {
         if (message == null) {
-            throw new IllegalArgumentException("El mensaje de correo es obligatorio.");
+            throw new ValidationException("El mensaje de correo es obligatorio.");
         }
         EmailConfig config = smtpConfigRepository.findByEmpresaId(empresaId);
         EmailSender sender = emailSenderFactory.create(config);

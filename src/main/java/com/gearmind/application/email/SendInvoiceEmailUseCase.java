@@ -1,5 +1,6 @@
 package com.gearmind.application.email;
 
+import com.gearmind.common.exception.ValidationException;
 import com.gearmind.domain.company.Empresa;
 import com.gearmind.domain.company.EmpresaRepository;
 import com.gearmind.domain.customer.Customer;
@@ -37,10 +38,10 @@ public class SendInvoiceEmailUseCase {
 
     public void execute(SendInvoiceEmailRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("La solicitud de envío de factura no puede ser nula.");
+            throw new ValidationException("La solicitud de envío de factura no puede ser nula.");
         }
-        Invoice invoice = invoiceRepository.findById(request.invoiceId()).orElseThrow(() -> new IllegalArgumentException("No se encontró la factura indicada."));
-        Customer customer = customerRepository.findById(invoice.getClienteId()).orElseThrow(() -> new IllegalArgumentException("No se encontró el cliente de la factura."));
+        Invoice invoice = invoiceRepository.findById(request.invoiceId()).orElseThrow(() -> new ValidationException("No se encontró la factura indicada."));
+        Customer customer = customerRepository.findById(invoice.getClienteId()).orElseThrow(() -> new ValidationException("No se encontró el cliente de la factura."));
         Empresa empresa = empresaRepository.findById(invoice.getEmpresaId()).orElse(null);
         Vehicle vehicle = vehicleRepository.findById(invoice.getVehiculoId()).orElse(null);
 
@@ -49,7 +50,7 @@ public class SendInvoiceEmailUseCase {
             recipient = safeTrim(customer.getEmail());
         }
         if (recipient.isBlank()) {
-            throw new IllegalArgumentException("El cliente no tiene email para enviar la factura.");
+            throw new ValidationException("El cliente no tiene email para enviar la factura.");
         }
 
         List<InvoiceLine> lines = invoiceRepository.findLinesByInvoiceId(invoice.getId());
@@ -65,10 +66,21 @@ public class SendInvoiceEmailUseCase {
             }
             body.append(".");
         }
+        if (invoice.getSubtotal() != null) {
+            body.append("\nSubtotal: ").append(EmailFormatUtils.formatMoney(invoice.getSubtotal())).append(".");
+        }
+        if (invoice.getIva() != null) {
+            body.append("\nIVA: ").append(EmailFormatUtils.formatMoney(invoice.getIva())).append(".");
+        }
+        if (invoice.getTotal() != null) {
+            body.append("\nTotal: ").append(EmailFormatUtils.formatMoney(invoice.getTotal())).append(".");
+        }
         if (request.message() != null && !request.message().isBlank()) {
             body.append("\n\nMensaje adicional:\n").append(request.message().trim());
         }
-        body.append("\n\nGracias por confiar en nosotros.\n");
+        body.append("\n\nGracias por confiar en nosotros.");
+        body.append("\n\nUn saludo,\n");
+        body.append(empresa != null ? empresa.getNombre() : "GearMind");
 
         EmailAttachment attachment = new EmailAttachment(pdfPath.getFileName().toString(), pdfPath, "application/pdf");
         EmailMessage message = new EmailMessage(recipient, subject, body.toString(), false, List.of(attachment));

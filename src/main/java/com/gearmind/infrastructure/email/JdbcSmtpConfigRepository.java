@@ -1,5 +1,7 @@
 package com.gearmind.infrastructure.email;
 
+import com.gearmind.common.exception.InfrastructureException;
+import com.gearmind.common.exception.ValidationException;
 import com.gearmind.domain.email.EmailConfig;
 import com.gearmind.domain.email.SmtpConfigRepository;
 import com.gearmind.infrastructure.database.DataSourceFactory;
@@ -39,9 +41,9 @@ public class JdbcSmtpConfigRepository implements SmtpConfigRepository {
                     return new EmailConfig(rs.getString("host"), rs.getInt("port"), rs.getString("username"), password, rs.getString("from_address"), rs.getBoolean("starttls"),rs.getBoolean("ssl"));
                 }
             }
-            throw new IllegalArgumentException("No hay configuración SMTP para la empresa.");
+            throw new ValidationException("No hay configuración SMTP para la empresa.");
         } catch (SQLException e) {
-            throw new RuntimeException("Error cargando la configuración SMTP.", e);
+            throw new InfrastructureException("Error cargando la configuración SMTP.", e);
         }
     }
 
@@ -66,7 +68,7 @@ public class JdbcSmtpConfigRepository implements SmtpConfigRepository {
             ps.setLong(8, empresaId);
             ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Error actualizando la configuración SMTP.", e);
+            throw new InfrastructureException("Error actualizando la configuración SMTP.", e);
         }
     }
 
@@ -76,7 +78,7 @@ public class JdbcSmtpConfigRepository implements SmtpConfigRepository {
             bindConfig(ps, config, 2);
             ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Error guardando la configuración SMTP.", e);
+            throw new InfrastructureException("Error guardando la configuración SMTP.", e);
         }
     }
 

@@ -3,6 +3,7 @@ package com.gearmind.application.email;
 import com.gearmind.domain.budget.Budget;
 import com.gearmind.domain.budget.BudgetLine;
 import com.gearmind.domain.budget.BudgetRepository;
+import com.gearmind.common.exception.ValidationException;
 import com.gearmind.domain.company.Empresa;
 import com.gearmind.domain.company.EmpresaRepository;
 import com.gearmind.domain.customer.Customer;
@@ -37,10 +38,10 @@ public class SendBudgetEmailUseCase {
 
     public void execute(SendBudgetEmailRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("La solicitud de envío de presupuesto no puede ser nula.");
+            throw new ValidationException("La solicitud de envío de presupuesto no puede ser nula.");
         }
-        Budget budget = budgetRepository.findById(request.budgetId()).orElseThrow(() -> new IllegalArgumentException("No se encontró el presupuesto indicado."));
-        Customer customer = customerRepository.findById(budget.getClienteId()).orElseThrow(() -> new IllegalArgumentException("No se encontró el cliente del presupuesto."));
+        Budget budget = budgetRepository.findById(request.budgetId()).orElseThrow(() -> new ValidationException("No se encontró el presupuesto indicado."));
+        Customer customer = customerRepository.findById(budget.getClienteId()).orElseThrow(() -> new ValidationException("No se encontró el cliente del presupuesto."));
         Empresa empresa = empresaRepository.findById(budget.getEmpresaId()).orElse(null);
         Vehicle vehicle = vehicleRepository.findById(budget.getVehiculoId()).orElse(null);
 
@@ -49,7 +50,7 @@ public class SendBudgetEmailUseCase {
             recipient = safeTrim(customer.getEmail());
         }
         if (recipient.isBlank()) {
-            throw new IllegalArgumentException("El cliente no tiene email para enviar el presupuesto.");
+            throw new ValidationException("El cliente no tiene email para enviar el presupuesto.");
         }
 
         List<BudgetLine> lines = budgetRepository.findLinesByBudgetId(budget.getId());
@@ -57,7 +58,7 @@ public class SendBudgetEmailUseCase {
         String subject = "Presupuesto #" + budget.getId() + " - " + (empresa != null ? empresa.getNombre() : "GearMind");
         StringBuilder body = new StringBuilder();
         body.append("Hola ").append(customer.getNombre()).append(",\n\n");
-        body.append("Adjuntamos el presupuesto solicitado en formato PDF.");
+        body.append("Te enviamos el presupuesto solicitado en formato PDF.");
         if (vehicle != null) {
             body.append("\nVehículo: ").append(vehicle.getMarca()).append(" ").append(vehicle.getModelo());
             if (vehicle.getMatricula() != null && !vehicle.getMatricula().isBlank()) {
@@ -65,10 +66,15 @@ public class SendBudgetEmailUseCase {
             }
             body.append(".");
         }
+        if (budget.getTotalEstimado() != null) {
+            body.append("\nTotal estimado: ").append(EmailFormatUtils.formatMoney(budget.getTotalEstimado())).append(".");
+        }
         if (request.message() != null && !request.message().isBlank()) {
             body.append("\n\nMensaje adicional:\n").append(request.message().trim());
         }
-        body.append("\n\nGracias por confiar en nosotros.\n");
+        body.append("\n\nSi necesitas cualquier aclaración, estaremos encantados de ayudarte.");
+        body.append("\n\nUn saludo,\n");
+        body.append(empresa != null ? empresa.getNombre() : "GearMind");
 
         EmailAttachment attachment = new EmailAttachment(pdfPath.getFileName().toString(), pdfPath, "application/pdf");
         EmailMessage message = new EmailMessage(recipient, subject, body.toString(), false, List.of(attachment));

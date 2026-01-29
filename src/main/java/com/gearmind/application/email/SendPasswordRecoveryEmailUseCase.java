@@ -1,5 +1,6 @@
 package com.gearmind.application.email;
 
+import com.gearmind.common.exception.ValidationException;
 import com.gearmind.domain.email.EmailMessage;
 import com.gearmind.domain.security.PasswordHasher;
 import com.gearmind.domain.user.User;
@@ -21,27 +22,27 @@ public class SendPasswordRecoveryEmailUseCase {
 
     public void execute(SendPasswordRecoveryEmailRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("La solicitud de recuperación no puede ser nula.");
+            throw new ValidationException("La solicitud de recuperación no puede ser nula.");
         }
         String email = safeTrim(request.email());
         if (email.isBlank()) {
-            throw new IllegalArgumentException("El email es obligatorio.");
+            throw new ValidationException("El email es obligatorio.");
         }
 
-        User user = userRepository.findByEmail(email.toLowerCase()).orElseThrow(() -> new IllegalArgumentException("No existe un usuario con ese email."));
+        User user = userRepository.findByEmail(email.toLowerCase()).orElseThrow(() -> new ValidationException("No existe un usuario con ese email."));
         String temporaryPassword = generateTemporaryPassword();
         String hashedPassword = passwordHasher.hash(temporaryPassword);
         userRepository.update(user.getId(), user.getEmpresaId(), user.getNombre(), user.getEmail(), hashedPassword, user.getRol(), user.isActivo());
 
         StringBuilder body = new StringBuilder();
         body.append("Hola ").append(user.getNombre()).append(",\n\n");
-        body.append("Hemos recibido una solicitud para recuperar tu contraseña en GearMind.\n\n");
-        body.append("Se ha generado una contraseña temporal para que puedas acceder:\n");
+        body.append("Hemos recibido una solicitud para restablecer tu contraseña en GearMind.\n\n");
+        body.append("Tu contraseña temporal es:\n");
         body.append(temporaryPassword).append("\n\n");
         body.append("Por seguridad, cambia la contraseña en cuanto accedas al sistema.\n");
         body.append("Si no solicitaste este cambio, ignora este correo y contacta con el administrador.\n");
 
-        EmailMessage message = new EmailMessage(user.getEmail(), "Recuperación de contraseña - contraseña temporal", body.toString());
+        EmailMessage message = new EmailMessage(user.getEmail(), "Recuperación de contraseña - credenciales temporales", body.toString());
         enviarEmailEmpresaUseCase.execute(user.getEmpresaId(), message);
     }
 
