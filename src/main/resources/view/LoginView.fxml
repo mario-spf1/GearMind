@@ -3,13 +3,12 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="com.gearmind.presentation.controller.LoginController">
-
+<StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:id="loginRoot" fx:controller="com.gearmind.presentation.controller.LoginController">
     <children>
 
-        <ImageView preserveRatio="false" opacity="0.55">
+        <ImageView preserveRatio="false" opacity="0.55" fitWidth="${loginRoot.width}" fitHeight="${loginRoot.height}">
             <image>
-                <Image url="@../img/login-background.jpg"/>
+                <Image url="@../img/Imagen_fondo.png"/>
             </image>
         </ImageView>
 
@@ -18,9 +17,9 @@
                 <VBox maxWidth="420" spacing="18" styleClass="tfx-card">
 
                     <VBox alignment="CENTER" spacing="6">
-                        <ImageView fitWidth="120" fitHeight="120" preserveRatio="true">
+                        <ImageView fitWidth="160" fitHeight="160" preserveRatio="true">
                             <image>
-                                <Image url="@../img/logo-gearmind.png"/>
+                                <Image url="@../img/Logo_Gearmind.png"/>
                             </image>
                         </ImageView>
                         <Label text="GearMind Taller" styleClass="tfx-title-xl"/>

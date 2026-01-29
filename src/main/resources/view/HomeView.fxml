@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
@@ -14,7 +15,11 @@
                 <Button fx:id="btnToggleSidebar" text="☰" onAction="#onToggleSidebar" mnemonicParsing="false" styleClass="tfx-icon-btn"/>
                 <HBox spacing="8" alignment="CENTER_LEFT" styleClass="tfx-brand">
                     <children>
-                        <Label text="⚙" styleClass="tfx-brand-icon"/>
+                        <ImageView fitWidth="28" fitHeight="28" preserveRatio="true">
+                            <image>
+                                <Image url="@../img/Logo_Gearmind.png"/>
+                            </image>
+                        </ImageView>
                         <Label text="GearMind" styleClass="tfx-toolbar-title"/>
                     </children>
                 </HBox>
