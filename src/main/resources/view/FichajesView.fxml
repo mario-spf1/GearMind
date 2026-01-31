@@ -31,13 +31,13 @@
                 <Label fx:id="lblEmpleadoFiltro" text="Empleado:"/>
                 <ComboBox fx:id="cmbEmpleado" prefWidth="240"/>
                 <Label text="Día:"/>
-                <DatePicker fx:id="dpDiaFiltro" prefWidth="150"/>
+                <DatePicker fx:id="dpDiaFiltro" prefWidth="150" promptText="Selecciona día"/>
             </children>
         </HBox>
 
         <VBox spacing="8" styleClass="tfx-card" VBox.vgrow="ALWAYS">
             <children>
-                <TableView fx:id="tblFichajes" VBox.vgrow="ALWAYS">
+                <TableView fx:id="tblFichajes">
                     <columns>
                         <TableColumn fx:id="colFecha" text="Fecha" prefWidth="160"/>
                         <TableColumn fx:id="colMovimiento" text="Movimiento" prefWidth="140"/>
