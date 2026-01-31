@@ -15,7 +15,7 @@
                 <Button fx:id="btnToggleSidebar" text="☰" onAction="#onToggleSidebar" mnemonicParsing="false" styleClass="tfx-icon-btn"/>
                 <HBox spacing="8" alignment="CENTER_LEFT" styleClass="tfx-brand">
                     <children>
-                        <ImageView fitWidth="28" fitHeight="28" preserveRatio="true">
+                        <ImageView fitWidth="100" fitHeight="100" preserveRatio="true">
                             <image>
                                 <Image url="@../img/Logo_Gearmind.png"/>
                             </image>
