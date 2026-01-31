@@ -28,6 +28,9 @@ import com.gearmind.infrastructure.task.MySqlTaskRepository;
 import com.gearmind.infrastructure.vehicle.MySqlVehicleRepository;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -87,6 +90,10 @@ public class DashboardController {
     private Label lblCitasConfirmadas;
     @FXML
     private Label lblSatisfaccionEstimada;
+    @FXML
+    private PieChart chartTareasEstado;
+    @FXML
+    private BarChart<String, Number> chartCitasEstado;
 
     private final ListCustomersUseCase listCustomersUseCase;
     private final ListVehiclesUseCase listVehiclesUseCase;
@@ -182,7 +189,7 @@ public class DashboardController {
                 lblTotalClientes.setText(String.valueOf(all.size()));
             }
             List<Customer> ultimos = all.stream().sorted(Comparator.comparing(Customer::getNombre, String.CASE_INSENSITIVE_ORDER)).limit(10).collect(Collectors.toList());
-            
+
             if (tblUltimosClientes != null) {
                 tblUltimosClientes.setItems(FXCollections.observableArrayList(ultimos));
                 int rows = Math.max(1, ultimos.size());
@@ -270,6 +277,8 @@ public class DashboardController {
                     .count();
 
             String satisfaccionEstimada = buildSatisfaccionEstimada(tasks);
+            updateTaskStatusChart(tasks);
+            updateAppointmentStatusChart(appointments);
 
             if (lblCitasHoy != null) {
                 lblCitasHoy.setText("• " + citasHoy + " citas programadas hoy");
@@ -355,4 +364,41 @@ public class DashboardController {
         return porcentaje + "%";
     }
 
+    private void updateTaskStatusChart(List<Task> tasks) {
+        if (chartTareasEstado == null) {
+            return;
+        }
+        long pendientes = tasks.stream().filter(t -> t.getEstado() == TaskStatus.PENDIENTE).count();
+        long enProceso = tasks.stream().filter(t -> t.getEstado() == TaskStatus.EN_PROCESO).count();
+        long completadas = tasks.stream().filter(t -> t.getEstado() == TaskStatus.COMPLETADA).count();
+        long canceladas = tasks.stream().filter(t -> t.getEstado() == TaskStatus.CANCELADA).count();
+
+        chartTareasEstado.setData(FXCollections.observableArrayList(
+                new PieChart.Data("Pendiente", pendientes),
+                new PieChart.Data("En proceso", enProceso),
+                new PieChart.Data("Completada", completadas),
+                new PieChart.Data("Cancelada", canceladas)
+        ));
+        chartTareasEstado.setLegendVisible(true);
+    }
+
+    private void updateAppointmentStatusChart(List<Appointment> appointments) {
+        if (chartCitasEstado == null) {
+            return;
+        }
+        long solicitadas = appointments.stream().filter(a -> a.getStatus() == AppointmentStatus.REQUESTED).count();
+        long confirmadas = appointments.stream().filter(a -> a.getStatus() == AppointmentStatus.CONFIRMED).count();
+        long completadas = appointments.stream().filter(a -> a.getStatus() == AppointmentStatus.COMPLETED).count();
+        long canceladas = appointments.stream().filter(a -> a.getStatus() == AppointmentStatus.CANCELLED).count();
+
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        series.setName("Estado de citas");
+        series.getData().add(new XYChart.Data<>("Solicitada", solicitadas));
+        series.getData().add(new XYChart.Data<>("Confirmada", confirmadas));
+        series.getData().add(new XYChart.Data<>("Completada", completadas));
+        series.getData().add(new XYChart.Data<>("Cancelada", canceladas));
+
+        chartCitasEstado.getData().setAll(series);
+        chartCitasEstado.setLegendVisible(false);
+    }
 }

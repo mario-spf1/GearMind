@@ -16,6 +16,7 @@ public class SaveTaskRequest {
     private TaskStatus estado;
     private TaskPriority prioridad;
     private LocalDateTime fechaLimite;
+    private Long currentUserId;
 
     public Long getId() {
         return id;
@@ -87,5 +88,13 @@ public class SaveTaskRequest {
 
     public void setFechaLimite(LocalDateTime fechaLimite) {
         this.fechaLimite = fechaLimite;
+    }
+
+    public Long getCurrentUserId() {
+        return currentUserId;
+    }
+
+    public void setCurrentUserId(Long currentUserId) {
+        this.currentUserId = currentUserId;
     }
 }

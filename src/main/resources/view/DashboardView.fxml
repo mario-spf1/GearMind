@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.chart.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -125,6 +126,27 @@
                     <Label fx:id="lblSatisfaccionEstimada" styleClass="tfx-mini-number"/>
                 </VBox>
             </FlowPane>
+        </VBox>
+    </GridPane>
+    <GridPane hgap="12" vgap="12">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+        </columnConstraints>
+        <VBox spacing="10" styleClass="tfx-card" GridPane.columnIndex="0">
+            <Label text="Estado de tareas" styleClass="tfx-label-strong"/>
+            <PieChart fx:id="chartTareasEstado" legendVisible="true" labelsVisible="true" prefHeight="220"/>
+        </VBox>
+        <VBox spacing="10" styleClass="tfx-card" GridPane.columnIndex="1">
+            <Label text="Estado de citas" styleClass="tfx-label-strong"/>
+            <BarChart fx:id="chartCitasEstado" prefHeight="220">
+                <xAxis>
+                    <CategoryAxis label="Estado"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis label="Cantidad"/>
+                </yAxis>
+            </BarChart>
         </VBox>
     </GridPane>
 </VBox>

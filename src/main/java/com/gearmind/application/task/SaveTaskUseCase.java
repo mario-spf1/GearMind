@@ -1,5 +1,6 @@
 package com.gearmind.application.task;
 
+import com.gearmind.application.message.SendMessageUseCase;
 import com.gearmind.domain.task.Task;
 import com.gearmind.domain.task.TaskPriority;
 import com.gearmind.domain.task.TaskRepository;
@@ -11,9 +12,16 @@ import java.util.Optional;
 public class SaveTaskUseCase {
 
     private final TaskRepository taskRepository;
+    private final SendMessageUseCase internalMessageUseCase;
 
     public SaveTaskUseCase(TaskRepository taskRepository) {
         this.taskRepository = taskRepository;
+        this.internalMessageUseCase = null;
+    }
+
+    public SaveTaskUseCase(TaskRepository taskRepository, SendMessageUseCase internalMessageUseCase) {
+        this.taskRepository = taskRepository;
+        this.internalMessageUseCase = internalMessageUseCase;
     }
 
     public void execute(SaveTaskRequest request) {
@@ -49,9 +57,11 @@ public class SaveTaskUseCase {
             task.setCreatedAt(LocalDateTime.now());
             task.setUpdatedAt(null);
             taskRepository.save(task);
+            notifyAssignment(task, request.getCurrentUserId(), null);
         } else {
             Optional<Task> existing = taskRepository.findById(request.getId());
             Task task = existing.orElseThrow(() -> new IllegalArgumentException("La tarea indicada no existe."));
+            Long previousEmployeeId = task.getAsignadoA();
             task.setOrdenTrabajoId(request.getOrdenTrabajoId());
             task.setAsignadoA(request.getAsignadoA());
             task.setTitulo(request.getTitulo());
@@ -61,6 +71,25 @@ public class SaveTaskUseCase {
             task.setFechaLimite(request.getFechaLimite());
             task.setUpdatedAt(LocalDateTime.now());
             taskRepository.save(task);
+            notifyAssignment(task, request.getCurrentUserId(), previousEmployeeId);
         }
+    }
+
+    private void notifyAssignment(Task task, Long senderId, Long previousEmployeeId) {
+        if (internalMessageUseCase == null) {
+            return;
+        }
+        Long assignedTo = task.getAsignadoA();
+        if (assignedTo == null || senderId == null) {
+            return;
+        }
+        if (assignedTo.equals(senderId)) {
+            return;
+        }
+        if (previousEmployeeId != null && previousEmployeeId.equals(assignedTo)) {
+            return;
+        }
+        String message = "Se te ha asignado la tarea #" + task.getId() + ": " + task.getTitulo() + ".";
+        internalMessageUseCase.execute(task.getEmpresaId(), senderId, assignedTo, message);
     }
 }

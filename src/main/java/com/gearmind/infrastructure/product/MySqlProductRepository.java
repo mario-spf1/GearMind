@@ -220,6 +220,40 @@ public class MySqlProductRepository implements ProductRepository {
     }
 
     @Override
+    public void delete(long productId, long empresaId) {
+        String deleteMovementsSql = """
+                DELETE FROM inventario_movimiento
+                WHERE producto_id = ? AND empresa_id = ?
+                """;
+        String deleteProductSql = """
+                DELETE FROM producto
+                WHERE id = ? AND empresa_id = ?
+                """;
+
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement psMovements = conn.prepareStatement(deleteMovementsSql); PreparedStatement psProduct = conn.prepareStatement(deleteProductSql)) {
+                psMovements.setLong(1, productId);
+                psMovements.setLong(2, empresaId);
+                psMovements.executeUpdate();
+
+                psProduct.setLong(1, productId);
+                psProduct.setLong(2, empresaId);
+                psProduct.executeUpdate();
+
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw new RuntimeException("Error eliminando producto " + productId, e);
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error eliminando producto " + productId, e);
+        }
+    }
+
+    @Override
     public List<Product> findAllWithEmpresa() {
         List<Product> result = new ArrayList<>();
 

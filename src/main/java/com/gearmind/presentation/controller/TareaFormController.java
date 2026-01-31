@@ -137,6 +137,12 @@ public class TareaFormController {
         request.setDescripcion(txtDescripcion.getText());
         request.setEstado(existingTask != null ? existingTask.getEstado() : TaskStatus.PENDIENTE);
         request.setFechaLimite(resolveFechaLimite());
+        if (AuthContext.isLoggedIn()) {
+            User currentUser = AuthContext.getCurrentUser();
+            if (currentUser != null) {
+                request.setCurrentUserId(currentUser.getId());
+            }
+        }
         return request;
     }
 
@@ -160,7 +166,7 @@ public class TareaFormController {
             }
             return;
         }
-        
+
         if (boxEmpresa != null) {
             boxEmpresa.setVisible(true);
             boxEmpresa.setManaged(true);

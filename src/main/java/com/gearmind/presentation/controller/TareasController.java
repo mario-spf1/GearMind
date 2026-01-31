@@ -1,6 +1,7 @@
 package com.gearmind.presentation.controller;
 
 import com.gearmind.application.common.AuthContext;
+import com.gearmind.application.message.SendMessageUseCase;
 import com.gearmind.application.task.AssignTaskUseCase;
 import com.gearmind.application.task.ChangeTaskStatusUseCase;
 import com.gearmind.application.task.ListTasksUseCase;
@@ -12,6 +13,7 @@ import com.gearmind.domain.task.TaskStatus;
 import com.gearmind.domain.user.User;
 import com.gearmind.domain.user.UserRole;
 import com.gearmind.infrastructure.auth.MySqlUserRepository;
+import com.gearmind.infrastructure.message.MySqlMessageRepository;
 import com.gearmind.infrastructure.task.MySqlTaskRepository;
 import com.gearmind.presentation.table.SmartTable;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -92,10 +94,11 @@ public class TareasController {
 
     public TareasController() {
         MySqlTaskRepository repo = new MySqlTaskRepository();
+        SendMessageUseCase internalMessageUseCase = new SendMessageUseCase(new MySqlMessageRepository());
         this.listTasksUseCase = new ListTasksUseCase(repo);
-        this.saveTaskUseCase = new SaveTaskUseCase(repo);
+        this.saveTaskUseCase = new SaveTaskUseCase(repo, internalMessageUseCase);
         this.changeTaskStatusUseCase = new ChangeTaskStatusUseCase(repo);
-        this.assignTaskUseCase = new AssignTaskUseCase(repo);
+        this.assignTaskUseCase = new AssignTaskUseCase(repo, internalMessageUseCase);
         this.setTaskPriorityUseCase = new SetTaskPriorityUseCase(repo);
     }
 
@@ -526,7 +529,8 @@ public class TareasController {
                 return;
             }
             try {
-                assignTaskUseCase.execute(task.getId(), empresaId, chosen.id);
+                Long senderId = AuthContext.isLoggedIn() ? AuthContext.getCurrentUser().getId() : null;
+                assignTaskUseCase.execute(task.getId(), empresaId, chosen.id, senderId);
                 loadTasksFromDb();
             } catch (Exception ex) {
                 new Alert(Alert.AlertType.ERROR, "No se pudo asignar la tarea: " + ex.getMessage()).showAndWait();

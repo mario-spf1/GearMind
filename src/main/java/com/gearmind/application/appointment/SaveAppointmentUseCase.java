@@ -6,6 +6,7 @@ import com.gearmind.domain.appointment.AppointmentRepository;
 import com.gearmind.domain.appointment.AppointmentStatus;
 import com.gearmind.domain.appointment.OverlappingAppointmentException;
 import com.gearmind.domain.user.UserRole;
+import com.gearmind.application.message.SendMessageUseCase;
 import com.gearmind.application.telegram.SendTelegramNotificationUseCase;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -16,15 +17,24 @@ public class SaveAppointmentUseCase {
 
     private final AppointmentRepository appointmentRepository;
     private final SendTelegramNotificationUseCase notificationUseCase;
+    private final SendMessageUseCase internalMessageUseCase;
 
     public SaveAppointmentUseCase(AppointmentRepository appointmentRepository) {
         this.appointmentRepository = appointmentRepository;
         this.notificationUseCase = null;
+        this.internalMessageUseCase = null;
     }
 
     public SaveAppointmentUseCase(AppointmentRepository appointmentRepository, SendTelegramNotificationUseCase notificationUseCase) {
         this.appointmentRepository = appointmentRepository;
         this.notificationUseCase = notificationUseCase;
+        this.internalMessageUseCase = null;
+    }
+
+    public SaveAppointmentUseCase(AppointmentRepository appointmentRepository, SendTelegramNotificationUseCase notificationUseCase, SendMessageUseCase internalMessageUseCase) {
+        this.appointmentRepository = appointmentRepository;
+        this.notificationUseCase = notificationUseCase;
+        this.internalMessageUseCase = internalMessageUseCase;
     }
 
     public void execute(SaveAppointmentRequest request) {
@@ -75,6 +85,7 @@ public class SaveAppointmentUseCase {
             appointment.setUpdatedAt(null);
             appointmentRepository.save(appointment);
             notifyCreation(appointment);
+            notifyEmployeeAssignment(appointment, request.getCurrentUserId(), null);
         } else {
             Optional<Appointment> maybeExisting = appointmentRepository.findById(request.getId());
             Appointment existing = maybeExisting.orElseThrow(() -> new IllegalArgumentException("La cita indicada no existe."));
@@ -102,6 +113,7 @@ public class SaveAppointmentUseCase {
             existing.setUpdatedAt(LocalDateTime.now());
             appointmentRepository.save(existing);
             notifyModification(existing, previousDateTime, previousVehicleId, previousEmployeeId, previousNotes, previousStatus, previousCustomerId);
+            notifyEmployeeAssignment(existing, request.getCurrentUserId(), previousEmployeeId);
         }
     }
 
@@ -180,6 +192,25 @@ public class SaveAppointmentUseCase {
         String message = "Tu cita #" + appointment.getId() + " ha sido modificada. Nueva fecha y hora: " + when + ".";
         String payload = "appointmentId=" + appointment.getId() + ";status=" + appointment.getStatus().name();
         notificationUseCase.execute(appointment.getCustomerId(), "CITA_MODIFICADA", message, payload);
+    }
+
+    private void notifyEmployeeAssignment(Appointment appointment, Long senderId, Long previousEmployeeId) {
+        if (internalMessageUseCase == null) {
+            return;
+        }
+        Long employeeId = appointment.getEmployeeId();
+        if (employeeId == null || senderId == null) {
+            return;
+        }
+        if (employeeId.equals(senderId)) {
+            return;
+        }
+        if (previousEmployeeId != null && previousEmployeeId.equals(employeeId)) {
+            return;
+        }
+        String when = formatDateTime(appointment.getDateTime());
+        String message = "Se te ha asignado la cita #" + appointment.getId() + " para el " + when + ".";
+        internalMessageUseCase.execute(appointment.getEmpresaId(), senderId, employeeId, message);
     }
 
     private String formatDateTime(LocalDateTime dateTime) {

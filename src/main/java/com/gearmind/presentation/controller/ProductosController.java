@@ -5,6 +5,7 @@ import com.gearmind.application.common.SessionManager;
 import com.gearmind.application.inventory.AdjustInventoryUseCase;
 import com.gearmind.application.product.ActivateProductUseCase;
 import com.gearmind.application.product.DeactivateProductUseCase;
+import com.gearmind.application.product.DeleteProductUseCase;
 import com.gearmind.application.product.ListLowStockProductsUseCase;
 import com.gearmind.application.product.ListProductsUseCase;
 import com.gearmind.domain.inventory.InventoryMovementType;
@@ -97,6 +98,7 @@ public class ProductosController {
     private final ListLowStockProductsUseCase listLowStockProductsUseCase;
     private final DeactivateProductUseCase deactivateProductUseCase;
     private final ActivateProductUseCase activateProductUseCase;
+    private final DeleteProductUseCase deleteProductUseCase;
     private final AdjustInventoryUseCase adjustInventoryUseCase;
 
     private final ObservableList<Product> masterData = FXCollections.observableArrayList();
@@ -110,6 +112,7 @@ public class ProductosController {
         this.listLowStockProductsUseCase = new ListLowStockProductsUseCase(repo);
         this.deactivateProductUseCase = new DeactivateProductUseCase(repo);
         this.activateProductUseCase = new ActivateProductUseCase(repo);
+        this.deleteProductUseCase = new DeleteProductUseCase(repo);
         this.adjustInventoryUseCase = new AdjustInventoryUseCase(repo, new MySqlInventoryMovementRepository());
     }
 
@@ -202,7 +205,8 @@ public class ProductosController {
             private final Button btnEditar = new Button("Editar");
             private final Button btnStock = new Button("Stock");
             private final Button btnToggle = new Button();
-            private final HBox box = new HBox(8, btnEditar, btnStock, btnToggle);
+            private final Button btnEliminar = new Button("Eliminar");
+            private final HBox box = new HBox(8, btnEditar, btnStock, btnToggle, btnEliminar);
 
             {
                 box.getStyleClass().add("tfx-table-actions");
@@ -210,9 +214,11 @@ public class ProductosController {
                 btnEditar.getStyleClass().add("tfx-table-action-btn");
                 btnStock.getStyleClass().add("tfx-table-action-btn");
                 btnToggle.getStyleClass().add("tfx-table-action-btn");
+                btnEliminar.getStyleClass().addAll("tfx-table-action-btn", "tfx-table-action-danger");
                 btnEditar.setTooltip(new Tooltip("Editar producto"));
                 btnStock.setTooltip(new Tooltip("Añadir stock"));
                 btnToggle.setTooltip(new Tooltip("Activar/Desactivar"));
+                btnEliminar.setTooltip(new Tooltip("Eliminar producto"));
 
                 btnEditar.setOnAction(e -> {
                     Product p = getItem();
@@ -232,6 +238,13 @@ public class ProductosController {
                     Product p = getItem();
                     if (p != null) {
                         openStockAdjustment(p);
+                    }
+                });
+
+                btnEliminar.setOnAction(e -> {
+                    Product p = getItem();
+                    if (p != null) {
+                        deleteProduct(p);
                     }
                 });
             }
@@ -453,6 +466,24 @@ public class ProductosController {
             if (btn == ButtonType.OK) {
                 activateProductUseCase.activate(product.getId(), product.getEmpresaId());
                 loadProductosFromDb();
+            }
+        });
+    }
+
+    private void deleteProduct(Product product) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Eliminar producto");
+        alert.setHeaderText("¿Eliminar producto del inventario?");
+        alert.setContentText("El producto \"" + product.getNombre() + "\" se eliminará del inventario y de sus movimientos.");
+
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                try {
+                    deleteProductUseCase.delete(product.getId(), product.getEmpresaId());
+                    loadProductosFromDb();
+                } catch (Exception ex) {
+                    new Alert(Alert.AlertType.ERROR, "No se pudo eliminar el producto.\n\n" + ex.getMessage()).showAndWait();
+                }
             }
         });
     }

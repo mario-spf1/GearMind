@@ -21,6 +21,8 @@ public interface ProductRepository {
 
     void activate(long productId, long empresaId);
 
+    void delete(long productId, long empresaId);
+
     List<Product> findAllWithEmpresa();
 
     List<Product> findLowStockByEmpresa(long empresaId);
