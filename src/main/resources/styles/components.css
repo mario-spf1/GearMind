@@ -400,6 +400,29 @@
     -fx-min-width: 360;
 }
 
+.tfx-card .chart,
+.tfx-card .chart-legend {
+    -fx-background-color: transparent;
+}
+
+.tfx-card .chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.tfx-card .chart-title,
+.tfx-card .chart-legend .label,
+.tfx-card .chart-pie-label {
+    -fx-text-fill: -tfx-text;
+    -fx-fill: -tfx-text;
+}
+
+.tfx-card .axis {
+    -fx-tick-label-fill: -tfx-text;
+}
+
+.tfx-card .axis .axis-label {
+    -fx-text-fill: -tfx-text;
+}
 
 .tfx-card-sm {
     -fx-background-color: -tfx-surface;
