@@ -86,6 +86,9 @@ public class FichajesController {
     @FXML
     public void initialize() {
         setupTable();
+        if (dpDiaFiltro != null && dpDiaFiltro.getValue() == null) {
+            dpDiaFiltro.setValue(LocalDate.now());
+        }
         setupFilters();
         refreshFichajes();
         refreshStatus();
@@ -207,10 +210,11 @@ public class FichajesController {
         if (tblFichajes == null) {
             return;
         }
-        int rows = Math.max(1, fichajes.size());
+        int rows = fichajes.size();
         double headerHeight = 28;
         double tableHeight = headerHeight + rows * tblFichajes.getFixedCellSize() + 2;
         tblFichajes.setPrefHeight(tableHeight);
+        tblFichajes.setMinHeight(tableHeight);
     }
 
     private void updateTotalDia(Long userId, LocalDate diaFiltro) {

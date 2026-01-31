@@ -22,7 +22,7 @@ public class SaveUserUseCase {
         if (request.id() == null) {
             String passwordHash = passwordHasher.hash(request.rawPassword().trim());
 
-            return repository.create(request.empresaId(), request.nombre().trim(), normalize(request.email()), passwordHash, request.rol(), request.activo() );
+            return repository.create(request.empresaId(), request.nombre().trim(), normalizeEmail(request.email()), passwordHash, request.rol(), request.activo());
         }
 
         User existing = repository.findById(request.id()).orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
@@ -34,7 +34,7 @@ public class SaveUserUseCase {
             passwordHash = existing.getPasswordHash();
         }
 
-        return repository.update(request.id(), request.empresaId(), request.nombre().trim(), normalize(request.email()), passwordHash, request.rol(), request.activo());
+        return repository.update(request.id(), request.empresaId(), request.nombre().trim(), normalizeEmail(request.email()), passwordHash, request.rol(), request.activo());
     }
 
     private void validate(SaveUserRequest r) {
@@ -70,7 +70,14 @@ public class SaveUserUseCase {
         }
     }
 
-    private String normalize(String s) {
-        return s == null ? null : s.trim();
+    private String normalizeEmail(String s) {
+        if (s == null) {
+            return null;
+        }
+        String trimmed = s.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        return trimmed.toLowerCase(java.util.Locale.ROOT);
     }
 }

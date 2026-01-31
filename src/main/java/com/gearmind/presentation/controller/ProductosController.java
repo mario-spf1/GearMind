@@ -182,7 +182,7 @@ public class ProductosController {
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 getStyleClass().removeAll("tfx-badge", "tfx-table-badge", "tfx-badge-success", "tfx-badge-danger");
-                
+
                 if (empty || item == null) {
                     setText(null);
                     setAlignment(Pos.CENTER);
@@ -350,11 +350,8 @@ public class ProductosController {
                         setGraphic(null);
                         return;
                     }
-                    String empresa = AuthContext.isSuperAdmin() ? safeRaw(item.getEmpresaNombre()) + " · " : "";
-                    String referencia = safeRaw(item.getReferencia());
                     String nombre = safeRaw(item.getNombre());
-                    String label = empresa + nombre + (referencia.isBlank() ? "" : " · Ref " + referencia);
-                    Label name = new Label(label);
+                    Label name = new Label(nombre);;
                     Label stock = new Label(formatStock(item));
                     stock.getStyleClass().add("tfx-warn");
                     HBox row = new HBox(8, name, new Region(), stock);
@@ -586,8 +583,7 @@ public class ProductosController {
 
     private String formatStock(Product product) {
         int stock = product.getStock() == null ? 0 : product.getStock();
-        int minimo = product.getStockMinimo() == null ? 0 : product.getStockMinimo();
-        return stock + " / " + minimo;
+        return String.valueOf(stock);
     }
 
     private String formatPrice(BigDecimal value) {

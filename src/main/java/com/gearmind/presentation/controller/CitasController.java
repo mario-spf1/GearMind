@@ -768,6 +768,8 @@ public class CitasController {
 
         TableColumn<TelegramRequestRow, TelegramRequestRow> colAcciones = new TableColumn<>("Acciones");
         colAcciones.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
+        colAcciones.setMinWidth(170);
+        colAcciones.setPrefWidth(190);
         colAcciones.setCellFactory(column -> new TableCell<>() {
             private final Button btnAceptar = new Button("Aceptar");
             private final Button btnRechazar = new Button("Rechazar");
@@ -813,8 +815,9 @@ public class CitasController {
         VBox root = new VBox(12, table, footer);
         root.setPadding(new javafx.geometry.Insets(12));
         root.getStyleClass().add("tfx-card");
+        root.setMinWidth(1000);
 
-        Scene scene = new Scene(root, 900, 500);
+        Scene scene = new Scene(root, 1100, 520);
         scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
         scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
         Stage stage = new Stage();

@@ -15,7 +15,7 @@ public class SaveEmpresaUseCase {
         String nombre = safeTrim(request.nombre());
         String cif = safeTrim(request.cif());
         String telefono = safeTrim(request.telefono());
-        String email = safeTrim(request.email());
+        String email = normalizeEmail(request.email());
         String direccion = safeTrim(request.direccion());
         String ciudad = safeTrim(request.ciudad());
         String provincia = safeTrim(request.provincia());
@@ -28,11 +28,23 @@ public class SaveEmpresaUseCase {
 
         long id = request.id() != null ? request.id() : 0L;
         Empresa empresa = new Empresa(id, nombre, cif, telefono, email, direccion, ciudad, provincia, cp, activa);
-        
+
         return repository.save(empresa);
     }
 
     private String safeTrim(String value) {
         return value != null ? value.trim() : "";
     }
+
+    private String normalizeEmail(String value) {
+        if (value == null) {
+            return "";
+        }
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        return trimmed.toLowerCase(java.util.Locale.ROOT);
+    }
+
 }

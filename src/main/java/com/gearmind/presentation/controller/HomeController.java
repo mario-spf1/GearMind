@@ -308,6 +308,8 @@ public class HomeController {
         VBox.setVgrow(conversationList, Priority.ALWAYS);
         HBox content = new HBox(12, conversationPane, chatPane);
         content.getStyleClass().add("tfx-chat-popup");
+        content.setMinWidth(720);
+        content.setPrefWidth(720);
         HBox.setHgrow(chatPane, Priority.ALWAYS);
         CustomMenuItem item = new CustomMenuItem(content, false);
         item.setHideOnClick(false);
@@ -331,7 +333,7 @@ public class HomeController {
 
         alertsList = new ListView<>();
         alertsList.setPlaceholder(new Label("Sin alertas de stock."));
-        alertsList.setPrefWidth(320);
+        alertsList.setPrefWidth(380);
         alertsList.getStyleClass().add("tfx-chat-list");
         alertsList.setCellFactory(listView -> new ListCell<>() {
             @Override
@@ -342,12 +344,9 @@ public class HomeController {
                     setGraphic(null);
                     return;
                 }
-                String empresa = AuthContext.isSuperAdmin() ? safe(item.getEmpresaNombre()) + " · " : "";
-                String referencia = safe(item.getReferencia());
                 String nombre = safe(item.getNombre());
-                String label = empresa + nombre + (referencia.isBlank() ? "" : " · Ref " + referencia);
-                Label name = new Label(label);
                 Label stock = new Label(formatStock(item));
+                Label name = new Label(nombre);
                 stock.getStyleClass().add("tfx-warn");
                 HBox row = new HBox(8, name, new Region(), stock);
                 HBox.setHgrow(row.getChildren().get(1), Priority.ALWAYS);
@@ -358,6 +357,8 @@ public class HomeController {
 
         VBox content = new VBox(8, new Label("Productos con stock bajo"), alertsList);
         content.getStyleClass().add("tfx-chat-popup");
+        content.setMinWidth(420);
+        content.setPrefWidth(420);
         CustomMenuItem item = new CustomMenuItem(content, false);
         item.setHideOnClick(false);
         alertsMenu = new ContextMenu(item);
@@ -531,8 +532,7 @@ public class HomeController {
 
     private String formatStock(Product product) {
         int stock = product.getStock() == null ? 0 : product.getStock();
-        int minimo = product.getStockMinimo() == null ? 0 : product.getStockMinimo();
-        return stock + " / " + minimo;
+        return String.valueOf(stock);
     }
 
     private String safe(String value) {

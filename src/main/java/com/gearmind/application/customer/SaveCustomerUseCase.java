@@ -17,14 +17,25 @@ public class SaveCustomerUseCase {
         validate(request);
 
         if (request.id() == null) {
-            return repository.create(request.empresaId(), request.nombre().trim(), normalize(request.dni()), normalize(request.email()), normalize(request.telefono()), normalize(request.notas()));
+            return repository.create(request.empresaId(), request.nombre().trim(), normalize(request.dni()), normalizeEmail(request.email()), normalize(request.telefono()), normalize(request.notas()));
         }
 
-        return repository.update(request.id(), request.empresaId(), request.nombre().trim(), normalize(request.dni()), normalize(request.email()), normalize(request.telefono()), normalize(request.notas()));
+        return repository.update(request.id(), request.empresaId(), request.nombre().trim(), normalize(request.dni()), normalizeEmail(request.email()), normalize(request.telefono()), normalize(request.notas()));
     }
 
     private String normalize(String s) {
         return s == null ? null : s.trim();
+    }
+
+    private String normalizeEmail(String s) {
+        if (s == null) {
+            return null;
+        }
+        String trimmed = s.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        return trimmed.toLowerCase(java.util.Locale.ROOT);
     }
 
     private void validate(SaveCustomerRequest r) {
