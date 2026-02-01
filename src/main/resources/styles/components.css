@@ -26,10 +26,38 @@
     -fx-background-color: -tfx-primary-600;
 }
 
+.tfx-btn-fichajes {
+    -fx-background-color: -tfx-success;
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+}
+
+.tfx-btn-fichajes:hover {
+    -fx-background-color: derive(-tfx-success, -10%);
+}
+
+.tfx-btn-fichajes:armed {
+    -fx-background-color: derive(-tfx-success, -16%);
+}
+
 .tfx-btn-ghost {
     -fx-background-color: transparent;
     -fx-text-fill: -tfx-text;
     -fx-border-color: -tfx-border;
+}
+
+.tfx-btn-filter-clear {
+    -fx-background-color: rgba(241,197,90,0.18);
+    -fx-text-fill: -tfx-warning;
+    -fx-border-color: rgba(241,197,90,0.6);
+}
+
+.tfx-btn-filter-clear:hover {
+    -fx-background-color: rgba(241,197,90,0.28);
+}
+
+.tfx-btn-filter-clear:armed {
+    -fx-background-color: rgba(241,197,90,0.36);
 }
 
 .tfx-btn-reload {

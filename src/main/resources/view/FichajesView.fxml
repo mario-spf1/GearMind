@@ -20,7 +20,7 @@
                     </children>
                 </VBox>
                 <Label fx:id="lblTiempoActual" text="Tiempo: 00:00 h" styleClass="tfx-muted"/>
-                <Button fx:id="btnSesionLaboral" text="Comenzar sesión laboral" onAction="#onSesionLaboral" styleClass="button tfx-btn-primary"/>
+                <Button fx:id="btnSesionLaboral" text="Comenzar sesión laboral" onAction="#onSesionLaboral" styleClass="tfx-btn-primary"/>
             </children>
         </HBox>
 

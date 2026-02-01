@@ -23,7 +23,7 @@
                 <ComboBox fx:id="cmbPageSize" prefWidth="90"/>
                 <Label text="por página" styleClass="tfx-muted"/>
                 <Button text="Recargar" onAction="#onRefrescar" styleClass="tfx-btn-reload"/>
-                <Button text="Nuevo vehículo" onAction="#onNuevo" styleClass="button tfx-btn-primary"/>
+                <Button text="Nuevo vehículo" onAction="#onNuevo" styleClass="tfx-btn-primary"/>
             </HBox>
 
             <VBox spacing="12" styleClass="tfx-card">
@@ -41,7 +41,7 @@
                     <TextField fx:id="filterVinField" promptText="VIN" HBox.hgrow="ALWAYS" styleClass="text-field"/>
                     <TextField fx:id="filterYearField" promptText="Año (2016-2020)" prefWidth="190" styleClass="text-field"/>
                     <Pane HBox.hgrow="ALWAYS"/>
-                    <Button text="Limpiar filtros" onAction="#onLimpiarFiltros" styleClass="button tfx-btn-ghost"/>
+                    <Button text="Limpiar filtros" onAction="#onLimpiarFiltros" styleClass="tfx-btn-filter-clear"/>
                 </HBox>
                 <VBox spacing="4">
                     <TableView fx:id="tblVehiculos">

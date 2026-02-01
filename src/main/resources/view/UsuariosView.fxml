@@ -51,7 +51,7 @@
                         <ComboBox fx:id="filterEstadoCombo" prefWidth="140" styleClass="tfx-filter-field"/>
                     </HBox>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="Limpiar filtros" onAction="#onLimpiarFiltros" styleClass="tfx-btn-ghost"/>
+                    <Button text="Limpiar filtros" onAction="#onLimpiarFiltros" styleClass="tfx-btn-filter-clear"/>
                 </HBox>
             </children>
         </VBox>

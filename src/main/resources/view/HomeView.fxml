@@ -34,7 +34,7 @@
 
                 <HBox fx:id="userBox" alignment="CENTER_RIGHT" spacing="8" styleClass="tfx-userbox">
                     <children>
-                        <Button fx:id="btnFichajes" text="Fichajes" onAction="#onFichajes" styleClass="button tfx-btn-primary"/>
+                        <Button fx:id="btnFichajes" text="Fichajes" onAction="#onFichajes" styleClass="tfx-btn-fichajes"/>
                         <Label fx:id="lblUsuarioActual" text="Usuario" styleClass="tfx-muted"/>
                         <Button fx:id="btnUserMenu" text="▾" mnemonicParsing="false" onAction="#onUserMenu" styleClass="tfx-icon-btn"/>
                     </children>
