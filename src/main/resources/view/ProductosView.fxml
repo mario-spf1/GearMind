@@ -89,10 +89,10 @@
                         <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="230"/>
                         <TableColumn fx:id="colStock" text="Stock" prefWidth="70"/>
                         <TableColumn fx:id="colStockMinimo" text="Stock mínimo" prefWidth="90"/>
-                        <TableColumn fx:id="colPrecioCompra" text="Precio compra" prefWidth="105"/>
-                        <TableColumn fx:id="colPrecioVenta" text="Precio venta" prefWidth="105"/>
+                        <TableColumn fx:id="colPrecioCompra" text="Precio compra" prefWidth="90"/>
+                        <TableColumn fx:id="colPrecioVenta" text="Precio venta" prefWidth="90"/>
                         <TableColumn fx:id="colEstado" text="Estado" prefWidth="95"/>
-                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="140"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="200"/>
                     </columns>
                 </TableView>
 

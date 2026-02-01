@@ -45,7 +45,7 @@
         </VBox>
         <VBox styleClass="tfx-card-kpi tfx-kpi-warning" GridPane.columnIndex="2">
             <HBox alignment="CENTER_LEFT" spacing="8">
-                <Label text="🛠️" styleClass="tfx-kpi-icon"/>
+                <Label text="🔧" styleClass="tfx-kpi-icon"/>
                 <Label text="Reparaciones abiertas" styleClass="tfx-kpi-title"/>
             </HBox>
             <Label fx:id="lblReparacionesAbiertas" text="0" styleClass="tfx-kpi-number"/>
