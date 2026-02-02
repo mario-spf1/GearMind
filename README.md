@@ -1,173 +1,117 @@
 # ⚙️ GearMind
-
-Proyecto realizado como **Trabajo Fin de Grado (TFG)**.
+> **Proyecto de Fin de Grado (TFG)**  
+> *Una solución robusta para la gestión inteligente de talleres mecánicos.*
 
 ---
 
 ## 📌 ¿Qué es GearMind?
 
-**GearMind** es una aplicación de escritorio diseñada para la **gestión integral de talleres mecánicos**, cubriendo tanto la operativa interna del taller como la interacción con los clientes.
+**GearMind** es una aplicación de escritorio de alto rendimiento diseñada para la **gestión integral de talleres**, optimizando tanto la operativa interna como la experiencia del cliente. A diferencia de las soluciones SaaS, GearMind apuesta por un **entorno local**, garantizando la soberanía de los datos y la privacidad del negocio.
 
-Permite centralizar y organizar:
-
-- Clientes y vehículos  
-- Citas y reparaciones  
-- Presupuestos, facturación y pagos  
-- Reportes y documentación  
-- Comunicación con clientes mediante **bot de Telegram**
-
-La aplicación funciona en **entorno local**, sin depender de servicios SaaS externos, garantizando el control total de los datos por parte del taller.
+### Capacidades principales:
+* 📦 **Gestión de Activos:** Control total de clientes y vehículos.
+* 🛠️ **Ciclo de Taller:** Citas, reparaciones y seguimiento de tareas.
+* 💰 **Administración:** Presupuestos, facturación y pagos (contado/plazos).
+* 📈 **Análisis:** Reportes detallados y documentación técnica en PDF.
+* 🤖 **Omnicanalidad:** Comunicación automatizada vía **Bot de Telegram**.
 
 ---
 
-## 🎯 Objetivos del proyecto
+## 🎯 Objetivos del Proyecto
 
-- Desarrollar una solución integral y realista para la gestión de talleres mecánicos.
-- Aplicar buenas prácticas de ingeniería del software.
-- Implementar una arquitectura limpia, escalable y mantenible.
-- Separar claramente dominio, lógica de negocio, infraestructura y presentación.
-- Integrar canales modernos de comunicación con el cliente.
+* **Ingeniería de Calidad:** Implementar una solución realista basada en buenas prácticas de software.
+* **Arquitectura Limpia:** Separación estricta de responsabilidades (Clean Architecture).
+* **Escalabilidad:** Código mantenible y desacoplado, preparado para futuras expansiones.
+* **Innovación:** Integración de canales modernos para mejorar el engagement con el cliente.
 
 ---
 
 ## 🧱 Stack Tecnológico
 
-| Capa | Tecnologías |
-|------|-------------|
-| **Lenguaje** | Java 21 |
-| **Interfaz de usuario** | JavaFX 21 · FXML · CSS personalizado |
-| **Arquitectura** | Clean Architecture (Domain → Application → Infrastructure → Presentation) |
-| **Persistencia** | MySQL 8 · JDBC · HikariCP · Flyway |
-| **Seguridad** | BCrypt (Spring Security Crypto) |
-| **Comunicación** | Bot de Telegram |
-| **Build & Tooling** | Maven · NetBeans 23 · OpenJDK 21 (Temurin) |
-| **Testing** | JUnit 5 |
+| Capa | Tecnología |
+| :--- | :--- |
+| **Lenguaje** | **Java 21** (LTS) |
+| **Interfaz (GUI)** | **JavaFX 21** (FXML + CSS Personalizado) |
+| **Arquitectura** | **Clean Architecture** (Domain-driven) |
+| **Persistencia** | **MySQL 8** + JDBC + HikariCP |
+| **Migraciones** | **Flyway** |
+| **Seguridad** | **BCrypt** (Spring Security Crypto) |
+| **Build Tool** | **Maven** |
+| **Testing** | **JUnit 5** |
 
 ---
 
-## 🏗️ Arquitectura
+## 🏗️ Arquitectura y Estructura
 
-GearMind sigue una **Clean Architecture estricta**, lo que garantiza:
+GearMind se rige por los principios de **Clean Architecture**, asegurando que el dominio sea el núcleo del sistema, libre de dependencias de frameworks o agentes externos.
 
-- Dominio independiente de frameworks.
-- Casos de uso aislados y testeables.
-- Infraestructura desacoplada.
-- Interfaz JavaFX como capa de presentación.
-
-Domain → Application → Infrastructure → Presentation
-
----
-
-## 🚀 Estructura del Proyecto
-
+### Estructura de directorios:
 ```bash
 GearMind/
-├─ pom.xml
-├─ README.md
-├─ src/
-│  ├─ main/
-│  │  ├─ java/com/gearmind/
-│  │  │  ├─ domain/          # Entidades y contratos del dominio
-│  │  │  ├─ application/     # Casos de uso y lógica de aplicación
-│  │  │  ├─ infrastructure/  # Persistencia, seguridad y servicios externos
-│  │  │  ├─ presentation/    # JavaFX (controladores y vistas)
-│  │  │  └─ config/          # Configuración e inyección de dependencias
-│  │  └─ resources/
-│  │     ├─ view/            # Archivos FXML
-│  │     ├─ styles/          # CSS (tema y componentes)
-│  │     └─ db/migration/    # Migraciones Flyway
-│  └─ test/
-│     └─ java/               # Tests unitarios (JUnit 5)
-└─ .gitignore
-
+├─ src/main/java/com/gearmind/
+│  ├─ domain/          # 🧩 Entidades y Contratos (Core)
+│  ├─ application/     # ⚙️ Casos de Uso (Lógica de Negocio)
+│  ├─ infrastructure/  # 🛠️ Persistencia, API Telegram, Seguridad
+│  ├─ presentation/    # 🖥️ JavaFX (Controladores y Vistas)
+│  └─ config/          # ⚙️ Inyección de Dependencias
+├─ src/main/resources/
+│  ├─ view/            # Archivos FXML
+│  ├─ styles/          # Temas CSS (Dark Mode)
+│  └─ db/migration/    # Scripts SQL de Flyway
+└─ test/               # 🧪 Tests Unitarios (JUnit 5)
 ```
 
+---
 
-✨ Funcionalidades
-Funcionalidades implementadas
+## ✨ Funcionalidades Destacadas
 
-🏠 Panel de control con resumen del estado del taller.
+### 💻 Interfaz de Usuario
+* **Dashboard:** Panel visual con el resumen del estado actual del taller.
+* **UX Moderna:** Interfaz con tema oscuro y componentes reutilizables.
+* **Gestión Documental:** Generación de facturas y reportes profesionales exportables.
 
-👤 Gestión de clientes.
+### 🤖 Bot de Telegram (Portal del Cliente)
+Un canal directo donde los clientes pueden:
+* 📅 Solicitar citas de forma automática.
+* 🔍 Consultar el estado de su reparación.
+* 📄 Ver facturas recientes y próximas citas programadas.
 
-🚗 Gestión de vehículos.
+---
 
-📅 Gestión de citas.
+## 🚀 Instalación y Ejecución
 
-🔧 Gestión de reparaciones y tareas.
+### Requisitos Previos
+* Java 21 (OpenJDK / Temurin recomendado).
+* MySQL Server 8.0 o superior.
+* Apache Maven 3.9+.
 
-💶 Presupuestos, facturas y pagos (contado y a plazos).
+### Pasos para ejecutar
 
-📊 Reportes exportables a PDF.
+1. **Clonar el repositorio:**
+```bash
+git clone https://github.com/tu-usuario/gearmind.git
+```
 
-🤖 Bot de Telegram para clientes:
+2. **Configurar la Base de Datos:** Crea una base de datos llamada `gearmind`. Las tablas se crearán automáticamente al iniciar gracias a Flyway.
 
-Solicitud de citas.
-
-Consulta de próximas citas.
-
-Estado de reparaciones.
-
-Facturas recientes.
-
-🎨 Interfaz moderna con tema oscuro y estilos reutilizables.
-
-🖥️ Requisitos Previos
-
-Java 21 (OpenJDK / Temurin recomendado)
-
-Apache Maven 3.9 o superior
-
-MySQL Server 8.0 o superior
-
-NetBeans 23 (o cualquier IDE compatible con Maven)
-
-Git
-
-▶️ Ejecución del Proyecto
-Desde NetBeans
-
-Abrir el proyecto como Maven Project.
-
-Ejecutar la clase principal:
-
-com.gearmind.presentation.App
-
-Desde terminal
+3. **Ejecución vía Terminal:**
+```bash
 mvn clean javafx:run
+```
 
-⚙️ Configuración de Base de Datos
+---
 
-Crear una base de datos MySQL (por ejemplo gearmind).
+## 🛡️ Seguridad y Calidad
 
-Configurar las credenciales en el archivo de configuración correspondiente.
+* **Protección de Datos:** Contraseñas cifradas mediante algoritmos de hash BCrypt.
+* **Roles de Acceso:** Diferenciación clara entre privilegios de Administrador y Empleado.
+* **Robustez:** Validación estricta de datos en la capa de aplicación antes de la persistencia.
 
-Las migraciones se ejecutan automáticamente mediante Flyway al iniciar la aplicación.
+---
 
-🧪 Testing
+## 📘 Licencia y Autoría
 
-Ejecución de tests unitarios:
+Este proyecto ha sido desarrollado como Trabajo Fin de Grado (TFG).
 
-mvn test
-
-
-Los tests se centran en la lógica de negocio y los casos de uso, independientes de la interfaz gráfica.
-
-🔒 Seguridad
-
-Contraseñas cifradas con BCrypt.
-
-Separación de roles (administrador y empleado).
-
-Validación de datos en la capa de aplicación.
-
-Control de acceso a funcionalidades según permisos.
-
-📘 Licencia
-
-Proyecto desarrollado como Trabajo Fin de Grado (TFG).
-
-Autor:
-Mario Rodríguez Gómez
-
-Uso académico y educativo.
+**Autor:** Mario Rodríguez Gómez  
+**Uso:** Académico y educativo.
