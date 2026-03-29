@@ -372,12 +372,13 @@ public class DashboardController {
         long enProceso = tasks.stream().filter(t -> t.getEstado() == TaskStatus.EN_PROCESO).count();
         long completadas = tasks.stream().filter(t -> t.getEstado() == TaskStatus.COMPLETADA).count();
         long canceladas = tasks.stream().filter(t -> t.getEstado() == TaskStatus.CANCELADA).count();
+        long total = pendientes + enProceso + completadas + canceladas;
 
         chartTareasEstado.setData(FXCollections.observableArrayList(
-                new PieChart.Data("Pendiente", pendientes),
-                new PieChart.Data("En proceso", enProceso),
-                new PieChart.Data("Completada", completadas),
-                new PieChart.Data("Cancelada", canceladas)
+                new PieChart.Data(buildChartLabel("Pendiente", pendientes, total), pendientes),
+                new PieChart.Data(buildChartLabel("En proceso", enProceso, total), enProceso),
+                new PieChart.Data(buildChartLabel("Completada", completadas, total), completadas),
+                new PieChart.Data(buildChartLabel("Cancelada", canceladas, total), canceladas)
         ));
         chartTareasEstado.setLegendVisible(true);
     }
@@ -390,15 +391,25 @@ public class DashboardController {
         long confirmadas = appointments.stream().filter(a -> a.getStatus() == AppointmentStatus.CONFIRMED).count();
         long completadas = appointments.stream().filter(a -> a.getStatus() == AppointmentStatus.COMPLETED).count();
         long canceladas = appointments.stream().filter(a -> a.getStatus() == AppointmentStatus.CANCELLED).count();
+        long total = solicitadas + confirmadas + completadas + canceladas;
 
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         series.setName("Estado de citas");
-        series.getData().add(new XYChart.Data<>("Solicitada", solicitadas));
-        series.getData().add(new XYChart.Data<>("Confirmada", confirmadas));
-        series.getData().add(new XYChart.Data<>("Completada", completadas));
-        series.getData().add(new XYChart.Data<>("Cancelada", canceladas));
+        series.getData().add(new XYChart.Data<>(buildChartLabel("Solicitada", solicitadas, total), solicitadas));
+        series.getData().add(new XYChart.Data<>(buildChartLabel("Confirmada", confirmadas, total), confirmadas));
+        series.getData().add(new XYChart.Data<>(buildChartLabel("Completada", completadas, total), completadas));
+        series.getData().add(new XYChart.Data<>(buildChartLabel("Cancelada", canceladas, total), canceladas));
 
         chartCitasEstado.getData().setAll(series);
         chartCitasEstado.setLegendVisible(false);
     }
+
+    private String buildChartLabel(String label, long value, long total) {
+        if (total <= 0) {
+            return label + " (0%)";
+        }
+        long percentage = Math.round((double) value * 100 / total);
+        return label + " (" + percentage + "%)";
+    }
+
 }
