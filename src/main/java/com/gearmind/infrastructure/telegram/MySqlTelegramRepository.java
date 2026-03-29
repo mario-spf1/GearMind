@@ -492,6 +492,28 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
         return result;
     }
 
+    @Override
+    public boolean cancelUpcomingAppointment(long empresaId, long clienteId, long appointmentId) {
+        String sql = """
+                UPDATE cita
+                SET estado = 'CANCELADA', updated_at = NOW()
+                WHERE id = ?
+                  AND empresa_id = ?
+                  AND cliente_id = ?
+                  AND fecha_hora >= NOW()
+                  AND estado NOT IN ('CANCELADA', 'COMPLETADA')
+                """;
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, appointmentId);
+            ps.setLong(2, empresaId);
+            ps.setLong(3, clienteId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al cancelar cita Telegram", e);
+        }
+    }
+
     private TelegramClientLink mapClientLink(ResultSet rs) throws SQLException {
         long id = rs.getLong("id");
         long empresaId = rs.getLong("empresa_id");

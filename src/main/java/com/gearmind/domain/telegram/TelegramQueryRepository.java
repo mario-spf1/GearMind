@@ -15,4 +15,6 @@ public interface TelegramQueryRepository {
     List<Integer> findBookedAppointmentHours(long empresaId, LocalDate date);
 
     List<Vehicle> findVehiclesByCliente(long empresaId, long clienteId);
+
+    boolean cancelUpcomingAppointment(long empresaId, long clienteId, long appointmentId);
 }

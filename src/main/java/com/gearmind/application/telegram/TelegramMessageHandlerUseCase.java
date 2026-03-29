@@ -30,6 +30,7 @@ public class TelegramMessageHandlerUseCase {
     private static final String OPTION_FACTURAS = "Facturas recientes";
     private static final String OPTION_CAMBIAR = "Cambiar cliente";
     private static final String OPTION_CANCELAR = "Cancelar";
+    private static final String OPTION_CANCELAR_CITA = "Cancelar cita";
     private static final String OPTION_SI = "Sí";
     private static final String OPTION_NO = "No";
     private static final String OPTION_REINTENTAR = "Reintentar";
@@ -45,6 +46,7 @@ public class TelegramMessageHandlerUseCase {
     private static final String PAYLOAD_APPOINTMENT_HOUR = "appointmentHour";
     private static final String PAYLOAD_APPOINTMENT_VEHICLE_ID = "appointmentVehicleId";
     private static final String PAYLOAD_APPOINTMENT_VEHICLE_LABEL = "appointmentVehicleLabel";
+    private static final String PAYLOAD_APPOINTMENT_CANCEL_ID = "appointmentCancelId";
     private static final List<Integer> APPOINTMENT_HOURS = List.of(9, 10, 11, 12, 13, 14, 15, 16, 17, 18);
     private final TelegramConfig config;
     private final TelegramBotClient botClient;
@@ -91,7 +93,7 @@ public class TelegramMessageHandlerUseCase {
                 return;
             }
 
-            if (text.startsWith("/cancelar") || text.equalsIgnoreCase(OPTION_CANCELAR)) {
+            if (text.equalsIgnoreCase("/cancelar") || text.startsWith("/cancelar ") || text.equalsIgnoreCase(OPTION_CANCELAR)) {
                 activeState.ifPresent(state -> conversationRepository.delete(state.getId()));
                 botClient.sendMessageWithKeyboard(chatId, "Conversación cancelada. Usa el menú para continuar.", buildMainMenu(), true);
                 return;
@@ -111,6 +113,7 @@ public class TelegramMessageHandlerUseCase {
                 startIdentityConversation(chatId, null, "Vamos a cambiar de cliente. Indícanos tu DNI.");
                 return;
             }
+
             if (text.startsWith("/estado")) {
                 if (!ensureLinked(chatId, "/estado")) {
                     return;
@@ -118,11 +121,20 @@ public class TelegramMessageHandlerUseCase {
                 sendRepairStatus(chatId);
                 return;
             }
+
             if (text.startsWith("/citas")) {
                 if (!ensureLinked(chatId, "/citas")) {
                     return;
                 }
                 sendUpcomingAppointments(chatId);
+                return;
+            }
+
+            if (text.startsWith("/cancelar-cita")) {
+                if (!ensureLinked(chatId, "/cancelar-cita")) {
+                    return;
+                }
+                startCancelAppointmentConversation(chatId);
                 return;
             }
 
@@ -345,6 +357,47 @@ public class TelegramMessageHandlerUseCase {
                 botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona una opción.", buildConfirmAppointmentKeyboard(), true);
                 return;
             }
+            case ASK_APPOINTMENT_TO_CANCEL -> {
+                if (OPTION_CITAS.equalsIgnoreCase(text)) {
+                    conversationRepository.delete(state.getId());
+                    sendUpcomingAppointments(state.getChatId());
+                    return;
+                }
+                Long appointmentId = parseAppointmentSelection(text);
+                if (appointmentId == null) {
+                    botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona una cita válida para cancelar.", buildCancelAppointmentKeyboard(state.getChatId()), true);
+                    return;
+                }
+                payload.put(PAYLOAD_APPOINTMENT_CANCEL_ID, String.valueOf(appointmentId));
+                nextStep = TelegramConversationStep.CONFIRM_APPOINTMENT_CANCELLATION;
+                botClient.sendMessageWithKeyboard(state.getChatId(), "¿Seguro que quieres cancelar la cita #" + appointmentId + "?", List.of(List.of(OPTION_SI, OPTION_NO), List.of(OPTION_CANCELAR)), true);
+            }
+            case CONFIRM_APPOINTMENT_CANCELLATION -> {
+                if (isYes(text)) {
+                    Optional<TelegramClientLink> link = clientLinkRepository.findByChatId(config.getEmpresaId(), state.getChatId());
+                    Long appointmentId = parsePayloadLong(payload.get(PAYLOAD_APPOINTMENT_CANCEL_ID));
+                    if (link.isEmpty() || appointmentId == null) {
+                        conversationRepository.delete(state.getId());
+                        botClient.sendMessageWithKeyboard(state.getChatId(), "No se pudo completar la cancelación. Inténtalo de nuevo.", buildMainMenu(), true);
+                        return;
+                    }
+                    boolean cancelled = queryRepository.cancelUpcomingAppointment(config.getEmpresaId(), link.get().getClienteId(), appointmentId);
+                    conversationRepository.delete(state.getId());
+                    if (cancelled) {
+                        botClient.sendMessageWithKeyboard(state.getChatId(), "Tu cita #" + appointmentId + " ha sido cancelada.", buildMainMenu(), true);
+                    } else {
+                        botClient.sendMessageWithKeyboard(state.getChatId(), "No se pudo cancelar la cita. Puede que ya no esté disponible.", buildMainMenu(), true);
+                    }
+                    return;
+                }
+                if (isNo(text)) {
+                    conversationRepository.delete(state.getId());
+                    botClient.sendMessageWithKeyboard(state.getChatId(), "No se ha cancelado ninguna cita.", buildMainMenu(), true);
+                    return;
+                }
+                botClient.sendMessageWithKeyboard(state.getChatId(), "Responde con Sí o No.", List.of(List.of(OPTION_SI, OPTION_NO), List.of(OPTION_CANCELAR)), true);
+                return;
+            }
 
             default -> {
                 conversationRepository.delete(state.getId());
@@ -377,6 +430,8 @@ public class TelegramMessageHandlerUseCase {
                 sendRepairStatus(chatId);
             case "/citas" ->
                 sendUpcomingAppointments(chatId);
+            case "/cancelar-cita" ->
+                startCancelAppointmentConversation(chatId);
             case "/facturas" ->
                 sendInvoices(chatId);
             default ->
@@ -448,7 +503,7 @@ public class TelegramMessageHandlerUseCase {
             return;
         }
 
-        List<TelegramAppointmentSummary> appointments = queryRepository.findUpcomingAppointments(config.getEmpresaId(), link.get().getClienteId(), DEFAULT_LIST_LIMIT);
+        List<TelegramAppointmentSummary> appointments = findUpcomingAppointments(chatId);
         if (appointments.isEmpty()) {
             botClient.sendMessageWithKeyboard(chatId, "No tienes citas próximas registradas.", buildMainMenu(), true);
             return;
@@ -459,7 +514,26 @@ public class TelegramMessageHandlerUseCase {
         for (TelegramAppointmentSummary appointment : appointments) {
             sb.append("• #").append(appointment.getId()).append(" - ").append(appointment.getFechaHora()).append(" (").append(appointment.getEstado()).append(")\n");
         }
-        botClient.sendMessageWithKeyboard(chatId, sb.toString().trim(), buildMainMenu(), true);
+        botClient.sendMessageWithKeyboard(chatId, sb.toString().trim(), buildUpcomingAppointmentsKeyboard(), true);
+    }
+
+    private void startCancelAppointmentConversation(long chatId) {
+        List<TelegramAppointmentSummary> appointments = findUpcomingAppointments(chatId);
+        if (appointments.isEmpty()) {
+            botClient.sendMessageWithKeyboard(chatId, "No tienes citas próximas para cancelar.", buildMainMenu(), true);
+            return;
+        }
+        TelegramConversationState state = new TelegramConversationState(null, config.getEmpresaId(), chatId, TelegramConversationStep.ASK_APPOINTMENT_TO_CANCEL, "{}", LocalDateTime.now());
+        conversationRepository.save(state);
+        botClient.sendMessageWithKeyboard(chatId, "Selecciona la cita que quieres cancelar.", buildCancelAppointmentKeyboard(chatId), true);
+    }
+
+    private List<TelegramAppointmentSummary> findUpcomingAppointments(long chatId) {
+        Optional<TelegramClientLink> link = clientLinkRepository.findByChatId(config.getEmpresaId(), chatId);
+        if (link.isEmpty()) {
+            return List.of();
+        }
+        return queryRepository.findUpcomingAppointments(config.getEmpresaId(), link.get().getClienteId(), DEFAULT_LIST_LIMIT);
     }
 
     private void sendInvoices(long chatId) {
@@ -578,6 +652,43 @@ public class TelegramMessageHandlerUseCase {
 
     private List<List<String>> buildConfirmAppointmentKeyboard() {
         return List.of(List.of(OPTION_CONFIRMAR_CITA), List.of(OPTION_CAMBIAR_DIA, OPTION_CANCELAR));
+    }
+
+    private List<List<String>> buildUpcomingAppointmentsKeyboard() {
+        return List.of(List.of(OPTION_CANCELAR_CITA), List.of(OPTION_CITA, OPTION_ESTADO), List.of(OPTION_FACTURAS, OPTION_CAMBIAR));
+    }
+
+    private List<List<String>> buildCancelAppointmentKeyboard(long chatId) {
+        List<String> options = new java.util.ArrayList<>();
+        for (TelegramAppointmentSummary appointment : findUpcomingAppointments(chatId)) {
+            options.add(formatAppointmentSelectionLabel(appointment));
+        }
+        if (options.isEmpty()) {
+            return buildMainMenu();
+        }
+        List<List<String>> keyboard = buildKeyboard(options, 1);
+        keyboard.add(0, List.of(OPTION_CITAS));
+        return keyboard;
+    }
+
+    private String formatAppointmentSelectionLabel(TelegramAppointmentSummary appointment) {
+        if (appointment == null) {
+            return "";
+        }
+        return "#" + appointment.getId() + " - " + appointment.getFechaHora();
+    }
+
+    private Long parseAppointmentSelection(String text) {
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+        String trimmed = text.trim();
+        if (!trimmed.startsWith("#")) {
+            return null;
+        }
+        int sep = trimmed.indexOf(" ");
+        String rawId = sep > 1 ? trimmed.substring(1, sep) : trimmed.substring(1);
+        return parsePayloadLong(rawId);
     }
 
     private List<List<String>> buildKeyboard(List<String> options, int columns) {
@@ -785,6 +896,8 @@ public class TelegramMessageHandlerUseCase {
                 "/estado";
             case OPTION_CITAS ->
                 "/citas";
+            case OPTION_CANCELAR_CITA ->
+                "/cancelar-cita";
             case OPTION_FACTURAS ->
                 "/facturas";
             case OPTION_CAMBIAR ->
