@@ -10,9 +10,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MySqlTelegramRepository implements TelegramClientLinkRepository, TelegramConversationRepository, TelegramAppointmentRequestRepository, TelegramNotificationLogRepository, TelegramQueryRepository {
 
+    private static final Pattern REQUESTED_DATE_PATTERN = Pattern.compile("Fecha solicitada: (\\d{4}-\\d{2}-\\d{2}) (\\d{2}:\\d{2})");
     private final DataSource dataSource;
 
     public MySqlTelegramRepository() {
@@ -311,6 +314,42 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
         return result;
     }
 
+    @Override
+    public List<TelegramAppointmentSummary> findPendingAppointmentRequests(long empresaId, long chatId, int limit) {
+        String sql = """
+                SELECT id, mensaje, fecha
+                FROM telegram_solicitud_cita
+                WHERE empresa_id = ? AND telegram_chat_id = ? AND estado = 'PENDIENTE'
+                ORDER BY fecha ASC
+                LIMIT ?
+                """;
+
+        List<TelegramAppointmentSummary> result = new ArrayList<>();
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, empresaId);
+            ps.setLong(2, chatId);
+            ps.setInt(3, limit);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    long id = rs.getLong("id");
+                    String mensaje = rs.getString("mensaje");
+                    Timestamp createdAt = rs.getTimestamp("fecha");
+                    LocalDateTime parsedRequestedDate = parseRequestedDate(mensaje);
+                    LocalDateTime dateTime = parsedRequestedDate != null
+                            ? parsedRequestedDate
+                            : (createdAt != null ? createdAt.toLocalDateTime() : null);
+                    result.add(new TelegramAppointmentSummary(id, dateTime, "SOLICITADA", "TELEGRAM_REQUEST_PENDING"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al consultar solicitudes de cita Telegram", e);
+        }
+
+        return result;
+    }
+
     private TelegramAppointmentRequest mapAppointmentRequest(ResultSet rs) throws SQLException {
         Long id = rs.getLong("id");
         long empresaId = rs.getLong("empresa_id");
@@ -511,6 +550,44 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Error al cancelar cita Telegram", e);
+        }
+    }
+
+    @Override
+    public boolean cancelPendingAppointmentRequest(long empresaId, long chatId, long requestId) {
+        String sql = """
+                UPDATE telegram_solicitud_cita
+                SET estado = 'DESCARTADA', updated_at = NOW()
+                WHERE id = ?
+                  AND empresa_id = ?
+                  AND telegram_chat_id = ?
+                  AND estado = 'PENDIENTE'
+                """;
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, requestId);
+            ps.setLong(2, empresaId);
+            ps.setLong(3, chatId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al cancelar solicitud de cita Telegram", e);
+        }
+    }
+
+    private LocalDateTime parseRequestedDate(String message) {
+        if (message == null || message.isBlank()) {
+            return null;
+        }
+        Matcher matcher = REQUESTED_DATE_PATTERN.matcher(message);
+        if (!matcher.find()) {
+            return null;
+        }
+        String date = matcher.group(1);
+        String time = matcher.group(2);
+        try {
+            return LocalDateTime.parse(date + "T" + time);
+        } catch (Exception ex) {
+            return null;
         }
     }
 

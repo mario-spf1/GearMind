@@ -15,6 +15,7 @@ import java.time.Month;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -47,6 +48,10 @@ public class TelegramMessageHandlerUseCase {
     private static final String PAYLOAD_APPOINTMENT_VEHICLE_ID = "appointmentVehicleId";
     private static final String PAYLOAD_APPOINTMENT_VEHICLE_LABEL = "appointmentVehicleLabel";
     private static final String PAYLOAD_APPOINTMENT_CANCEL_ID = "appointmentCancelId";
+    private static final String PAYLOAD_APPOINTMENT_CANCEL_TYPE = "appointmentCancelType";
+    private static final String APPOINTMENT_TYPE_CONFIRMED = "CONFIRMED";
+    private static final String APPOINTMENT_TYPE_REQUEST = "REQUEST";
+    private static final String PENDING_REQUEST_NOTE = "TELEGRAM_REQUEST_PENDING";
     private static final List<Integer> APPOINTMENT_HOURS = List.of(9, 10, 11, 12, 13, 14, 15, 16, 17, 18);
     private final TelegramConfig config;
     private final TelegramBotClient botClient;
@@ -364,29 +369,36 @@ public class TelegramMessageHandlerUseCase {
                     return;
                 }
                 Long appointmentId = parseAppointmentSelection(text);
-                if (appointmentId == null) {
+                String appointmentType = parseAppointmentSelectionType(text);
+                if (appointmentId == null || appointmentType == null) {
                     botClient.sendMessageWithKeyboard(state.getChatId(), "Selecciona una cita válida para cancelar.", buildCancelAppointmentKeyboard(state.getChatId()), true);
                     return;
                 }
                 payload.put(PAYLOAD_APPOINTMENT_CANCEL_ID, String.valueOf(appointmentId));
+                payload.put(PAYLOAD_APPOINTMENT_CANCEL_TYPE, appointmentType);
                 nextStep = TelegramConversationStep.CONFIRM_APPOINTMENT_CANCELLATION;
-                botClient.sendMessageWithKeyboard(state.getChatId(), "¿Seguro que quieres cancelar la cita #" + appointmentId + "?", List.of(List.of(OPTION_SI, OPTION_NO), List.of(OPTION_CANCELAR)), true);
+                String targetLabel = APPOINTMENT_TYPE_REQUEST.equals(appointmentType) ? "la solicitud de cita #" : "la cita #";
+                botClient.sendMessageWithKeyboard(state.getChatId(), "¿Seguro que quieres cancelar " + targetLabel + appointmentId + "?", List.of(List.of(OPTION_SI, OPTION_NO), List.of(OPTION_CANCELAR)), true);
             }
             case CONFIRM_APPOINTMENT_CANCELLATION -> {
                 if (isYes(text)) {
                     Optional<TelegramClientLink> link = clientLinkRepository.findByChatId(config.getEmpresaId(), state.getChatId());
                     Long appointmentId = parsePayloadLong(payload.get(PAYLOAD_APPOINTMENT_CANCEL_ID));
-                    if (link.isEmpty() || appointmentId == null) {
+                    String appointmentType = payload.get(PAYLOAD_APPOINTMENT_CANCEL_TYPE);
+                    if (link.isEmpty() || appointmentId == null || appointmentType == null) {
                         conversationRepository.delete(state.getId());
                         botClient.sendMessageWithKeyboard(state.getChatId(), "No se pudo completar la cancelación. Inténtalo de nuevo.", buildMainMenu(), true);
                         return;
                     }
-                    boolean cancelled = queryRepository.cancelUpcomingAppointment(config.getEmpresaId(), link.get().getClienteId(), appointmentId);
+                    boolean cancelled = APPOINTMENT_TYPE_REQUEST.equals(appointmentType)
+                            ? queryRepository.cancelPendingAppointmentRequest(config.getEmpresaId(), state.getChatId(), appointmentId)
+                            : queryRepository.cancelUpcomingAppointment(config.getEmpresaId(), link.get().getClienteId(), appointmentId);
                     conversationRepository.delete(state.getId());
                     if (cancelled) {
-                        botClient.sendMessageWithKeyboard(state.getChatId(), "Tu cita #" + appointmentId + " ha sido cancelada.", buildMainMenu(), true);
+                        String successMessage = APPOINTMENT_TYPE_REQUEST.equals(appointmentType) ? "Tu solicitud de cita #" + appointmentId + " ha sido cancelada." : "Tu cita #" + appointmentId + " ha sido cancelada.";
+                        botClient.sendMessageWithKeyboard(state.getChatId(), successMessage, buildMainMenu(), true);
                     } else {
-                        botClient.sendMessageWithKeyboard(state.getChatId(), "No se pudo cancelar la cita. Puede que ya no esté disponible.", buildMainMenu(), true);
+                        botClient.sendMessageWithKeyboard(state.getChatId(), "No se pudo cancelar. Puede que ya no esté disponible.", buildMainMenu(), true);
                     }
                     return;
                 }
@@ -533,7 +545,13 @@ public class TelegramMessageHandlerUseCase {
         if (link.isEmpty()) {
             return List.of();
         }
-        return queryRepository.findUpcomingAppointments(config.getEmpresaId(), link.get().getClienteId(), DEFAULT_LIST_LIMIT);
+        List<TelegramAppointmentSummary> confirmedAppointments = queryRepository.findUpcomingAppointments(config.getEmpresaId(), link.get().getClienteId(), DEFAULT_LIST_LIMIT);
+        List<TelegramAppointmentSummary> pendingRequests = queryRepository.findPendingAppointmentRequests(config.getEmpresaId(), chatId, DEFAULT_LIST_LIMIT);
+        List<TelegramAppointmentSummary> merged = new java.util.ArrayList<>(confirmedAppointments.size() + pendingRequests.size());
+        merged.addAll(confirmedAppointments);
+        merged.addAll(pendingRequests);
+        merged.sort(Comparator.comparing(TelegramAppointmentSummary::getFechaHora, Comparator.nullsLast(Comparator.naturalOrder())));
+        return merged;
     }
 
     private void sendInvoices(long chatId) {
@@ -675,7 +693,9 @@ public class TelegramMessageHandlerUseCase {
         if (appointment == null) {
             return "";
         }
-        return "#" + appointment.getId() + " - " + appointment.getFechaHora();
+        String typePrefix = isPendingRequest(appointment) ? "#R" : "#C";
+        return typePrefix + appointment.getId() + " - " + appointment.getFechaHora();
+
     }
 
     private Long parseAppointmentSelection(String text) {
@@ -683,12 +703,30 @@ public class TelegramMessageHandlerUseCase {
             return null;
         }
         String trimmed = text.trim();
-        if (!trimmed.startsWith("#")) {
+        if (!(trimmed.startsWith("#R") || trimmed.startsWith("#C"))) {
             return null;
         }
         int sep = trimmed.indexOf(" ");
-        String rawId = sep > 1 ? trimmed.substring(1, sep) : trimmed.substring(1);
+        String rawId = sep > 2 ? trimmed.substring(2, sep) : trimmed.substring(2);
         return parsePayloadLong(rawId);
+    }
+
+    private String parseAppointmentSelectionType(String text) {
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+        String trimmed = text.trim();
+        if (trimmed.startsWith("#R")) {
+            return APPOINTMENT_TYPE_REQUEST;
+        }
+        if (trimmed.startsWith("#C")) {
+            return APPOINTMENT_TYPE_CONFIRMED;
+        }
+        return null;
+    }
+
+    private boolean isPendingRequest(TelegramAppointmentSummary appointment) {
+        return appointment != null && PENDING_REQUEST_NOTE.equals(appointment.getNotas());
     }
 
     private List<List<String>> buildKeyboard(List<String> options, int columns) {

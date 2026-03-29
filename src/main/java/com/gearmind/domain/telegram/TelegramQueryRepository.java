@@ -8,6 +8,8 @@ public interface TelegramQueryRepository {
 
     List<TelegramAppointmentSummary> findUpcomingAppointments(long empresaId, long clienteId, int limit);
 
+    List<TelegramAppointmentSummary> findPendingAppointmentRequests(long empresaId, long chatId, int limit);
+
     List<TelegramRepairSummary> findRecentRepairs(long empresaId, long clienteId, int limit);
 
     List<TelegramInvoiceSummary> findRecentInvoices(long empresaId, long clienteId, int limit);
@@ -17,4 +19,6 @@ public interface TelegramQueryRepository {
     List<Vehicle> findVehiclesByCliente(long empresaId, long clienteId);
 
     boolean cancelUpcomingAppointment(long empresaId, long clienteId, long appointmentId);
+
+    boolean cancelPendingAppointmentRequest(long empresaId, long chatId, long requestId);
 }
