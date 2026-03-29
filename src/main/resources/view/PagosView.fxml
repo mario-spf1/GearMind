@@ -78,6 +78,7 @@
                         <TableColumn fx:id="colPagado" text="Pagado" prefWidth="120"/>
                         <TableColumn fx:id="colPendiente" text="Pendiente" prefWidth="120"/>
                         <TableColumn fx:id="colPlazos" text="Plazos" prefWidth="90"/>
+                        <TableColumn fx:id="colInteres" text="Interés" prefWidth="95"/>
                         <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="140"/>
                     </columns>
                 </TableView>

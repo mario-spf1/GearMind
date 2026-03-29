@@ -59,6 +59,8 @@ public class PagosController {
     @FXML
     private TableColumn<Payment, String> colPlazos;
     @FXML
+    private TableColumn<Payment, String> colInteres;
+    @FXML
     private TableColumn<Payment, Payment> colAcciones;
 
     @FXML
@@ -149,7 +151,7 @@ public class PagosController {
         colPagado.setCellValueFactory(c -> new SimpleStringProperty(formatPrice(c.getValue().getTotalPagado())));
         colPendiente.setCellValueFactory(c -> new SimpleStringProperty(formatPrice(c.getValue().getTotalPendiente())));
         colPlazos.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getNumeroPlazos() != null ? c.getValue().getNumeroPlazos() : 0)));
-
+        colInteres.setCellValueFactory(c -> new SimpleStringProperty(formatInterest(c.getValue().getInteresPorcentaje())));
         colAcciones.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnGestionar = new Button("Gestionar");
@@ -312,6 +314,11 @@ public class PagosController {
     private String formatPrice(BigDecimal value) {
         BigDecimal resolved = value == null ? BigDecimal.ZERO : value;
         return priceFormat.format(resolved) + " €";
+    }
+
+    private String formatInterest(BigDecimal value) {
+        BigDecimal resolved = value == null ? BigDecimal.ZERO : value;
+        return resolved.stripTrailingZeros().toPlainString() + " %";
     }
 
     private String mapStatusToLabel(PaymentStatus status) {

@@ -41,6 +41,8 @@
                         <Label fx:id="lblPendiente" text="0,00" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
                         <Label text="Plazos:" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
                         <Label fx:id="lblPlazos" text="-" GridPane.rowIndex="3" GridPane.columnIndex="3"/>
+                        <Label text="Interés:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <Label fx:id="lblInteres" text="0 %" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
                     </children>
                 </GridPane>
             </children>

@@ -56,6 +56,8 @@ public class PagoPlazosController {
     private Label lblPendiente;
     @FXML
     private Label lblPlazos;
+    @FXML
+    private Label lblInteres;
 
     @FXML
     private TableView<PaymentInstallment> tblPlazos;
@@ -215,6 +217,9 @@ public class PagoPlazosController {
         if (lblPlazos != null) {
             lblPlazos.setText(String.valueOf(payment.getNumeroPlazos() != null ? payment.getNumeroPlazos() : 0));
         }
+        if (lblInteres != null) {
+            lblInteres.setText(formatInterest(payment.getInteresPorcentaje()));
+        }
 
         installments.setAll(listInstallmentsUseCase.execute(paymentId));
         records.setAll(listRecordsUseCase.execute(paymentId));
@@ -276,6 +281,11 @@ public class PagoPlazosController {
             return "";
         }
         return value.format(dateTimeFormatter);
+    }
+
+    private String formatInterest(BigDecimal value) {
+        BigDecimal resolved = value == null ? BigDecimal.ZERO : value;
+        return resolved.stripTrailingZeros().toPlainString() + " %";
     }
 
     private String mapInstallmentStatusToLabel(PaymentInstallmentStatus status) {
