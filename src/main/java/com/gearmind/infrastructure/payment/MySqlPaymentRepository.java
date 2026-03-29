@@ -130,6 +130,7 @@ public class MySqlPaymentRepository implements PaymentRepository {
                 } else {
                     ps.setNull(i++, Types.INTEGER);
                 }
+                ps.setBigDecimal(i++, payment.getInteresPorcentaje() != null ? payment.getInteresPorcentaje() : BigDecimal.ZERO);
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) {
