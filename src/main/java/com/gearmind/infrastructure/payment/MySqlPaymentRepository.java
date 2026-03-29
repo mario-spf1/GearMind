@@ -106,8 +106,8 @@ public class MySqlPaymentRepository implements PaymentRepository {
     public long createPayment(Payment payment, List<PaymentInstallment> installments, List<PaymentRecord> records) {
         String insertPaymentSql = """
                 INSERT INTO pago
-                    (empresa_id, factura_id, cliente_id, tipo, estado, total, total_pagado, numero_plazos)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    (empresa_id, factura_id, cliente_id, tipo, estado, total, total_pagado, numero_plazos, interes_porcentaje)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         Connection cn = null;
@@ -126,9 +126,9 @@ public class MySqlPaymentRepository implements PaymentRepository {
                 ps.setBigDecimal(i++, payment.getTotal() != null ? payment.getTotal() : BigDecimal.ZERO);
                 ps.setBigDecimal(i++, BigDecimal.ZERO);
                 if (payment.getNumeroPlazos() != null) {
-                    ps.setInt(i, payment.getNumeroPlazos());
+                    ps.setInt(i++, payment.getNumeroPlazos());
                 } else {
-                    ps.setNull(i, Types.INTEGER);
+                    ps.setNull(i++, Types.INTEGER);
                 }
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -420,6 +420,7 @@ public class MySqlPaymentRepository implements PaymentRepository {
         if (!rs.wasNull()) {
             payment.setNumeroPlazos(numeroPlazos);
         }
+        payment.setInteresPorcentaje(rs.getBigDecimal("interes_porcentaje"));
         Timestamp created = rs.getTimestamp("created_at");
         if (created != null) {
             payment.setCreatedAt(created.toLocalDateTime());
@@ -480,6 +481,7 @@ public class MySqlPaymentRepository implements PaymentRepository {
                     p.total,
                     p.total_pagado,
                     p.numero_plazos,
+                    p.interes_porcentaje,
                     p.created_at,
                     p.updated_at,
                     e.nombre AS empresa_nombre,

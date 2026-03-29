@@ -54,6 +54,8 @@
                         <TextField fx:id="txtPlazos" prefWidth="120" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
                         <Label text="Primer vencimiento:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                         <DatePicker fx:id="dpPrimerVencimiento" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label text="Interés (%):" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtInteres" prefWidth="120" promptText="0" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
                     </children>
                 </GridPane>
             </children>

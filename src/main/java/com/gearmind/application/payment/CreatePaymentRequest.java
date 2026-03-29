@@ -1,7 +1,7 @@
 package com.gearmind.application.payment;
 
 import com.gearmind.domain.payment.PaymentType;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class CreatePaymentRequest {
@@ -10,6 +10,7 @@ public class CreatePaymentRequest {
     private PaymentType tipo;
     private int numeroPlazos;
     private LocalDate primerVencimiento;
+    private BigDecimal interesPorcentaje;
 
     public long getFacturaId() {
         return facturaId;
@@ -41,5 +42,13 @@ public class CreatePaymentRequest {
 
     public void setPrimerVencimiento(LocalDate primerVencimiento) {
         this.primerVencimiento = primerVencimiento;
+    }
+
+    public BigDecimal getInteresPorcentaje() {
+        return interesPorcentaje;
+    }
+
+    public void setInteresPorcentaje(BigDecimal interesPorcentaje) {
+        this.interesPorcentaje = interesPorcentaje;
     }
 }

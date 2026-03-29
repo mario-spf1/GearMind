@@ -38,6 +38,8 @@ public class PagoFormController {
     @FXML
     private TextField txtPlazos;
     @FXML
+    private TextField txtInteres;
+    @FXML
     private DatePicker dpPrimerVencimiento;
     @FXML
     private Button btnGuardar;
@@ -82,6 +84,9 @@ public class PagoFormController {
         if (dpPrimerVencimiento != null) {
             dpPrimerVencimiento.setValue(LocalDate.now());
         }
+        if (txtInteres != null) {
+            txtInteres.setText("0");
+        }
         updateInstallmentFields();
         validateForm();
     }
@@ -107,6 +112,9 @@ public class PagoFormController {
         if (dpPrimerVencimiento != null) {
             dpPrimerVencimiento.valueProperty().addListener((obs, oldValue, newValue) -> validateForm());
         }
+        if (txtInteres != null) {
+            txtInteres.textProperty().addListener((obs, oldValue, newValue) -> validateForm());
+        }
     }
 
     @FXML
@@ -121,10 +129,12 @@ public class PagoFormController {
                 request.setTipo(PaymentType.PLAZOS);
                 request.setNumeroPlazos(parsePlazos());
                 request.setPrimerVencimiento(dpPrimerVencimiento != null ? dpPrimerVencimiento.getValue() : null);
+                request.setInteresPorcentaje(parseInteres());
             } else {
                 request.setTipo(PaymentType.CONTADO);
                 request.setNumeroPlazos(1);
                 request.setPrimerVencimiento(LocalDate.now());
+                request.setInteresPorcentaje(BigDecimal.ZERO);
             }
 
             createPaymentUseCase.execute(request);
@@ -149,12 +159,15 @@ public class PagoFormController {
         if (dpPrimerVencimiento != null) {
             dpPrimerVencimiento.setDisable(!showInstallments);
         }
+        if (txtInteres != null) {
+            txtInteres.setDisable(!showInstallments);
+        }
     }
 
     private void validateForm() {
         boolean valid = invoice != null;
         if (rbPlazos != null && rbPlazos.isSelected()) {
-            valid = valid && parsePlazos() > 0 && dpPrimerVencimiento != null && dpPrimerVencimiento.getValue() != null;
+            valid = valid && parsePlazos() > 0 && dpPrimerVencimiento != null && dpPrimerVencimiento.getValue() != null && parseInteres() != null;
         }
         if (btnGuardar != null) {
             btnGuardar.setDisable(!valid);
@@ -169,6 +182,25 @@ public class PagoFormController {
             return Integer.parseInt(txtPlazos.getText().trim());
         } catch (NumberFormatException ex) {
             return 0;
+        }
+    }
+
+    private BigDecimal parseInteres() {
+        if (txtInteres == null) {
+            return BigDecimal.ZERO;
+        }
+        String raw = txtInteres.getText();
+        if (raw == null || raw.trim().isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        try {
+            BigDecimal value = new BigDecimal(raw.trim().replace(',', '.'));
+            if (value.compareTo(BigDecimal.ZERO) < 0) {
+                return null;
+            }
+            return value;
+        } catch (NumberFormatException ex) {
+            return null;
         }
     }
 

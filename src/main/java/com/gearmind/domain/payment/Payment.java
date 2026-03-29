@@ -14,6 +14,7 @@ public class Payment {
     private BigDecimal total;
     private BigDecimal totalPagado;
     private Integer numeroPlazos;
+    private BigDecimal interesPorcentaje;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String empresaNombre;
@@ -23,7 +24,8 @@ public class Payment {
     public Payment() {
     }
 
-    public Payment(Long id, Long empresaId, Long facturaId, Long clienteId, PaymentType tipo, PaymentStatus estado, BigDecimal total, BigDecimal totalPagado, Integer numeroPlazos, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Payment(Long id, Long empresaId, Long facturaId, Long clienteId, PaymentType tipo, PaymentStatus estado, BigDecimal total,
+            BigDecimal totalPagado, Integer numeroPlazos, BigDecimal interesPorcentaje, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.empresaId = empresaId;
         this.facturaId = facturaId;
@@ -33,6 +35,7 @@ public class Payment {
         this.total = total;
         this.totalPagado = totalPagado;
         this.numeroPlazos = numeroPlazos;
+        this.interesPorcentaje = interesPorcentaje;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -107,6 +110,14 @@ public class Payment {
 
     public void setNumeroPlazos(Integer numeroPlazos) {
         this.numeroPlazos = numeroPlazos;
+    }
+
+    public BigDecimal getInteresPorcentaje() {
+        return interesPorcentaje;
+    }
+
+    public void setInteresPorcentaje(BigDecimal interesPorcentaje) {
+        this.interesPorcentaje = interesPorcentaje;
     }
 
     public LocalDateTime getCreatedAt() {

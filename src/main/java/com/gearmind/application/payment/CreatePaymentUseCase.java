@@ -52,7 +52,6 @@ public class CreatePaymentUseCase {
         payment.setFacturaId(invoice.getId());
         payment.setClienteId(invoice.getClienteId());
         payment.setTipo(request.getTipo());
-        payment.setTotal(invoice.getTotal());
 
         List<PaymentInstallment> installments = new ArrayList<>();
         List<PaymentRecord> records = new ArrayList<>();
@@ -60,6 +59,8 @@ public class CreatePaymentUseCase {
         if (request.getTipo() == PaymentType.CONTADO) {
             payment.setEstado(PaymentStatus.COMPLETADO);
             payment.setNumeroPlazos(1);
+            payment.setInteresPorcentaje(BigDecimal.ZERO);
+            payment.setTotal(invoice.getTotal());
             PaymentInstallment installment = new PaymentInstallment();
             installment.setNumero(1);
             installment.setFechaVencimiento(LocalDate.now());
@@ -82,7 +83,11 @@ public class CreatePaymentUseCase {
             }
             payment.setEstado(PaymentStatus.ABIERTO);
             payment.setNumeroPlazos(request.getNumeroPlazos());
-            installments.addAll(buildInstallments(invoice.getTotal(), request.getNumeroPlazos(), request.getPrimerVencimiento()));
+            BigDecimal interestRate = normalizeInterest(request.getInteresPorcentaje());
+            payment.setInteresPorcentaje(interestRate);
+            BigDecimal totalConInteres = calculateTotalWithInterest(invoice.getTotal(), interestRate);
+            payment.setTotal(totalConInteres);
+            installments.addAll(buildInstallments(totalConInteres, request.getNumeroPlazos(), request.getPrimerVencimiento()));
         }
 
         long paymentId = paymentRepository.createPayment(payment, installments, records);
@@ -97,14 +102,14 @@ public class CreatePaymentUseCase {
     private List<PaymentInstallment> buildInstallments(BigDecimal total, int count, LocalDate firstDueDate) {
         List<PaymentInstallment> installments = new ArrayList<>();
         BigDecimal totalBase = total == null ? BigDecimal.ZERO : total;
-        BigDecimal baseAmount = totalBase.divide(BigDecimal.valueOf(count), 2, RoundingMode.DOWN);
-        BigDecimal remainder = totalBase.subtract(baseAmount.multiply(BigDecimal.valueOf(count)));
+        BigDecimal installmentBase = totalBase.divide(BigDecimal.valueOf(count), 2, RoundingMode.DOWN);
+        BigDecimal remainder = totalBase.subtract(installmentBase.multiply(BigDecimal.valueOf(count)));
 
         for (int i = 0; i < count; i++) {
             PaymentInstallment installment = new PaymentInstallment();
             installment.setNumero(i + 1);
             installment.setFechaVencimiento(firstDueDate.plusMonths(i));
-            BigDecimal amount = baseAmount;
+            BigDecimal amount = installmentBase;
             if (i == count - 1) {
                 amount = amount.add(remainder);
             }
@@ -114,5 +119,21 @@ public class CreatePaymentUseCase {
         }
 
         return installments;
+    }
+
+    private BigDecimal normalizeInterest(BigDecimal interestRate) {
+        if (interestRate == null) {
+            return BigDecimal.ZERO;
+        }
+        if (interestRate.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El interés no puede ser negativo.");
+        }
+        return interestRate.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateTotalWithInterest(BigDecimal total, BigDecimal interestRate) {
+        BigDecimal totalBase = total == null ? BigDecimal.ZERO : total;
+        BigDecimal multiplier = BigDecimal.ONE.add(normalizeInterest(interestRate).divide(BigDecimal.valueOf(100), 8, RoundingMode.HALF_UP));
+        return totalBase.multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
     }
 }
