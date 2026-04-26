@@ -2,13 +2,6 @@
 setlocal
 cd /d "%~dp0"
 
-if not exist ".env" (
-  echo Error: no existe el fichero .env.
-  echo Copia .env.template como .env y configura los datos de conexion.
-  pause
-  exit /b 1
-)
-
 if not exist "app\GearMind.jar" (
   echo Error: no se encontro app\GearMind.jar.
   echo Revisa que el paquete cliente este completo.
@@ -23,6 +16,6 @@ if not exist "app\lib\" (
   exit /b 1
 )
 
-java --module-path "app/lib" --add-modules javafx.controls,javafx.fxml -cp "app/GearMind.jar;app/lib/*" com.gearmind.presentation.App
+java --module-path "app/lib" --add-modules javafx.controls,javafx.fxml -cp "app/GearMind.jar;app/lib/*" com.gearmind.launcher.LauncherApp
 if errorlevel 1 pause
 endlocal

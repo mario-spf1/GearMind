@@ -26,4 +26,4 @@ if [[ ! -d "app/lib" ]]; then
   exit 1
 fi
 
-java -cp "app/GearMind.jar:app/lib/*" com.gearmind.presentation.App
+java --module-path "app/lib" --add-modules javafx.controls,javafx.fxml -cp "app/GearMind.jar:app/lib/*" com.gearmind.presentation.App

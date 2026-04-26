@@ -71,6 +71,7 @@ xcopy /s /q "target\dependency\*" "%LIB_DIR%\" >nul
 
 echo [3/5] Copiando scripts y plantilla...
 copy /y ".env.template"  "%PACKAGE_DIR%\.env.template" >nul
+copy /y "launcher.bat"   "%PACKAGE_DIR%\launcher.bat"  >nul
 copy /y "setup-db.bat"   "%PACKAGE_DIR%\setup-db.bat"  >nul
 copy /y "run-app.bat"    "%PACKAGE_DIR%\run-app.bat"   >nul
 copy /y "run-bot.bat"    "%PACKAGE_DIR%\run-bot.bat"   >nul

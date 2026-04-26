@@ -42,12 +42,14 @@ if [[ ! -f "$ROOT_DIR/README-CLIENTE.md" ]]; then
   exit 1
 fi
 cp "$ROOT_DIR/.env.template" "$PACKAGE_DIR/.env.template"
-cp "$ROOT_DIR/setup-db.sh" "$PACKAGE_DIR/setup-db.sh"
+cp "$ROOT_DIR/launcher.bat" "$PACKAGE_DIR/launcher.bat"
+cp "$ROOT_DIR/launcher.sh"  "$PACKAGE_DIR/launcher.sh"
+cp "$ROOT_DIR/setup-db.sh"  "$PACKAGE_DIR/setup-db.sh"
 cp "$ROOT_DIR/setup-db.bat" "$PACKAGE_DIR/setup-db.bat"
-cp "$ROOT_DIR/run-app.sh" "$PACKAGE_DIR/run-app.sh"
-cp "$ROOT_DIR/run-app.bat" "$PACKAGE_DIR/run-app.bat"
-cp "$ROOT_DIR/run-bot.sh" "$PACKAGE_DIR/run-bot.sh"
-cp "$ROOT_DIR/run-bot.bat" "$PACKAGE_DIR/run-bot.bat"
+cp "$ROOT_DIR/run-app.sh"   "$PACKAGE_DIR/run-app.sh"
+cp "$ROOT_DIR/run-app.bat"  "$PACKAGE_DIR/run-app.bat"
+cp "$ROOT_DIR/run-bot.sh"   "$PACKAGE_DIR/run-bot.sh"
+cp "$ROOT_DIR/run-bot.bat"  "$PACKAGE_DIR/run-bot.bat"
 cp "$ROOT_DIR/README-CLIENTE.md" "$PACKAGE_DIR/README-CLIENTE.md"
 
 chmod +x "$PACKAGE_DIR"/*.sh
