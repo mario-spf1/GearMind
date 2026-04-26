@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.gearmind.launcher.LauncherController"
+      styleClass="tfx-page"
+      spacing="16"
+      prefWidth="520" prefHeight="600">
+
+    <!-- Cabecera -->
+    <VBox spacing="2">
+        <Label text="GearMind" styleClass="tfx-title-xl"/>
+        <Label text="Panel de inicio" styleClass="tfx-muted"/>
+    </VBox>
+
+    <!-- ═══ PANEL SETUP (primera vez) ═══ -->
+    <VBox fx:id="setupPanel" styleClass="tfx-card" spacing="14" managed="false" visible="false">
+        <Label text="Primera configuración" styleClass="tfx-label-strong"/>
+        <Label text="Introduce los datos de conexión a MySQL. Solo necesitas hacer esto una vez."
+               styleClass="tfx-muted" wrapText="true"/>
+
+        <GridPane hgap="12" vgap="10">
+            <columnConstraints>
+                <ColumnConstraints minWidth="120" maxWidth="120"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <Label text="Host *" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="dbHostField" promptText="localhost"
+                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Puerto *" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="dbPortField" promptText="3306"
+                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Base de datos *" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextField fx:id="dbNameField" promptText="gearmind"
+                       GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label text="Usuario *" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <TextField fx:id="dbUserField" promptText="root"
+                       GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+            <Label text="Contraseña" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+            <PasswordField fx:id="dbPassField"
+                           GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        </GridPane>
+
+        <Separator/>
+
+        <Label text="Telegram (opcional)" styleClass="tfx-label-strong"/>
+        <GridPane hgap="12">
+            <columnConstraints>
+                <ColumnConstraints minWidth="120" maxWidth="120"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+            <Label text="Bot Token" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="botTokenField" promptText="Dejar vacío si no usas Telegram"
+                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+        </GridPane>
+
+        <Label fx:id="setupStatusLabel" wrapText="true" styleClass="tfx-muted"/>
+
+        <Button fx:id="setupButton" text="Guardar y configurar"
+                styleClass="tfx-btn-primary" onAction="#onSaveSetup"
+                maxWidth="Infinity"/>
+    </VBox>
+
+    <!-- ═══ PANEL PRINCIPAL ═══ -->
+    <VBox fx:id="mainPanel" spacing="12" managed="false" visible="false">
+
+        <!-- Estado BD -->
+        <HBox styleClass="tfx-card" alignment="CENTER_LEFT" spacing="12">
+            <Label text="Base de datos" styleClass="tfx-label-strong"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="dbStatusLabel" text="Comprobando..." styleClass="tfx-badge tfx-badge-warning"/>
+        </HBox>
+
+        <!-- Aplicación principal -->
+        <VBox styleClass="tfx-card" spacing="10">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Aplicación principal" styleClass="tfx-label-strong"/>
+                    <Label text="Interfaz de escritorio GearMind" styleClass="tfx-muted"/>
+                </VBox>
+                <Label fx:id="appStatusLabel" text="Detenida" styleClass="tfx-badge tfx-badge-danger"/>
+            </HBox>
+            <Button fx:id="appButton" text="Iniciar" styleClass="tfx-btn-primary"
+                    onAction="#onToggleApp" maxWidth="Infinity" disable="true"/>
+        </VBox>
+
+        <!-- Bot Telegram -->
+        <VBox styleClass="tfx-card" spacing="10">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Bot Telegram" styleClass="tfx-label-strong"/>
+                    <Label text="Webhook de notificaciones y citas" styleClass="tfx-muted"/>
+                </VBox>
+                <Label fx:id="botStatusLabel" text="Inactivo" styleClass="tfx-badge tfx-badge-danger"/>
+            </HBox>
+            <Button fx:id="botButton" text="Iniciar" styleClass="tfx-btn-primary"
+                    onAction="#onToggleBot" maxWidth="Infinity" disable="true"/>
+        </VBox>
+
+        <!-- Log -->
+        <TextArea fx:id="logArea" editable="false" prefHeight="130"
+                  promptText="Los mensajes de la aplicación aparecerán aquí..."
+                  style="-fx-font-family: 'Courier New', monospace; -fx-font-size: 11px; -fx-control-inner-background: #0a0f18;"/>
+    </VBox>
+
+</VBox>
