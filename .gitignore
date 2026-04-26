@@ -34,3 +34,9 @@ Thumbs.db
 *.bak
 *.tmp
 .env
+
+# ========================================
+# BUILD ARTIFACTS CLIENT PACKAGE
+# ========================================
+release/
+*.zip   

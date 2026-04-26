@@ -115,3 +115,18 @@ Este proyecto ha sido desarrollado como Trabajo Fin de Grado (TFG).
 
 **Autor:** Mario Rodríguez Gómez  
 **Uso:** Académico y educativo.
+
+## 🧰 Empaquetado para Cliente (solo desarrollador)
+
+Para generar una entrega sin código fuente para clientes finales, usa:
+
+```bash
+./scripts/build-client-package.sh
+```
+
+Este script es **exclusivo para desarrollo/distribución interna** y genera:
+
+- `release/client-package/`
+- `release/GearMind-Cliente.zip`
+
+> El cliente solo debe modificar su archivo `.env` con datos de MySQL y Telegram.
