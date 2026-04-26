@@ -37,6 +37,10 @@ cp "$JAR_SOURCE" "$APP_DIR/GearMind.jar"
 cp -R target/dependency/. "$LIB_DIR/"
 
 echo "[3/5] Copiando assets/scripts de ejecución..."
+if [[ ! -f "$ROOT_DIR/README-CLIENTE.md" ]]; then
+  echo "Error: no se encontró README-CLIENTE.md en la raíz del proyecto." >&2
+  exit 1
+fi
 cp "$ROOT_DIR/.env.template" "$PACKAGE_DIR/.env.template"
 cp "$ROOT_DIR/setup-db.sh" "$PACKAGE_DIR/setup-db.sh"
 cp "$ROOT_DIR/setup-db.bat" "$PACKAGE_DIR/setup-db.bat"
