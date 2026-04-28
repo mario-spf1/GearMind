@@ -159,6 +159,62 @@ public class MySqlFichajeRepository implements FichajeRepository {
     }
 
     @Override
+    public List<Fichaje> findByFilters(Long empresaId, Long userId, LocalDate from, LocalDate to) {
+        StringBuilder sb = new StringBuilder("""
+                SELECT f.id, f.empresa_id, f.user_id, f.movimiento, f.fecha,
+                       u.nombre AS usuario_nombre,
+                       e.nombre AS empresa_nombre
+                FROM fichaje f
+                JOIN usuario u ON u.id = f.user_id
+                JOIN empresa e ON e.id = f.empresa_id
+                """);
+
+        boolean whereAdded = false;
+        if (empresaId != null && empresaId > 0) {
+            sb.append(" WHERE f.empresa_id = ?");
+            whereAdded = true;
+        }
+        if (userId != null && userId > 0) {
+            sb.append(whereAdded ? " AND" : " WHERE");
+            sb.append(" f.user_id = ?");
+            whereAdded = true;
+        }
+        if (from != null && to != null) {
+            sb.append(whereAdded ? " AND" : " WHERE");
+            sb.append(" f.fecha >= ? AND f.fecha < ?");
+        }
+        sb.append(" ORDER BY f.fecha DESC");
+
+        List<Fichaje> result = new ArrayList<>();
+        LocalDateTime startOfRange = from != null ? from.atStartOfDay() : null;
+        LocalDateTime endOfRange = to != null ? to.plusDays(1).atStartOfDay() : null;
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sb.toString())) {
+            int index = 1;
+            if (empresaId != null && empresaId > 0) {
+                ps.setLong(index++, empresaId);
+            }
+            if (userId != null && userId > 0) {
+                ps.setLong(index++, userId);
+            }
+            if (from != null && to != null) {
+                ps.setTimestamp(index++, Timestamp.valueOf(startOfRange));
+                ps.setTimestamp(index, Timestamp.valueOf(endOfRange));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al consultar fichajes por rango", e);
+        }
+
+        return result;
+    }
+
+    @Override
     public List<Fichaje> findByUserAndDate(Long userId, java.time.LocalDate date) {
         String sql = """
                 SELECT f.id, f.empresa_id, f.user_id, f.movimiento, f.fecha,
@@ -189,6 +245,42 @@ public class MySqlFichajeRepository implements FichajeRepository {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error al consultar fichajes del día", e);
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<Fichaje> findByUserAndDateRange(Long userId, java.time.LocalDate from, java.time.LocalDate to) {
+        String sql = """
+                SELECT f.id, f.empresa_id, f.user_id, f.movimiento, f.fecha,
+                       u.nombre AS usuario_nombre,
+                       e.nombre AS empresa_nombre
+                FROM fichaje f
+                JOIN usuario u ON u.id = f.user_id
+                JOIN empresa e ON e.id = f.empresa_id
+                WHERE f.user_id = ?
+                  AND f.fecha >= ?
+                  AND f.fecha < ?
+                ORDER BY f.fecha ASC
+                """;
+
+        List<Fichaje> result = new ArrayList<>();
+        java.time.LocalDateTime startOfRange = from.atStartOfDay();
+        java.time.LocalDateTime endOfRange = to.plusDays(1).atStartOfDay();
+
+        try (Connection cn = dataSource.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            ps.setTimestamp(2, Timestamp.valueOf(startOfRange));
+            ps.setTimestamp(3, Timestamp.valueOf(endOfRange));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al consultar fichajes del rango", e);
         }
 
         return result;

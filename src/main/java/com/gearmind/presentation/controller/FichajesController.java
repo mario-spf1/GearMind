@@ -1,5 +1,11 @@
 package com.gearmind.presentation.controller;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
+
 import com.gearmind.application.common.AuthContext;
 import com.gearmind.application.fichaje.GetFichajeStatusUseCase;
 import com.gearmind.application.fichaje.RegistrarFichajeUseCase;
@@ -12,6 +18,7 @@ import com.gearmind.domain.user.UserRole;
 import com.gearmind.infrastructure.auth.MySqlUserRepository;
 import com.gearmind.infrastructure.company.MySqlEmpresaRepository;
 import com.gearmind.infrastructure.fichaje.MySqlFichajeRepository;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
@@ -26,12 +33,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.util.Duration;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Optional;
 
 public class FichajesController {
 
@@ -50,7 +51,9 @@ public class FichajesController {
     @FXML
     private ComboBox<UsuarioOption> cmbEmpleado;
     @FXML
-    private DatePicker dpDiaFiltro;
+    private DatePicker dpDesde;
+    @FXML
+    private DatePicker dpHasta;
     @FXML
     private TableView<Fichaje> tblFichajes;
     @FXML
@@ -86,8 +89,11 @@ public class FichajesController {
     @FXML
     public void initialize() {
         setupTable();
-        if (dpDiaFiltro != null) {
-            dpDiaFiltro.setValue(null);
+        if (dpDesde != null) {
+            dpDesde.setValue(LocalDate.now());
+        }
+        if (dpHasta != null) {
+            dpHasta.setValue(LocalDate.now());
         }
         setupFilters();
         refreshFichajes();
@@ -122,9 +128,7 @@ public class FichajesController {
             if (cmbEmpleado != null) {
                 cmbEmpleado.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
             }
-            if (dpDiaFiltro != null) {
-                dpDiaFiltro.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
-            }
+            addDateRangeListeners();
             return;
         }
 
@@ -135,9 +139,7 @@ public class FichajesController {
             if (cmbEmpleado != null) {
                 cmbEmpleado.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
             }
-            if (dpDiaFiltro != null) {
-                dpDiaFiltro.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
-            }
+            addDateRangeListeners();
             return;
         }
 
@@ -147,8 +149,15 @@ public class FichajesController {
         hideNode(cmbEmpleado);
         hideColumn(colEmpleado);
         hideColumn(colEmpresa);
-        if (dpDiaFiltro != null) {
-            dpDiaFiltro.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
+        addDateRangeListeners();
+    }
+
+    private void addDateRangeListeners() {
+        if (dpDesde != null) {
+            dpDesde.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
+        }
+        if (dpHasta != null) {
+            dpHasta.valueProperty().addListener((obs, oldVal, newVal) -> refreshFichajes());
         }
     }
 
@@ -184,7 +193,8 @@ public class FichajesController {
         UserRole role = AuthContext.getRole();
         Long empresaId = null;
         Long userId = null;
-        LocalDate diaFiltro = dpDiaFiltro != null ? dpDiaFiltro.getValue() : null;
+        LocalDate desde = dpDesde != null ? dpDesde.getValue() : null;
+        LocalDate hasta = dpHasta != null ? dpHasta.getValue() : null;
 
         if (role == UserRole.EMPLEADO) {
             empresaId = AuthContext.getEmpresaId();
@@ -197,13 +207,13 @@ public class FichajesController {
             userId = cmbEmpleado != null && cmbEmpleado.getValue() != null ? cmbEmpleado.getValue().id : null;
         }
 
-        if (diaFiltro != null) {
-            fichajes.setAll(fichajeRepository.findByFilters(empresaId, userId, diaFiltro));
+        if (desde != null && hasta != null) {
+            fichajes.setAll(fichajeRepository.findByFilters(empresaId, userId, desde, hasta));
         } else {
             fichajes.setAll(fichajeRepository.findByFilters(empresaId, userId));
         }
         updateTableHeight();
-        updateTotalDia(userId, diaFiltro);
+        updateTotalPeriodo(userId, desde, hasta);
     }
 
     private void updateTableHeight() {
@@ -218,21 +228,22 @@ public class FichajesController {
         tblFichajes.setMaxHeight(tableHeight);
     }
 
-    private void updateTotalDia(Long userId, LocalDate diaFiltro) {
+    private void updateTotalPeriodo(Long userId, LocalDate desde, LocalDate hasta) {
         if (lblTotalDia == null) {
             return;
         }
-        if (diaFiltro == null) {
-            lblTotalDia.setText("Total del día: —");
+        if (desde == null || hasta == null) {
+            lblTotalDia.setText("Total del período: —");
             return;
         }
         if (userId == null || userId == 0L) {
-            lblTotalDia.setText("Total del día: selecciona un usuario");
+            lblTotalDia.setText("Total del período: selecciona un usuario");
             return;
         }
-        List<Fichaje> registros = fichajeRepository.findByUserAndDate(userId, diaFiltro);
+        List<Fichaje> registros = fichajeRepository.findByUserAndDateRange(userId, desde, hasta);
         java.time.Duration total = calculateWorkedTotal(registros);
-        lblTotalDia.setText("Total del día: " + formatDuration(total, null));
+        String label = desde.equals(hasta) ? "Total del día" : "Total del período";
+        lblTotalDia.setText(label + ": " + formatDuration(total, null));
     }
 
     @FXML
