@@ -30,10 +30,8 @@
                 <ComboBox fx:id="cmbEmpresa" prefWidth="220"/>
                 <Label fx:id="lblEmpleadoFiltro" text="Empleado:"/>
                 <ComboBox fx:id="cmbEmpleado" prefWidth="240"/>
-                <Label text="Desde:"/>
-                <DatePicker fx:id="dpDesde" prefWidth="150" promptText="Desde"/>
-                <Label text="Hasta:"/>
-                <DatePicker fx:id="dpHasta" prefWidth="150" promptText="Hasta"/>
+                <Label text="Día:"/>
+                <DatePicker fx:id="dpDiaFiltro" prefWidth="150" promptText="Selecciona día"/>
             </children>
         </HBox>
 
