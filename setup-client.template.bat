@@ -101,16 +101,44 @@ for /f "delims=" %%i in ('where mysql.exe 2^>nul') do (
     goto :configurar_db
 )
 
-echo       MySQL no encontrado. Descargando MySQL 9.1.0...
+echo       MySQL no encontrado. Instalando MySQL...
 echo       ^(esto puede tardar varios minutos segun la conexion^)
 echo.
 
-set MYSQL_URL=https://dev.mysql.com/get/Downloads/MySQL-9.1/mysql-9.1.0-winx64.zip
-set MYSQL_ZIP=%TEMP%\mysql-9.1.0-winx64.zip
+:: Intentar con winget primero (disponible en Windows 10/11 actualizado)
+winget --version >nul 2>&1
+if not errorlevel 1 (
+    echo       Instalando MySQL mediante winget...
+    winget install Oracle.MySQL --silent --accept-source-agreements --accept-package-agreements
+    if not errorlevel 1 (
+        echo       MySQL instalado via winget.
+        :: Buscar mysql.exe en la ruta tipica de instalacion
+        for /d %%d in ("%ProgramFiles%\MySQL\MySQL Server 9*") do (
+            if exist "%%d\bin\mysql.exe" set MYSQL_CMD=%%d\bin\mysql.exe
+            if exist "%%d\bin\mysqld.exe" set MYSQL_BIN=%%d\bin
+        )
+        for /d %%d in ("%ProgramFiles%\MySQL\MySQL Server 8*") do (
+            if exist "%%d\bin\mysql.exe" set MYSQL_CMD=%%d\bin\mysql.exe
+            if exist "%%d\bin\mysqld.exe" set MYSQL_BIN=%%d\bin
+        )
+        for /f "delims=" %%i in ('where mysql.exe 2^>nul') do set MYSQL_CMD=%%i
+        timeout /t 5 /nobreak >nul
+        goto :configurar_db
+    )
+    echo       winget no pudo instalar MySQL. Intentando descarga directa...
+)
 
-powershell -NoProfile -Command "Invoke-WebRequest -Uri '!MYSQL_URL!' -OutFile '!MYSQL_ZIP!' -UseBasicParsing"
+:: Fallback: descargar ZIP desde CDN de MySQL
+set MYSQL_ZIP=%TEMP%\mysql-9.1.0-winx64.zip
+echo       Descargando desde cdn.mysql.com...
+powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://cdn.mysql.com/Downloads/MySQL-9.1/mysql-9.1.0-winx64.zip' -OutFile '!MYSQL_ZIP!' -UseBasicParsing"
 if errorlevel 1 (
-    echo ERROR: No se pudo descargar MySQL. Comprueba la conexion a internet.
+    echo.
+    echo ERROR: No se pudo descargar MySQL automaticamente.
+    echo.
+    echo Descarga MySQL manualmente desde:
+    echo   https://dev.mysql.com/downloads/mysql/
+    echo Elige la version ZIP para Windows x64, instala y vuelve a ejecutar este script.
     pause & exit /b 1
 )
 
