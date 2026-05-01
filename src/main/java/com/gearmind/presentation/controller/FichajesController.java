@@ -261,6 +261,10 @@ public class FichajesController {
     }
 
     private void refreshStatus() {
+        if (!AuthContext.isLoggedIn()) {
+            if (timer != null) timer.stop();
+            return;
+        }
         Optional<FichajeStatus> status = getFichajeStatusUseCase.execute(AuthContext.getCurrentUser().getId());
         if (status.isEmpty()) {
             btnSesionLaboral.setText("Comenzar sesión laboral");
