@@ -487,7 +487,7 @@ public class MySqlTelegramRepository implements TelegramClientLinkRepository, Te
     @Override
     public List<Vehicle> findVehiclesByCliente(long empresaId, long clienteId) {
         String sql = """
-                SELECT id, empresa_id, cliente_id, matricula, marca, modelo, year, vin, created_at, updated_at
+                SELECT id, empresa_id, cliente_id, matricula, marca, modelo, `year`, vin, created_at, updated_at
                 FROM vehiculo
                 WHERE empresa_id = ? AND cliente_id = ?
                 ORDER BY matricula ASC

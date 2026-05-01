@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS vehiculo (
     matricula VARCHAR(32),
     marca VARCHAR(100),
     modelo VARCHAR(100),
-    year INT,
+    `year` INT,
     vin VARCHAR(64),
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS smtp_config (
     password_encrypted TEXT NOT NULL,
     from_address VARCHAR(255),
     starttls TINYINT(1) NOT NULL DEFAULT 0,
-    ssl TINYINT(1) NOT NULL DEFAULT 0,
+    `ssl` TINYINT(1) NOT NULL DEFAULT 0,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_smtp_config_empresa FOREIGN KEY (empresa_id) REFERENCES empresa(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

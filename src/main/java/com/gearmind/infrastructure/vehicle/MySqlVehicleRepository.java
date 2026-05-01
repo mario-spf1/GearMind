@@ -16,7 +16,7 @@ public class MySqlVehicleRepository implements VehicleRepository {
     public List<Vehicle> findByEmpresaId(Long empresaId) {
         String sql = """
             SELECT v.id, v.empresa_id, v.cliente_id,
-                v.matricula, v.marca, v.modelo, v.year, v.vin,
+                v.matricula, v.marca, v.modelo, v.`year`, v.vin,
                 v.created_at, v.updated_at,
                 c.nombre AS cliente_nombre,
                 e.nombre AS empresa_nombre
@@ -47,7 +47,7 @@ public class MySqlVehicleRepository implements VehicleRepository {
     public List<Vehicle> findAllWithEmpresa() {
         String sql = """
             SELECT v.id, v.empresa_id, v.cliente_id,
-                v.matricula, v.marca, v.modelo, v.year, v.vin,
+                v.matricula, v.marca, v.modelo, v.`year`, v.vin,
                 v.created_at, v.updated_at,
                 c.nombre AS cliente_nombre,
                 e.nombre AS empresa_nombre
@@ -74,7 +74,7 @@ public class MySqlVehicleRepository implements VehicleRepository {
     public Optional<Vehicle> findById(Long id) {
         String sql = """
             SELECT v.id, v.empresa_id, v.cliente_id,
-                v.matricula, v.marca, v.modelo, v.year, v.vin,
+                v.matricula, v.marca, v.modelo, v.`year`, v.vin,
                 v.created_at, v.updated_at,
                 c.nombre AS cliente_nombre,
                 e.nombre AS empresa_nombre
@@ -110,7 +110,7 @@ public class MySqlVehicleRepository implements VehicleRepository {
     private Vehicle insert(Vehicle vehicle) {
         String sql = """
             INSERT INTO vehiculo
-                (empresa_id, cliente_id, matricula, marca, modelo, year, vin)
+                (empresa_id, cliente_id, matricula, marca, modelo, `year`, vin)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """;
 
@@ -146,7 +146,7 @@ public class MySqlVehicleRepository implements VehicleRepository {
     private Vehicle update(Vehicle vehicle) {
         String sql = """
             UPDATE vehiculo
-            SET empresa_id = ?, cliente_id = ?, matricula = ?, marca = ?, modelo = ?, year = ?, vin = ?
+            SET empresa_id = ?, cliente_id = ?, matricula = ?, marca = ?, modelo = ?, `year` = ?, vin = ?
             WHERE id = ?
             """;
 
