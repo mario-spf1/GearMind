@@ -109,13 +109,43 @@ if not errorlevel 1 goto :install_mysql
 
 echo       Puerto 3306 ocupado. Comprobando si es un MySQL compatible...
 
-:: Intentar conectar con la contrasena horneada
+:: Intentar conectar con la contrasena horneada (PATH y rutas comunes)
+set _MYSQL_REUSED=
 for /f "delims=" %%i in ('where mysql.exe 2^>nul') do (
-    "%%i" -u root -p"!MYSQL_ROOT_PASS!" -P 3306 -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
-    if not errorlevel 1 (
-        set MYSQL_CMD=%%i
-        echo       Conexion correcta. Reutilizando MySQL existente en 3306.
-        goto :configurar_db
+    if not defined _MYSQL_REUSED (
+        "%%i" -u root -p"!MYSQL_ROOT_PASS!" -P 3306 -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
+        if not errorlevel 1 (
+            set MYSQL_CMD=%%i
+            set _MYSQL_REUSED=1
+            echo       Conexion correcta. Reutilizando MySQL existente en 3306.
+            goto :configurar_db
+        )
+    )
+)
+:: Buscar en rutas de instalacion comunes si no se encontro en PATH
+if not defined _MYSQL_REUSED (
+    for /d %%d in ("%ProgramFiles%\MySQL\MySQL Server 9*" "%ProgramFiles%\MySQL\MySQL Server 8*") do (
+        if not defined _MYSQL_REUSED (
+            if exist "%%d\bin\mysql.exe" (
+                "%%d\bin\mysql.exe" -u root -p"!MYSQL_ROOT_PASS!" -P 3306 -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
+                if not errorlevel 1 (
+                    set MYSQL_CMD=%%d\bin\mysql.exe
+                    set _MYSQL_REUSED=1
+                    echo       Conexion correcta. Reutilizando MySQL existente en 3306.
+                    goto :configurar_db
+                )
+            )
+        )
+    )
+)
+if not defined _MYSQL_REUSED (
+    if exist "!MYSQL_BIN!\mysql.exe" (
+        "!MYSQL_BIN!\mysql.exe" -u root -p"!MYSQL_ROOT_PASS!" -P 3306 -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
+        if not errorlevel 1 (
+            set _MYSQL_REUSED=1
+            echo       Conexion correcta. Reutilizando MySQL existente en 3306.
+            goto :configurar_db
+        )
     )
 )
 
