@@ -99,7 +99,7 @@ public class ClientesController {
 
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
 
-        tblClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblClientes.setPlaceholder(new Label("No hay clientes que mostrar."));
 
         // ===== Empresa (solo SuperAdmin) =====

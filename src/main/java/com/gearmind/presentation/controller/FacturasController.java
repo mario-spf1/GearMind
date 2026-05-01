@@ -109,7 +109,7 @@ public class FacturasController {
     private void initialize() {
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
 
-        tblFacturas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblFacturas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblFacturas.setPlaceholder(new Label("No hay facturas que mostrar."));
 
         if (!isSuperAdmin) {

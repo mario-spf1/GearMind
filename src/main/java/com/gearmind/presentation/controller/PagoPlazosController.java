@@ -113,10 +113,10 @@ public class PagoPlazosController {
     @FXML
     private void initialize() {
         tblPlazos.setItems(installments);
-        tblPlazos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblPlazos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblPlazos.setFixedCellSize(28);
         tblRegistros.setItems(records);
-        tblRegistros.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblRegistros.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblRegistros.setFixedCellSize(28);
 
         colNumero.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getNumero() != null ? c.getValue().getNumero() : 0)));

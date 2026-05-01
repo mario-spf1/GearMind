@@ -22,7 +22,7 @@ import java.util.Locale;
 
 public class BudgetPdfGenerator {
 
-    private static final DecimalFormat MONEY_FORMAT = new DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance(new Locale("es", "ES")));
+    private static final DecimalFormat MONEY_FORMAT = new DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance(Locale.of("es", "ES")));
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final BigDecimal DEFAULT_IVA_RATE = new BigDecimal("0.21");
     private static final Color META_BACKGROUND = new Color(246, 247, 251);

@@ -85,7 +85,7 @@ public class VehiculosController {
     private void initialize() {
 
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
-        tblVehiculos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblVehiculos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblVehiculos.setPlaceholder(new Label("No hay vehículos que mostrar."));
 
         if (!isSuperAdmin) {

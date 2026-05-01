@@ -177,7 +177,7 @@ public class DashboardController {
         colCliTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colCliEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
 
-        tblUltimosClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblUltimosClientes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblUltimosClientes.setFixedCellSize(28);
     }
 
@@ -400,7 +400,7 @@ public class DashboardController {
         series.getData().add(new XYChart.Data<>(buildChartLabel("Completada", completadas, total), completadas));
         series.getData().add(new XYChart.Data<>(buildChartLabel("Cancelada", canceladas, total), canceladas));
 
-        chartCitasEstado.getData().setAll(series);
+        chartCitasEstado.getData().setAll(List.of(series));
         chartCitasEstado.setLegendVisible(false);
     }
 

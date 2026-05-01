@@ -94,7 +94,7 @@ public class PagosController {
     private void initialize() {
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
 
-        tblPagos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblPagos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblPagos.setPlaceholder(new Label("No hay pagos que mostrar."));
 
         if (!isSuperAdmin) {

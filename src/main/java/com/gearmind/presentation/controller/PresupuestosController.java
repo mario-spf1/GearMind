@@ -101,7 +101,7 @@ public class PresupuestosController {
     private void initialize() {
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
 
-        tblPresupuestos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblPresupuestos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblPresupuestos.setPlaceholder(new Label("No hay presupuestos que mostrar."));
 
         if (!isSuperAdmin) {

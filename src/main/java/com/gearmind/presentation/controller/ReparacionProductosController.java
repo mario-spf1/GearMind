@@ -85,7 +85,7 @@ public class ReparacionProductosController {
         }
         if (tblMovimientos != null) {
             tblMovimientos.setItems(movimientos);
-            tblMovimientos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            tblMovimientos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         }
 
         if (colProducto != null) {

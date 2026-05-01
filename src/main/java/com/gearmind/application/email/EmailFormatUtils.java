@@ -7,7 +7,7 @@ import java.util.Locale;
 
 public final class EmailFormatUtils {
 
-    private static final DecimalFormat MONEY_FORMAT = new DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance(new Locale("es", "ES")));
+    private static final DecimalFormat MONEY_FORMAT = new DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance(Locale.of("es", "ES")));
 
     private EmailFormatUtils() {
     }

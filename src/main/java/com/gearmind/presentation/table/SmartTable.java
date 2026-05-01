@@ -47,7 +47,7 @@ public class SmartTable<T> {
         this.globalMatcher = globalMatcher;
 
         if (this.table != null) {
-            this.table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            this.table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         }
 
         if (this.globalSearchField != null) {

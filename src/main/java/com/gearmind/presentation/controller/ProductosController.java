@@ -121,7 +121,7 @@ public class ProductosController {
 
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
 
-        tblProductos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblProductos.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblProductos.setPlaceholder(new Label("No hay productos que mostrar."));
 
         if (!isSuperAdmin) {

@@ -96,7 +96,7 @@ public class UsuariosController {
         }
 
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
-        tblUsuarios.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblUsuarios.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblUsuarios.setPlaceholder(new Label("No hay usuarios que mostrar."));
 
         if (!isSuperAdmin) {

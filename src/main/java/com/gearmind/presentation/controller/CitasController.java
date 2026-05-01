@@ -726,7 +726,7 @@ public class CitasController {
         }
 
         TableView<TelegramRequestRow> table = new TableView<>();
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         ObservableList<TelegramRequestRow> rows = FXCollections.observableArrayList();
         for (TelegramAppointmentRequest request : requests) {
             LocalDateTime requestedDateTime = parseRequestedDateTime(request.getMensaje());
@@ -807,7 +807,7 @@ public class CitasController {
             }
         });
 
-        table.getColumns().addAll(colFecha, colFechaSolicitada, colCliente, colVehiculo, colMensaje, colAcciones);
+        table.getColumns().addAll(List.of(colFecha, colFechaSolicitada, colCliente, colVehiculo, colMensaje, colAcciones));
 
         Button btnCerrar = new Button("Cerrar");
         btnCerrar.getStyleClass().add("button-secondary");

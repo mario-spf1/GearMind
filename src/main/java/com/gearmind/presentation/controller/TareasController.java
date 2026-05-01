@@ -107,7 +107,7 @@ public class TareasController {
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
         boolean isAdmin = AuthContext.isAdminOrSuperAdmin();
 
-        tblTareas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblTareas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblTareas.setPlaceholder(new Label("No hay tareas que mostrar."));
 
         if (!isSuperAdmin) {

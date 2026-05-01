@@ -381,7 +381,7 @@ public class PresupuestoFormController {
         tblLineas.setItems(lineas);
         tblLineas.setEditable(true);
         tblLineas.setFixedCellSize(28);
-        tblLineas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblLineas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 
         configureColumnWidths();
         colDescripcion.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDescripcion()));

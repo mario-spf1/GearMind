@@ -102,7 +102,7 @@ public class FichajesController {
         colEmpleado.setCellValueFactory(cell -> new SimpleStringProperty(safe(cell.getValue().getUsuarioNombre())));
         colEmpresa.setCellValueFactory(cell -> new SimpleStringProperty(safe(cell.getValue().getEmpresaNombre())));
         tblFichajes.setItems(fichajes);
-        tblFichajes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblFichajes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblFichajes.setFixedCellSize(28);
     }
 

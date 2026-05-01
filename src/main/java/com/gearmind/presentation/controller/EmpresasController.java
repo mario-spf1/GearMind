@@ -94,7 +94,7 @@ public class EmpresasController {
 
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
 
-        tblEmpresas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblEmpresas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblEmpresas.setPlaceholder(new Label("No hay empresas que mostrar."));
 
         if (!isSuperAdmin) {

@@ -91,7 +91,7 @@ public class ReportesController {
 
     @FXML
     private void initialize() {
-        tblReportes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblReportes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblReportes.setPlaceholder(new Label("No hay datos para el reporte."));
 
         colEmpresa.setCellValueFactory(c -> new SimpleStringProperty(safe(c.getValue().getEmpresa())));

@@ -102,7 +102,7 @@ public class ReparacionesController {
     private void initialize() {
         boolean isSuperAdmin = AuthContext.isSuperAdmin();
 
-        tblReparaciones.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblReparaciones.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         tblReparaciones.setPlaceholder(new Label("No hay reparaciones que mostrar."));
 
         if (!isSuperAdmin) {

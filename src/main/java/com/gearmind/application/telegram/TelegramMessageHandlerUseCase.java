@@ -766,9 +766,9 @@ public class TelegramMessageHandlerUseCase {
         if (text == null) {
             return null;
         }
-        String normalized = text.trim().toLowerCase(new Locale("es", "ES"));
+        String normalized = text.trim().toLowerCase(Locale.of("es", "ES"));
         for (int month = 1; month <= 12; month++) {
-            if (monthLabel(month).toLowerCase(new Locale("es", "ES")).equals(normalized)) {
+            if (monthLabel(month).toLowerCase(Locale.of("es", "ES")).equals(normalized)) {
                 return month;
             }
         }
@@ -836,7 +836,7 @@ public class TelegramMessageHandlerUseCase {
     }
 
     private String monthLabel(int month) {
-        return Month.of(month).getDisplayName(TextStyle.FULL_STANDALONE, new Locale("es", "ES"));
+        return Month.of(month).getDisplayName(TextStyle.FULL_STANDALONE, Locale.of("es", "ES"));
     }
 
     private void appendCustomerHeader(StringBuilder sb, long clienteId) {
