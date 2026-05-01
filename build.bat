@@ -119,6 +119,7 @@ echo [4/6] Copiando scripts y ficheros...
 copy /y "launcher.bat"     "%PACKAGE_DIR%\launcher.bat"     >nul
 copy /y "run-app.bat"      "%PACKAGE_DIR%\run-app.bat"      >nul
 copy /y "run-bot.bat"      "%PACKAGE_DIR%\run-bot.bat"      >nul
+copy /y "mostrar-ip.bat"   "%PACKAGE_DIR%\mostrar-ip.bat"   >nul
 copy /y "README-CLIENTE.md" "%PACKAGE_DIR%\README-CLIENTE.md" >nul
 
 :: -------------------------------------------------------
@@ -141,8 +142,9 @@ echo.
 echo Paquete generado en: !ZIP_FILE!
 echo.
 echo Contenido del paquete:
-echo   setup-client.bat  ^<-- el cliente ejecuta esto primero (como admin)
+echo   setup-client.bat  ^<-- ejecutar primero (como admin) y elegir SERVIDOR o CLIENTE
 echo   launcher.bat      ^<-- para arrancar GearMind cada dia
+echo   mostrar-ip.bat    ^<-- el SERVIDOR lo ejecuta para ver su IP
 echo   run-app.bat / run-bot.bat
 echo   app\GearMind.jar + lib\
 echo.

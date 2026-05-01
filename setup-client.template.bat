@@ -85,8 +85,164 @@ echo.
 
 :check_mysql
 :: -------------------------------------------------------
+:: Modo de instalacion: Servidor o Cliente
+:: -------------------------------------------------------
+echo.
+echo ============================================================
+echo   Modo de instalacion
+echo ============================================================
+echo   [S] SERVIDOR del taller
+echo       Este PC tendra MySQL y guardara los datos del taller.
+echo       El primer PC del taller siempre debe ser servidor.
+echo.
+echo   [C] CLIENTE del taller
+echo       Este PC se conectara por la red local al PC servidor
+echo       que ya este instalado y encendido.
+echo ============================================================
+echo.
+:ask_install_mode
+set INSTALL_MODE=
+set /p INSTALL_MODE="Tipo de instalacion (S/C): "
+if /i "!INSTALL_MODE!"=="S" goto :modo_servidor
+if /i "!INSTALL_MODE!"=="C" goto :modo_cliente
+echo       Respuesta no valida. Escribe S o C.
+goto :ask_install_mode
+
+:modo_cliente
+echo.
+echo [2/3] Configuracion de la conexion al servidor del taller...
+echo.
+echo       Buscando servidores GearMind en la red local...
+echo       (esto tarda unos 5 segundos)
+
+set CANDIDATES_FILE=%TEMP%\gearmind_servers.txt
+if exist "!CANDIDATES_FILE!" del /q "!CANDIDATES_FILE!"
+
+powershell -NoProfile -Command ^
+  "$local = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' -and ($_.PrefixOrigin -eq 'Dhcp' -or $_.PrefixOrigin -eq 'Manual') } | Select-Object -First 1).IPAddress;" ^
+  "if (-not $local) { exit 0 };" ^
+  "$subnet = $local -replace '\.\d+$', '.';" ^
+  "$mine = ($local -split '\.')[3];" ^
+  "$probes = @();" ^
+  "1..254 | ForEach-Object {" ^
+  "  if ($_ -ne [int]$mine) {" ^
+  "    $ip = $subnet + $_;" ^
+  "    $c = New-Object System.Net.Sockets.TcpClient;" ^
+  "    $iar = $c.BeginConnect($ip, 3306, $null, $null);" ^
+  "    $probes += [PSCustomObject]@{ IP = $ip; Client = $c; IAR = $iar }" ^
+  "  }" ^
+  "};" ^
+  "Start-Sleep -Milliseconds 1500;" ^
+  "$found = @();" ^
+  "foreach ($p in $probes) {" ^
+  "  if ($p.IAR.IsCompleted) {" ^
+  "    try { $p.Client.EndConnect($p.IAR); $found += $p.IP } catch {}" ^
+  "  };" ^
+  "  $p.Client.Close()" ^
+  "};" ^
+  "$found | Out-File -FilePath '!CANDIDATES_FILE!' -Encoding ASCII"
+
+set CANDIDATE_COUNT=0
+if exist "!CANDIDATES_FILE!" (
+    for /f "usebackq delims=" %%i in ("!CANDIDATES_FILE!") do (
+        set /a CANDIDATE_COUNT+=1
+        set CANDIDATE_!CANDIDATE_COUNT!=%%i
+    )
+)
+
+set DB_SERVER_HOST=
+set DB_SERVER_PORT=
+
+if !CANDIDATE_COUNT! gtr 0 (
+    echo.
+    echo       Servidores encontrados en la red local:
+    for /l %%n in (1,1,!CANDIDATE_COUNT!) do (
+        call echo         [%%n] %%CANDIDATE_%%n%%
+    )
+    echo         [M] Escribir IP o nombre manualmente
+    echo.
+    :ask_pick
+    set PICK=
+    set /p PICK="Elige una opcion: "
+    if /i "!PICK!"=="M" goto :ask_manual
+    if "!PICK!"=="" (
+        echo       Opcion no valida.
+        goto :ask_pick
+    )
+    call set DB_SERVER_HOST=%%CANDIDATE_!PICK!%%
+    if "!DB_SERVER_HOST!"=="" (
+        echo       Numero fuera de rango.
+        goto :ask_pick
+    )
+    set DB_SERVER_PORT=3306
+    goto :test_conexion
+)
+
+echo       No se detectaron servidores. Introduce los datos manualmente.
+
+:ask_manual
+echo.
+:ask_server_host
+set DB_SERVER_HOST=
+set /p DB_SERVER_HOST="IP o nombre del PC servidor del taller: "
+if "!DB_SERVER_HOST!"=="" (
+    echo       Debes indicar la IP del servidor.
+    goto :ask_server_host
+)
+set DB_SERVER_PORT=
+set /p DB_SERVER_PORT="Puerto MySQL del servidor [3306]: "
+if "!DB_SERVER_PORT!"=="" set DB_SERVER_PORT=3306
+
+:test_conexion
+
+echo       Comprobando conexion con !DB_SERVER_HOST!:!DB_SERVER_PORT!...
+powershell -NoProfile -Command "try { $c = New-Object System.Net.Sockets.TcpClient; $iar = $c.BeginConnect('!DB_SERVER_HOST!', !DB_SERVER_PORT!, $null, $null); if (-not $iar.AsyncWaitHandle.WaitOne(5000)) { $c.Close(); exit 1 }; $c.EndConnect($iar); $c.Close(); exit 0 } catch { exit 1 }" >nul 2>&1
+if errorlevel 1 (
+    echo.
+    echo ERROR: No se puede alcanzar !DB_SERVER_HOST!:!DB_SERVER_PORT!.
+    echo Comprueba que:
+    echo   - El PC servidor esta encendido y conectado a la misma red.
+    echo   - El firewall del servidor permite el puerto !DB_SERVER_PORT!.
+    echo   - La IP introducida es correcta.
+    pause & exit /b 1
+)
+echo       Conexion al servidor correcta.
+echo.
+
+echo [3/3] Generando configuracion local...
+(
+echo APP_ENV=production
+echo DB_HOST=!DB_SERVER_HOST!
+echo DB_PORT=!DB_SERVER_PORT!
+echo DB_NAME=gearmind
+echo DB_USER=!APP_DB_USER!
+echo DB_PASS=!APP_DB_PASS!
+echo DB_POOL_MAX=10
+echo TELEGRAM_BOT_TOKEN=
+echo TELEGRAM_WEBHOOK_SECRET=
+echo TELEGRAM_WEBHOOK_PATH=/api/telegram/webhook
+echo TELEGRAM_WEBHOOK_PORT=8081
+echo TELEGRAM_EMPRESA_ID=1
+) > .env
+echo       Configuracion guardada.
+echo.
+
+echo ============================================================
+echo   Instalacion CLIENTE completada
+echo ============================================================
+echo.
+echo   Haz doble clic en launcher.bat para iniciar GearMind.
+echo   Te conectaras al servidor: !DB_SERVER_HOST!:!DB_SERVER_PORT!
+echo.
+pause
+endlocal
+exit /b 0
+
+:modo_servidor
+:: -------------------------------------------------------
 :: [2/5] Detectar puerto e instalar MySQL si es necesario
 :: -------------------------------------------------------
+echo.
 echo [2/5] Comprobando MySQL...
 
 set MYSQL_PORT=3306
@@ -275,11 +431,12 @@ echo [3/5] Configurando base de datos y usuarios (puerto !MYSQL_PORT!)...
 :: Reset completo: eliminar BD y usuarios previos para empezar limpio
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP DATABASE IF EXISTS gearmind;" 2>nul
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!APP_DB_USER!'@'localhost';" 2>nul
+"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!APP_DB_USER!'@'%%';" 2>nul
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!SUPPORT_USER!'@'%%';" 2>nul
 
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE DATABASE gearmind CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE USER IF NOT EXISTS '!APP_DB_USER!'@'localhost' IDENTIFIED BY '!APP_DB_PASS!';"
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "GRANT ALL PRIVILEGES ON gearmind.* TO '!APP_DB_USER!'@'localhost';"
+"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE USER IF NOT EXISTS '!APP_DB_USER!'@'%%' IDENTIFIED BY '!APP_DB_PASS!';"
+"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "GRANT ALL PRIVILEGES ON gearmind.* TO '!APP_DB_USER!'@'%%';"
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE USER IF NOT EXISTS '!SUPPORT_USER!'@'%%' IDENTIFIED BY '!SUPPORT_PASS!';"
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "GRANT SELECT, INSERT, UPDATE, DELETE ON gearmind.* TO '!SUPPORT_USER!'@'%%';"
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "FLUSH PRIVILEGES;"
@@ -340,16 +497,22 @@ if errorlevel 1 (
 :: -------------------------------------------------------
 echo.
 echo ============================================================
-echo   Instalacion completada
+echo   Instalacion SERVIDOR completada
 echo ============================================================
 echo.
 echo   Haz doble clic en launcher.bat para iniciar GearMind.
 echo.
 echo   Puerto MySQL en uso: !MYSQL_PORT!
 echo.
-echo   NOTA: Para soporte tecnico remoto, abre el puerto !MYSQL_PORT!
-echo   en tu router apuntando a este ordenador.
-echo   Si no sabes como hacerlo, contacta con tu tecnico de red.
+echo   IP(s) de este PC en la red local (para los PCs cliente):
+for /f "delims=" %%i in ('powershell -NoProfile -Command "Get-NetIPAddress -AddressFamily IPv4 ^| Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' -and ($_.PrefixOrigin -eq 'Dhcp' -or $_.PrefixOrigin -eq 'Manual') } ^| Select-Object -ExpandProperty IPAddress" 2^>nul') do echo     %%i  (puerto !MYSQL_PORT!)
+echo.
+echo   En cada PC cliente del taller, ejecuta setup-client.bat,
+echo   elige modo CLIENTE y escribe una de las IPs anteriores.
+echo.
+echo   NOTA: Para soporte tecnico remoto desde fuera de la red
+echo   local, abre el puerto !MYSQL_PORT! en tu router apuntando
+echo   a este ordenador.
 echo.
 pause
 endlocal
