@@ -18,7 +18,7 @@ public class LauncherApp extends Application {
         scene.getStylesheets().add(getClass().getResource("/styles/theme.css").toExternalForm());
         scene.getStylesheets().add(getClass().getResource("/styles/components.css").toExternalForm());
 
-        stage.setTitle("GearMind — Lanzador");
+        stage.setTitle("GearMind — Launcher");
         stage.setResizable(false);
         stage.setOnCloseRequest(e -> controller.onClose());
         stage.setScene(scene);

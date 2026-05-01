@@ -195,7 +195,7 @@ public class AjustesController {
             updates.put("TELEGRAM_EMPRESA_ID", empresaIdStr);
             writeEnv(updates);
 
-            setBotStatus("Guardado. Reinicia el bot desde el lanzador para aplicar los cambios.", true);
+            setBotStatus("Guardado. Reinicia el bot desde el launcher para aplicar los cambios.", true);
         } catch (ValidationException ve) {
             setBotStatus(ve.getMessage(), false);
         } catch (Exception e) {

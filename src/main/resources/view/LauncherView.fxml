@@ -13,7 +13,7 @@
     <!-- Cabecera -->
     <VBox spacing="2">
         <Label text="GearMind" styleClass="tfx-title-xl"/>
-        <Label text="Panel de inicio" styleClass="tfx-muted"/>
+        <Label text="Launcher" styleClass="tfx-muted"/>
     </VBox>
 
     <!-- ═══ PANEL SETUP (primera vez) ═══ -->
@@ -105,10 +105,6 @@
                     onAction="#onToggleBot" maxWidth="Infinity" disable="true"/>
         </VBox>
 
-        <!-- Log -->
-        <TextArea fx:id="logArea" editable="false" prefHeight="130"
-                  promptText="Los mensajes de la aplicación aparecerán aquí..."
-                  style="-fx-font-family: 'Courier New', monospace; -fx-font-size: 11px; -fx-control-inner-background: #0a0f18;"/>
     </VBox>
 
 </VBox>

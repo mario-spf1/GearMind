@@ -82,7 +82,7 @@
                             <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
 
                             <Label text="Bot de Telegram" styleClass="tfx-label-strong"/>
-                            <Label text="Crea un bot con @BotFather en Telegram y pega aquí el token. Tras guardar, reinicia el bot desde el lanzador para aplicar los cambios." styleClass="tfx-muted" wrapText="true"/>
+                            <Label text="Crea un bot con @BotFather en Telegram y pega aquí el token. Tras guardar, reinicia el bot desde el launcher para aplicar los cambios." styleClass="tfx-muted" wrapText="true"/>
 
                             <GridPane hgap="12" vgap="10">
                                 <columnConstraints>

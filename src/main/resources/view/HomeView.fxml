@@ -17,7 +17,7 @@
                     <children>
                         <ImageView fitWidth="100" fitHeight="100" preserveRatio="true">
                             <image>
-                                <Image url="@../img/Logo_Gearmind.png"/>
+                                <Image url="@../img/Logo_GearMind.png"/>
                             </image>
                         </ImageView>
                         <Label text="GearMind" styleClass="tfx-toolbar-title"/>

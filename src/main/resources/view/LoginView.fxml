@@ -19,7 +19,7 @@
                     <VBox alignment="CENTER" spacing="6">
                         <ImageView fitWidth="160" fitHeight="160" preserveRatio="true">
                             <image>
-                                <Image url="@../img/Logo_Gearmind.png"/>
+                                <Image url="@../img/Logo_GearMind.png"/>
                             </image>
                         </ImageView>
                         <Label text="GearMind Taller" styleClass="tfx-title-xl"/>

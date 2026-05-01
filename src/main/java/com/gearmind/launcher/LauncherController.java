@@ -34,7 +34,6 @@ public class LauncherController {
     @FXML private Button appButton;
     @FXML private Label botStatusLabel;
     @FXML private Button botButton;
-    @FXML private TextArea logArea;
 
     private Process appProcess;
     private Process botProcess;
@@ -180,10 +179,7 @@ public class LauncherController {
         } else {
             try {
                 appProcess = startProcess("com.gearmind.presentation.App");
-                streamLog(appProcess, "App");
-            } catch (IOException e) {
-                appendLog("[App] Error al iniciar: " + e.getMessage());
-            }
+            } catch (IOException ignored) {}
         }
         refreshProcessStatus();
     }
@@ -196,10 +192,7 @@ public class LauncherController {
         } else {
             try {
                 botProcess = startProcess("com.gearmind.infrastructure.telegram.TelegramWebhookMain");
-                streamLog(botProcess, "Bot");
-            } catch (IOException e) {
-                appendLog("[Bot] Error al iniciar: " + e.getMessage());
-            }
+            } catch (IOException ignored) {}
         }
         refreshProcessStatus();
     }
@@ -262,29 +255,9 @@ public class LauncherController {
                 "-cp", cp,
                 mainClass);
         pb.directory(new File("."));
-        pb.redirectErrorStream(true);
+        pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+        pb.redirectError(ProcessBuilder.Redirect.DISCARD);
         return pb.start();
-    }
-
-    private void streamLog(Process process, String prefix) {
-        new Thread(() -> {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    final String out = "[" + prefix + "] " + line;
-                    Platform.runLater(() -> appendLog(out));
-                }
-            } catch (IOException ignored) {}
-        }).start();
-    }
-
-    private void appendLog(String line) {
-        logArea.appendText(line + "\n");
-        String text = logArea.getText();
-        String[] lines = text.split("\n", -1);
-        if (lines.length > 300) {
-            logArea.setText(String.join("\n", java.util.Arrays.copyOfRange(lines, lines.length - 300, lines.length)));
-        }
     }
 
     private void writeEnvFile(String host, String port, String dbName, String user, String pass, String token) throws IOException {
