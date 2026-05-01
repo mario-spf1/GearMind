@@ -112,17 +112,18 @@ if not errorlevel 1 (
     winget install Oracle.MySQL --silent --accept-source-agreements --accept-package-agreements
     if not errorlevel 1 (
         echo       MySQL instalado via winget.
-        :: Buscar mysql.exe en la ruta tipica de instalacion
+        :: Arrancar servicio (winget no siempre lo inicia)
+        net start MySQL >nul 2>&1
+        net start MySQL91 >nul 2>&1
+        timeout /t 8 /nobreak >nul
+        :: Buscar mysql.exe en rutas tipicas de instalacion
         for /d %%d in ("%ProgramFiles%\MySQL\MySQL Server 9*") do (
             if exist "%%d\bin\mysql.exe" set MYSQL_CMD=%%d\bin\mysql.exe
-            if exist "%%d\bin\mysqld.exe" set MYSQL_BIN=%%d\bin
         )
         for /d %%d in ("%ProgramFiles%\MySQL\MySQL Server 8*") do (
             if exist "%%d\bin\mysql.exe" set MYSQL_CMD=%%d\bin\mysql.exe
-            if exist "%%d\bin\mysqld.exe" set MYSQL_BIN=%%d\bin
         )
         for /f "delims=" %%i in ('where mysql.exe 2^>nul') do set MYSQL_CMD=%%i
-        timeout /t 5 /nobreak >nul
         goto :configurar_db
     )
     echo       winget no pudo instalar MySQL. Intentando descarga directa...

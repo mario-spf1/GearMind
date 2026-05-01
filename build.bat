@@ -104,7 +104,7 @@ powershell -NoProfile -Command ^
   "$c = $c -replace '\{\{APP_DB_PASS\}\}',    '!APP_DB_PASS!';" ^
   "$c = $c -replace '\{\{SUPPORT_USER\}\}',   '!SUPPORT_USER!';" ^
   "$c = $c -replace '\{\{SUPPORT_PASS\}\}',   '!SUPPORT_PASS!';" ^
-  "$c | Set-Content '%PACKAGE_DIR%\setup-client.bat' -Encoding UTF8"
+  "$enc = New-Object System.Text.UTF8Encoding `$false; [System.IO.File]::WriteAllText((Resolve-Path '.').Path + '\%PACKAGE_DIR%\setup-client.bat', `$c, `$enc)"
 
 if errorlevel 1 (
   echo Error: no se pudo generar setup-client.bat.
