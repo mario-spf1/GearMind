@@ -103,9 +103,9 @@ if not errorlevel 1 (
     goto :configurar_db
 )
 
-:: Comprobar si el puerto 3306 esta ocupado
-netstat -ano -p tcp | findstr "LISTENING" | findstr ":3306 " >nul 2>&1
-if errorlevel 1 goto :install_mysql
+:: Comprobar si el puerto 3306 esta ocupado (PowerShell, mas fiable que netstat)
+powershell -NoProfile -Command "try { $s = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, 3306); $s.Start(); $s.Stop(); exit 0 } catch { exit 1 }" >nul 2>&1
+if not errorlevel 1 goto :install_mysql
 
 echo       Puerto 3306 ocupado. Comprobando si es un MySQL compatible...
 
@@ -120,17 +120,7 @@ for /f "delims=" %%i in ('where mysql.exe 2^>nul') do (
 )
 
 echo       No se pudo reutilizar el MySQL existente. Buscando puerto alternativo...
-set MYSQL_PORT=
-for /l %%p in (3307,1,3320) do (
-    if not defined MYSQL_PORT (
-        netstat -ano -p tcp | findstr "LISTENING" | findstr ":%%p " >nul 2>&1
-        if errorlevel 1 set MYSQL_PORT=%%p
-    )
-)
-if not defined MYSQL_PORT (
-    echo ERROR: No se encontro un puerto libre entre 3307-3320.
-    pause & exit /b 1
-)
+call :find_free_port
 echo       Se usara el puerto !MYSQL_PORT! para MySQL.
 
 :install_mysql
@@ -221,15 +211,36 @@ echo.
 :: -------------------------------------------------------
 :: [3/5] Configurar base de datos y usuarios
 :: -------------------------------------------------------
-echo [3/5] Configurando base de datos y usuarios...
-
+:: Verificacion de conexion. Si falla, reinstalar en otro puerto (una vez).
 "!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '!MYSQL_ROOT_PASS!';" 2>nul
-
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: No se pudo conectar a MySQL en el puerto !MYSQL_PORT!. Comprueba las credenciales.
+if not errorlevel 1 goto :configurar_db_ok
+
+if defined MYSQL_RETRY (
+    echo ERROR: No se pudo conectar a MySQL despues de reinstalar.
+    echo Comprueba que las credenciales del build coinciden o detente otros MySQL en ejecucion.
     pause & exit /b 1
 )
+
+echo.
+echo       No se pudo autenticar contra MySQL en el puerto !MYSQL_PORT!.
+echo       Reinstalando GearMind MySQL en un puerto libre alternativo...
+echo.
+set MYSQL_RETRY=1
+
+:: Detener y desinstalar nuestro servicio si existe
+sc query !MYSQL_SVC! >nul 2>&1
+if not errorlevel 1 (
+    net stop !MYSQL_SVC! >nul 2>&1
+    "!MYSQL_BIN!\mysqld" --remove !MYSQL_SVC! >nul 2>&1
+)
+
+call :find_free_port
+echo       Reinstalando en el puerto !MYSQL_PORT!.
+goto :install_zip
+
+:configurar_db_ok
+echo [3/5] Configurando base de datos y usuarios (puerto !MYSQL_PORT!)...
 
 :: Reset completo: eliminar BD y usuarios previos para empezar limpio
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP DATABASE IF EXISTS gearmind;" 2>nul
@@ -312,3 +323,21 @@ echo   Si no sabes como hacerlo, contacta con tu tecnico de red.
 echo.
 pause
 endlocal
+exit /b 0
+
+:: -------------------------------------------------------
+:: Subrutinas
+:: -------------------------------------------------------
+:find_free_port
+set MYSQL_PORT=
+for /l %%p in (3307,1,3320) do (
+    if not defined MYSQL_PORT (
+        powershell -NoProfile -Command "try { $s = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, %%p); $s.Start(); $s.Stop(); exit 0 } catch { exit 1 }" >nul 2>&1
+        if not errorlevel 1 set MYSQL_PORT=%%p
+    )
+)
+if not defined MYSQL_PORT (
+    echo ERROR: No se encontro un puerto libre entre 3307-3320.
+    pause & exit /b 1
+)
+goto :eof
