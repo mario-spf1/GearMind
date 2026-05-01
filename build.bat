@@ -127,7 +127,14 @@ copy /y "README-CLIENTE.md" "%PACKAGE_DIR%\README-CLIENTE.md" >nul
 :: -------------------------------------------------------
 echo [5/6] Generando ZIP...
 if exist "!ZIP_FILE!" del /q "!ZIP_FILE!"
-powershell -NoProfile -Command "Compress-Archive -Path '%PACKAGE_DIR%\*' -DestinationPath '!ZIP_FILE!'"
+powershell -NoProfile -Command ^
+  "Add-Type -AssemblyName System.IO.Compression.FileSystem;" ^
+  "$src = (Resolve-Path '%PACKAGE_DIR%').Path;" ^
+  "$dst = Join-Path (Resolve-Path '.').Path '!ZIP_FILE!';" ^
+  "for ($i=0; $i -lt 5; $i++) {" ^
+  "  try { [System.IO.Compression.ZipFile]::CreateFromDirectory($src, $dst, 'Optimal', $false); break }" ^
+  "  catch { if ($i -eq 4) { throw } ; Start-Sleep -Seconds 2 ; if (Test-Path $dst) { Remove-Item $dst -Force } }" ^
+  "}"
 if errorlevel 1 (
   echo Error: no se pudo crear el ZIP.
   pause
