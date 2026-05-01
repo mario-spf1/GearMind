@@ -16,6 +16,5 @@ if not exist "app\lib\" (
   exit /b 1
 )
 
-java --module-path "app/lib" --add-modules javafx.controls,javafx.fxml -cp "app/GearMind.jar;app/lib/*" com.gearmind.launcher.LauncherApp
-if errorlevel 1 pause
+start "" javaw --module-path "app/lib" --add-modules javafx.controls,javafx.fxml -cp "app/GearMind.jar;app/lib/*" com.gearmind.launcher.LauncherApp
 endlocal

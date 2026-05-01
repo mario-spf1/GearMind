@@ -255,7 +255,12 @@ public class LauncherController {
     private Process startProcess(String mainClass) throws IOException {
         String java = ProcessHandle.current().info().command().orElse("java");
         String cp = "app/GearMind.jar" + File.pathSeparator + "app/lib/*";
-        ProcessBuilder pb = new ProcessBuilder(java, "-cp", cp, mainClass);
+        ProcessBuilder pb = new ProcessBuilder(
+                java,
+                "--module-path", "app/lib",
+                "--add-modules", "javafx.controls,javafx.fxml",
+                "-cp", cp,
+                mainClass);
         pb.directory(new File("."));
         pb.redirectErrorStream(true);
         return pb.start();
