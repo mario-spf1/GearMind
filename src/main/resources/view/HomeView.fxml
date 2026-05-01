@@ -66,6 +66,7 @@
                 <Button fx:id="btnNavTareas" text="Tareas" onAction="#onNavTareas" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
                 <Button fx:id="btnNavUsuarios" text="Usuarios" onAction="#onNavUsuarios" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
                 <Button fx:id="btnNavEmpresas" text="Empresas" onAction="#onNavEmpresas" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
+                <Button fx:id="btnNavAjustes" text="Ajustes" onAction="#onNavAjustes" styleClass="tfx-nav-item" maxWidth="1.7976931348623157E308"/>
             </children>
         </VBox>
     </left>

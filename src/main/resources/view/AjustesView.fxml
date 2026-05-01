@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.gearmind.presentation.controller.AjustesController"
+      spacing="16"
+      styleClass="tfx-page">
+
+    <children>
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="Ajustes" styleClass="tfx-title-xl"/>
+                <Label text="Configura el envío de emails y el bot de Telegram." styleClass="tfx-subtitle"/>
+            </VBox>
+        </HBox>
+
+        <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+            <tabs>
+                <!-- ─── SMTP ───────────────────────────────────────── -->
+                <Tab text="Correo (SMTP)">
+                    <content>
+                        <VBox spacing="12" styleClass="tfx-card">
+                            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+
+                            <Label text="Servidor SMTP de la empresa" styleClass="tfx-label-strong"/>
+                            <Label text="Estos datos se usan para enviar correos desde GearMind (recuperación de contraseña, notificaciones, facturas...)." styleClass="tfx-muted" wrapText="true"/>
+
+                            <GridPane hgap="12" vgap="10">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+                                    <ColumnConstraints percentWidth="75" hgrow="ALWAYS"/>
+                                </columnConstraints>
+
+                                <Label text="Host" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="tfx-muted"/>
+                                <TextField fx:id="smtpHostField" promptText="smtp.gmail.com" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                                <Label text="Puerto" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="tfx-muted"/>
+                                <TextField fx:id="smtpPortField" promptText="587" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                                <Label text="Usuario" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="tfx-muted"/>
+                                <TextField fx:id="smtpUsernameField" promptText="usuario@dominio.com" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                                <Label text="Contraseña" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="tfx-muted"/>
+                                <PasswordField fx:id="smtpPasswordField" promptText="••••••••" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+                                <Label text="Remitente (From)" GridPane.columnIndex="0" GridPane.rowIndex="4" styleClass="tfx-muted"/>
+                                <TextField fx:id="smtpFromField" promptText="taller@dominio.com" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+                                <Label text="Seguridad" GridPane.columnIndex="0" GridPane.rowIndex="5" styleClass="tfx-muted"/>
+                                <HBox spacing="16" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                    <CheckBox fx:id="smtpStartTlsCheck" text="STARTTLS"/>
+                                    <CheckBox fx:id="smtpSslCheck" text="SSL"/>
+                                </HBox>
+                            </GridPane>
+
+                            <Separator/>
+
+                            <Label text="Probar configuración" styleClass="tfx-label-strong"/>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <TextField fx:id="smtpTestRecipientField" promptText="destinatario@ejemplo.com" HBox.hgrow="ALWAYS"/>
+                                <Button text="Enviar email de prueba" onAction="#onTestSmtp" styleClass="button tfx-btn-ghost"/>
+                            </HBox>
+
+                            <Separator/>
+
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Button text="Guardar SMTP" onAction="#onSaveSmtp" styleClass="button tfx-btn-primary"/>
+                                <Label fx:id="smtpStatusLabel" text="" styleClass="tfx-muted"/>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Tab>
+
+                <!-- ─── Telegram ───────────────────────────────────── -->
+                <Tab text="Bot de Telegram">
+                    <content>
+                        <VBox spacing="12" styleClass="tfx-card">
+                            <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+
+                            <Label text="Bot de Telegram" styleClass="tfx-label-strong"/>
+                            <Label text="Crea un bot con @BotFather en Telegram y pega aquí el token. Tras guardar, reinicia el bot desde el lanzador para aplicar los cambios." styleClass="tfx-muted" wrapText="true"/>
+
+                            <GridPane hgap="12" vgap="10">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+                                    <ColumnConstraints percentWidth="75" hgrow="ALWAYS"/>
+                                </columnConstraints>
+
+                                <Label text="Token del bot" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="tfx-muted"/>
+                                <TextField fx:id="botTokenField" promptText="123456:ABC-DEF..." GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                                <Label text="Webhook secret" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="tfx-muted"/>
+                                <TextField fx:id="botWebhookSecretField" promptText="(opcional)" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                                <Label text="Webhook path" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="tfx-muted"/>
+                                <TextField fx:id="botWebhookPathField" promptText="/api/telegram/webhook" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                                <Label text="Webhook port" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="tfx-muted"/>
+                                <TextField fx:id="botWebhookPortField" promptText="8081" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+                                <Label text="Empresa ID" GridPane.columnIndex="0" GridPane.rowIndex="4" styleClass="tfx-muted"/>
+                                <TextField fx:id="botEmpresaIdField" promptText="1" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                            </GridPane>
+
+                            <Separator/>
+
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Button text="Guardar Telegram" onAction="#onSaveTelegram" styleClass="button tfx-btn-primary"/>
+                                <Label fx:id="botStatusLabel" text="" styleClass="tfx-muted"/>
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </children>
+</VBox>

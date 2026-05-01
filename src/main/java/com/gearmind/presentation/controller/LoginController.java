@@ -9,6 +9,7 @@ import com.gearmind.application.email.EnviarEmailEmpresaUseCase;
 import com.gearmind.application.email.SendPasswordRecoveryEmailRequest;
 import com.gearmind.application.email.SendPasswordRecoveryEmailUseCase;
 import com.gearmind.application.common.SessionManager;
+import com.gearmind.common.exception.ValidationException;
 import com.gearmind.domain.user.User;
 import com.gearmind.infrastructure.auth.BCryptPasswordHasher;
 import com.gearmind.infrastructure.auth.MySqlUserRepository;
@@ -114,9 +115,13 @@ public class LoginController {
             try {
                 sendPasswordRecoveryEmailUseCase.execute(new SendPasswordRecoveryEmailRequest(email));
                 new Alert(Alert.AlertType.INFORMATION, "Se ha enviado una contraseña temporal a " + email + ".").showAndWait();
+            } catch (ValidationException ex) {
+                String msg = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("smtp")
+                        ? "El envío de emails aún no está configurado. Pide a tu administrador que lo configure desde Ajustes."
+                        : ex.getMessage();
+                showWarning(msg);
             } catch (Exception ex) {
-                ex.printStackTrace();
-                showError("No se pudo enviar el correo de recuperación: " + ex.getMessage());
+                showError("No se pudo enviar el correo de recuperación. Inténtalo más tarde.");
             }
         });
     }

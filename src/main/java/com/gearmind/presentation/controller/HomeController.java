@@ -87,6 +87,8 @@ public class HomeController {
     private Button btnNavPagos;
     @FXML
     private Button btnNavTareas;
+    @FXML
+    private Button btnNavAjustes;
 
     private javafx.scene.Node savedSidebar;
     private ContextMenu userMenu;
@@ -163,6 +165,7 @@ public class HomeController {
         if (role == null) {
             hideButton(btnNavEmpresas);
             hideButton(btnNavUsuarios);
+            hideButton(btnNavAjustes);
             return;
         }
 
@@ -179,11 +182,12 @@ public class HomeController {
             hideButton(btnNavEmpresas);
             hideButton(btnNavUsuarios);
             hideButton(btnNavReportes);
+            hideButton(btnNavAjustes);
         }
     }
 
     private void setAllSidebarButtonsVisible(boolean visible) {
-        for (Button b : List.of(btnNavDashboard, btnNavReportes, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavPagos, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas)) {
+        for (Button b : List.of(btnNavDashboard, btnNavReportes, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavPagos, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas, btnNavAjustes)) {
             if (b != null) {
                 b.setVisible(visible);
                 b.setManaged(visible);
@@ -608,7 +612,7 @@ public class HomeController {
     }
 
     private void setActiveNavButton(Button activeButton) {
-        List<Button> buttons = List.of(btnNavDashboard, btnNavReportes, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavPagos, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas);
+        List<Button> buttons = List.of(btnNavDashboard, btnNavReportes, btnNavCitas, btnNavReparaciones, btnNavPresupuestos, btnNavFacturas, btnNavPagos, btnNavTareas, btnNavClientes, btnNavVehiculos, btnNavProductos, btnNavUsuarios, btnNavEmpresas, btnNavAjustes);
         for (Button b : buttons) {
             if (b != null) {
                 b.getStyleClass().remove("tfx-nav-active");
@@ -705,5 +709,14 @@ public class HomeController {
     private void onNavEmpresas() {
         loadView("/view/EmpresasView.fxml");
         setActiveNavButton(btnNavEmpresas);
+    }
+
+    @FXML
+    private void onNavAjustes() {
+        if (!AuthContext.isLoggedIn() || !AuthContext.isAdminOrSuperAdmin()) {
+            return;
+        }
+        loadView("/view/AjustesView.fxml");
+        setActiveNavButton(btnNavAjustes);
     }
 }
