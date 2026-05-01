@@ -36,7 +36,15 @@ Thumbs.db
 .env
 
 # ========================================
+# DESPLIEGUE - CREDENCIALES Y SECRETOS
+# ========================================
+# Contiene contraseñas de cliente → NUNCA subir
+build-config.bat
+# Generado por build.bat con credenciales horneadas → NUNCA subir
+release/client-package/setup-client.bat
+
+# ========================================
 # BUILD ARTIFACTS CLIENT PACKAGE
 # ========================================
 release/
-*.zip   
+*.zip
