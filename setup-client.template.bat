@@ -190,11 +190,18 @@ echo [3/5] Configurando base de datos y usuarios...
 
 "!MYSQL_CMD!" -u root --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '!MYSQL_ROOT_PASS!';" 2>nul
 
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -e "CREATE DATABASE IF NOT EXISTS gearmind CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -e "SELECT 1;" >nul 2>&1
 if errorlevel 1 (
     echo ERROR: No se pudo conectar a MySQL. Comprueba las credenciales.
     pause & exit /b 1
 )
+
+:: Reset completo: eliminar BD y usuarios previos para empezar limpio
+"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -e "DROP DATABASE IF EXISTS gearmind;" 2>nul
+"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -e "DROP USER IF EXISTS '!APP_DB_USER!'@'localhost';" 2>nul
+"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -e "DROP USER IF EXISTS '!SUPPORT_USER!'@'%%';" 2>nul
+
+"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -e "CREATE DATABASE gearmind CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -e "CREATE USER IF NOT EXISTS '!APP_DB_USER!'@'localhost' IDENTIFIED BY '!APP_DB_PASS!';"
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -e "GRANT ALL PRIVILEGES ON gearmind.* TO '!APP_DB_USER!'@'localhost';"
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -e "CREATE USER IF NOT EXISTS '!SUPPORT_USER!'@'%%' IDENTIFIED BY '!SUPPORT_PASS!';"
