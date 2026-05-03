@@ -219,9 +219,6 @@ echo DB_USER=!APP_DB_USER!
 echo DB_PASS=!APP_DB_PASS!
 echo DB_POOL_MAX=10
 echo TELEGRAM_BOT_TOKEN=
-echo TELEGRAM_WEBHOOK_SECRET=
-echo TELEGRAM_WEBHOOK_PATH=/api/telegram/webhook
-echo TELEGRAM_WEBHOOK_PORT=8081
 echo TELEGRAM_EMPRESA_ID=1
 ) > .env
 echo       Configuracion guardada.
@@ -504,9 +501,6 @@ echo DB_USER=!APP_DB_USER!
 echo DB_PASS=!APP_DB_PASS!
 echo DB_POOL_MAX=10
 echo TELEGRAM_BOT_TOKEN=
-echo TELEGRAM_WEBHOOK_SECRET=
-echo TELEGRAM_WEBHOOK_PATH=/api/telegram/webhook
-echo TELEGRAM_WEBHOOK_PORT=8081
 echo TELEGRAM_EMPRESA_ID=1
 ) > .env
 

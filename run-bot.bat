@@ -23,6 +23,6 @@ if not exist "app\lib\" (
   exit /b 1
 )
 
-java -cp "app/GearMind.jar;app/lib/*" com.gearmind.infrastructure.telegram.TelegramWebhookMain
+java -cp "app/GearMind.jar;app/lib/*" com.gearmind.infrastructure.telegram.TelegramPollingMain
 if errorlevel 1 pause
 endlocal

@@ -197,7 +197,7 @@ public class LauncherController {
             botProcess = null;
         } else {
             try {
-                botProcess = startProcess("com.gearmind.infrastructure.telegram.TelegramWebhookMain");
+                botProcess = startProcess("com.gearmind.infrastructure.telegram.TelegramPollingMain");
             } catch (IOException ignored) {}
         }
         refreshProcessStatus();
@@ -276,9 +276,6 @@ public class LauncherController {
                 "DB_PASS=" + pass,
                 "DB_POOL_MAX=10",
                 "TELEGRAM_BOT_TOKEN=" + token,
-                "TELEGRAM_WEBHOOK_SECRET=",
-                "TELEGRAM_WEBHOOK_PATH=/api/telegram/webhook",
-                "TELEGRAM_WEBHOOK_PORT=8081",
                 "TELEGRAM_EMPRESA_ID=1",
                 ""
         );

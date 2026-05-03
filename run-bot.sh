@@ -26,4 +26,4 @@ if [[ ! -d "app/lib" ]]; then
   exit 1
 fi
 
-java -cp "app/GearMind.jar:app/lib/*" com.gearmind.infrastructure.telegram.TelegramWebhookMain
+java -cp "app/GearMind.jar:app/lib/*" com.gearmind.infrastructure.telegram.TelegramPollingMain

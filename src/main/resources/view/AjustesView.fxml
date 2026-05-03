@@ -93,17 +93,8 @@
                                 <Label text="Token del bot" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="tfx-muted"/>
                                 <TextField fx:id="botTokenField" promptText="123456:ABC-DEF..." GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                                <Label text="Webhook secret" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="tfx-muted"/>
-                                <TextField fx:id="botWebhookSecretField" promptText="(opcional)" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-
-                                <Label text="Webhook path" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="tfx-muted"/>
-                                <TextField fx:id="botWebhookPathField" promptText="/api/telegram/webhook" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-
-                                <Label text="Webhook port" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="tfx-muted"/>
-                                <TextField fx:id="botWebhookPortField" promptText="8081" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-
-                                <Label text="Empresa ID" GridPane.columnIndex="0" GridPane.rowIndex="4" styleClass="tfx-muted"/>
-                                <TextField fx:id="botEmpresaIdField" promptText="1" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                                <Label text="Empresa ID" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="tfx-muted"/>
+                                <TextField fx:id="botEmpresaIdField" promptText="1" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
                             </GridPane>
 
                             <Separator/>

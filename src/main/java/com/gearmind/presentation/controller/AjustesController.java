@@ -39,9 +39,6 @@ public class AjustesController {
     @FXML private Label smtpStatusLabel;
 
     @FXML private TextField botTokenField;
-    @FXML private TextField botWebhookSecretField;
-    @FXML private TextField botWebhookPathField;
-    @FXML private TextField botWebhookPortField;
     @FXML private TextField botEmpresaIdField;
     @FXML private Label botStatusLabel;
 
@@ -158,9 +155,6 @@ public class AjustesController {
         try {
             Map<String, String> env = readEnv();
             botTokenField.setText(env.getOrDefault("TELEGRAM_BOT_TOKEN", ""));
-            botWebhookSecretField.setText(env.getOrDefault("TELEGRAM_WEBHOOK_SECRET", ""));
-            botWebhookPathField.setText(env.getOrDefault("TELEGRAM_WEBHOOK_PATH", "/api/telegram/webhook"));
-            botWebhookPortField.setText(env.getOrDefault("TELEGRAM_WEBHOOK_PORT", "8081"));
             String empresaIdDefault = String.valueOf(AuthContext.getEmpresaId());
             botEmpresaIdField.setText(env.getOrDefault("TELEGRAM_EMPRESA_ID", empresaIdDefault));
             setBotStatus("Configuración cargada.", true);
@@ -173,15 +167,8 @@ public class AjustesController {
     private void onSaveTelegram() {
         try {
             String token = trim(botTokenField.getText());
-            String secret = trim(botWebhookSecretField.getText());
-            String path = trim(botWebhookPathField.getText());
-            String portStr = trim(botWebhookPortField.getText());
             String empresaIdStr = trim(botEmpresaIdField.getText());
 
-            if (!portStr.isEmpty()) {
-                try { Integer.parseInt(portStr); }
-                catch (NumberFormatException e) { throw new ValidationException("El puerto del webhook debe ser un número."); }
-            }
             if (!empresaIdStr.isEmpty()) {
                 try { Long.parseLong(empresaIdStr); }
                 catch (NumberFormatException e) { throw new ValidationException("El empresa ID debe ser un número."); }
@@ -189,9 +176,6 @@ public class AjustesController {
 
             Map<String, String> updates = new LinkedHashMap<>();
             updates.put("TELEGRAM_BOT_TOKEN", token);
-            updates.put("TELEGRAM_WEBHOOK_SECRET", secret);
-            updates.put("TELEGRAM_WEBHOOK_PATH", path);
-            updates.put("TELEGRAM_WEBHOOK_PORT", portStr);
             updates.put("TELEGRAM_EMPRESA_ID", empresaIdStr);
             writeEnv(updates);
 

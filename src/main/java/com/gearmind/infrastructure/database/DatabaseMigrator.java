@@ -8,6 +8,6 @@ public final class DatabaseMigrator {
     }
 
     public static void migrate() {
-        Flyway.configure().dataSource(DataSourceFactory.getDataSource()).locations("classpath:db/migration").load().migrate();
+        Flyway.configure().dataSource(DataSourceFactory.getDataSource()).locations("classpath:db/migration").baselineOnMigrate(true).load().migrate();
     }
 }
