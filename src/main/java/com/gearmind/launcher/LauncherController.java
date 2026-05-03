@@ -1,5 +1,6 @@
 package com.gearmind.launcher;
 
+import com.gearmind.AppVersion;
 import io.github.cdimascio.dotenv.Dotenv;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -15,6 +16,9 @@ import java.nio.file.*;
 import java.sql.*;
 
 public class LauncherController {
+
+    // Header
+    @FXML private Label versionLabel;
 
     // Setup
     @FXML private VBox setupPanel;
@@ -42,6 +46,8 @@ public class LauncherController {
 
     @FXML
     private void initialize() {
+        versionLabel.setText("v" + AppVersion.VERSION);
+
         if (Files.exists(ENV_PATH)) {
             showMainPanel();
         } else {

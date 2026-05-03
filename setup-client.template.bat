@@ -428,13 +428,51 @@ goto :install_zip
 :configurar_db_ok
 echo [3/5] Configurando base de datos y usuarios (puerto !MYSQL_PORT!)...
 
+:: Detectar si ya existe una instalacion previa de GearMind
+set GEARMIND_EXISTS=
+"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -N -B -e "SHOW DATABASES LIKE 'gearmind';" 2>nul | findstr /b /c:"gearmind" >nul
+if not errorlevel 1 set GEARMIND_EXISTS=1
+
+set RESET_DB=0
+if defined GEARMIND_EXISTS (
+    echo.
+    echo ============================================================
+    echo   Ya existe una instalacion de GearMind en este PC.
+    echo ============================================================
+    echo   [M] Mantener los datos existentes ^(recomendado^)
+    echo       Se conservan clientes, citas, vehiculos, etc.
+    echo       Util para actualizar a una version nueva.
+    echo.
+    echo   [B] Borrar todo y empezar de cero
+    echo       ATENCION: se perderan todos los datos guardados.
+    echo ============================================================
+    echo.
+    :ask_reset
+    set RESET_CHOICE=
+    set /p RESET_CHOICE="Que quieres hacer (M/B): "
+    if /i "!RESET_CHOICE!"=="M" goto :keep_db
+    if /i "!RESET_CHOICE!"=="B" (
+        set /p CONFIRM_RESET="Escribe BORRAR para confirmar: "
+        if /i "!CONFIRM_RESET!"=="BORRAR" (
+            set RESET_DB=1
+            goto :reset_db
+        )
+        echo       Confirmacion incorrecta. Volviendo a preguntar.
+        goto :ask_reset
+    )
+    echo       Respuesta no valida. Escribe M o B.
+    goto :ask_reset
+)
+
+:reset_db
 :: Reset completo: eliminar BD y usuarios previos para empezar limpio
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP DATABASE IF EXISTS gearmind;" 2>nul
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!APP_DB_USER!'@'localhost';" 2>nul
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!APP_DB_USER!'@'%%';" 2>nul
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!SUPPORT_USER!'@'%%';" 2>nul
 
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE DATABASE gearmind CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+:keep_db
+"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE DATABASE IF NOT EXISTS gearmind CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE USER IF NOT EXISTS '!APP_DB_USER!'@'%%' IDENTIFIED BY '!APP_DB_PASS!';"
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "GRANT ALL PRIVILEGES ON gearmind.* TO '!APP_DB_USER!'@'%%';"
 "!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE USER IF NOT EXISTS '!SUPPORT_USER!'@'%%' IDENTIFIED BY '!SUPPORT_PASS!';"
@@ -480,6 +518,12 @@ if errorlevel 1 (
 echo       Tablas creadas correctamente.
 echo.
 
+if defined GEARMIND_EXISTS if "!RESET_DB!"=="0" (
+    echo       Se han mantenido los usuarios existentes. Saltando creacion de administrador.
+    echo.
+    goto :setup_done
+)
+
 echo ============================================================
 echo   Configuracion del primer administrador
 echo ============================================================
@@ -494,6 +538,7 @@ if errorlevel 1 (
     pause & exit /b 1
 )
 
+:setup_done
 :: -------------------------------------------------------
 echo.
 echo ============================================================

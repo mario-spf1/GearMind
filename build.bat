@@ -100,10 +100,10 @@ echo [3/6] Generando script de instalacion del cliente...
 powershell -NoProfile -Command ^
   "$c = Get-Content 'setup-client.template.bat' -Raw -Encoding UTF8;" ^
   "$c = $c -replace '\{\{MYSQL_ROOT_PASS\}\}', '!MYSQL_ROOT_PASS!';" ^
-  "$c = $c -replace '\{\{APP_DB_USER\}\}',    '!APP_DB_USER!';" ^
-  "$c = $c -replace '\{\{APP_DB_PASS\}\}',    '!APP_DB_PASS!';" ^
-  "$c = $c -replace '\{\{SUPPORT_USER\}\}',   '!SUPPORT_USER!';" ^
-  "$c = $c -replace '\{\{SUPPORT_PASS\}\}',   '!SUPPORT_PASS!';" ^
+  "$c = $c -replace '\{\{APP_DB_USER\}\}', '!APP_DB_USER!';" ^
+  "$c = $c -replace '\{\{APP_DB_PASS\}\}', '!APP_DB_PASS!';" ^
+  "$c = $c -replace '\{\{SUPPORT_USER\}\}', '!SUPPORT_USER!';" ^
+  "$c = $c -replace '\{\{SUPPORT_PASS\}\}', '!SUPPORT_PASS!';" ^
   "$enc = New-Object System.Text.UTF8Encoding $false; [System.IO.File]::WriteAllText((Resolve-Path '.').Path + '\%PACKAGE_DIR%\setup-client.bat', $c, $enc)"
 
 if errorlevel 1 (
@@ -116,11 +116,12 @@ if errorlevel 1 (
 :: [4/6] Copiar scripts de arranque
 :: -------------------------------------------------------
 echo [4/6] Copiando scripts y ficheros...
-copy /y "launcher.bat"     "%PACKAGE_DIR%\launcher.bat"     >nul
-copy /y "run-app.bat"      "%PACKAGE_DIR%\run-app.bat"      >nul
-copy /y "run-bot.bat"      "%PACKAGE_DIR%\run-bot.bat"      >nul
-copy /y "mostrar-ip.bat"   "%PACKAGE_DIR%\mostrar-ip.bat"   >nul
-copy /y "README-CLIENTE.md" "%PACKAGE_DIR%\README-CLIENTE.md" >nul
+copy /y "launcher.bat" "%PACKAGE_DIR%\launcher.bat">nul
+copy /y "run-app.bat" "%PACKAGE_DIR%\run-app.bat">nul
+copy /y "run-bot.bat" "%PACKAGE_DIR%\run-bot.bat">nul
+copy /y "mostrar-ip.bat" "%PACKAGE_DIR%\mostrar-ip.bat">nul
+copy /y "update.bat" "%PACKAGE_DIR%\update.bat">nul
+copy /y "README-CLIENTE.md" "%PACKAGE_DIR%\README-CLIENTE.md">nul
 
 :: -------------------------------------------------------
 :: [5/6] Generar ZIP
@@ -149,16 +150,17 @@ echo.
 echo Paquete generado en: !ZIP_FILE!
 echo.
 echo Contenido del paquete:
-echo   setup-client.bat  ^<-- ejecutar primero (como admin) y elegir SERVIDOR o CLIENTE
-echo   launcher.bat      ^<-- para arrancar GearMind cada dia
-echo   mostrar-ip.bat    ^<-- el SERVIDOR lo ejecuta para ver su IP
-echo   run-app.bat / run-bot.bat
-echo   app\GearMind.jar + lib\
+echo setup-client.bat ^<-- ejecutar primero (como admin) y elegir SERVIDOR o CLIENTE
+echo launcher.bat ^<-- para arrancar GearMind cada dia
+echo mostrar-ip.bat ^<-- el SERVIDOR lo ejecuta para ver su IP
+echo run-app.bat / run-bot.bat
+echo app\GearMind.jar + lib\
 echo.
 echo Credenciales horneadas:
-echo   MySQL root:  !MYSQL_ROOT_PASS!
-echo   App DB:      !APP_DB_USER! / !APP_DB_PASS!
-echo   Soporte:     !SUPPORT_USER! / !SUPPORT_PASS!
+echo MySQL root: !MYSQL_ROOT_PASS!
+echo App DB: !APP_DB_USER! / !APP_DB_PASS!
+echo Soporte: !SUPPORT_USER! / !SUPPORT_PASS!
 echo.
 pause
 endlocal
+ 

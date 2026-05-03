@@ -14,6 +14,7 @@
     <VBox spacing="2">
         <Label text="GearMind" styleClass="tfx-title-xl"/>
         <Label text="Launcher" styleClass="tfx-muted"/>
+        <Label fx:id="versionLabel" styleClass="tfx-muted"/>
     </VBox>
 
     <!-- ═══ PANEL SETUP (primera vez) ═══ -->
