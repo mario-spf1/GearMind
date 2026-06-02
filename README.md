@@ -81,7 +81,7 @@ Un canal directo donde los clientes pueden:
 ## 🚀 Instalación y Ejecución
 
 ### Requisitos Previos
-* Java 21 (OpenJDK / Temurin recomendado).
+* **JDK** 21 (OpenJDK / Temurin recomendado). Ojo: hace falta el JDK completo, no solo el JRE, porque Maven necesita el compilador `javac`.
 * MySQL Server 8.0 o superior.
 * Apache Maven 3.9+.
 
@@ -130,3 +130,5 @@ Este script es **exclusivo para desarrollo/distribución interna** y genera:
 - `release/GearMind-Cliente.zip`
 
 > El cliente solo debe modificar su archivo `.env` con datos de MySQL y Telegram.
+
+En Windows el empaquetado se hace con `build.bat`. Si Maven se queja con *"No compiler is provided in this environment. Perhaps you are running on a JRE rather than a JDK?"*, es porque tu `JAVA_HOME` apunta a un JRE en lugar de a un JDK. El propio `build.bat` ya localiza el JDK a partir de `javac` y ajusta `JAVA_HOME` antes de llamar a Maven, así que basta con tener el JDK 21 instalado y `javac` accesible en el `PATH`.

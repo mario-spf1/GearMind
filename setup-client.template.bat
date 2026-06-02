@@ -41,11 +41,14 @@ echo [1/5] Verificando Java 21...
 
 java -version >nul 2>&1
 if not errorlevel 1 (
-    java -version 2>&1 | findstr /r "\"21\." >nul
+    java -version >"%TEMP%\gearmind_jver.txt" 2>&1
+    findstr /c:"version \"21" "%TEMP%\gearmind_jver.txt" >nul
     if not errorlevel 1 (
+        del /q "%TEMP%\gearmind_jver.txt" >nul 2>&1
         echo       Java 21 encontrado. Continuando...
         goto :check_mysql
     )
+    del /q "%TEMP%\gearmind_jver.txt" >nul 2>&1
     echo       Se encontro Java pero no es version 21. Instalando Java 21...
 ) else (
     echo       Java no encontrado. Instalando Java 21...
@@ -263,10 +266,12 @@ if not errorlevel 1 goto :install_mysql
 echo       Puerto 3306 ocupado. Comprobando si es un MySQL compatible...
 
 :: Intentar conectar con la contrasena horneada (PATH y rutas comunes)
+:: Usamos MYSQL_PWD para no disparar el aviso "Using a password on the command line interface can be insecure"
 set _MYSQL_REUSED=
+set MYSQL_PWD=!MYSQL_ROOT_PASS!
 for /f "delims=" %%i in ('where mysql.exe 2^>nul') do (
     if not defined _MYSQL_REUSED (
-        "%%i" -u root -p"!MYSQL_ROOT_PASS!" -P 3306 -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
+        "%%i" -u root -P 3306 -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
         if not errorlevel 1 (
             set MYSQL_CMD=%%i
             set _MYSQL_REUSED=1
@@ -280,7 +285,7 @@ if not defined _MYSQL_REUSED (
     for /d %%d in ("%ProgramFiles%\MySQL\MySQL Server 9*" "%ProgramFiles%\MySQL\MySQL Server 8*") do (
         if not defined _MYSQL_REUSED (
             if exist "%%d\bin\mysql.exe" (
-                "%%d\bin\mysql.exe" -u root -p"!MYSQL_ROOT_PASS!" -P 3306 -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
+                "%%d\bin\mysql.exe" -u root -P 3306 -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
                 if not errorlevel 1 (
                     set MYSQL_CMD=%%d\bin\mysql.exe
                     set _MYSQL_REUSED=1
@@ -293,7 +298,7 @@ if not defined _MYSQL_REUSED (
 )
 if not defined _MYSQL_REUSED (
     if exist "!MYSQL_BIN!\mysql.exe" (
-        "!MYSQL_BIN!\mysql.exe" -u root -p"!MYSQL_ROOT_PASS!" -P 3306 -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
+        "!MYSQL_BIN!\mysql.exe" -u root -P 3306 -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
         if not errorlevel 1 (
             set _MYSQL_REUSED=1
             echo       Conexion correcta. Reutilizando MySQL existente en 3306.
@@ -395,8 +400,11 @@ echo.
 :: [3/5] Configurar base de datos y usuarios
 :: -------------------------------------------------------
 :: Verificacion de conexion. Si falla, reinstalar en otro puerto (una vez).
+:: Primer ALTER se hace sin password (cuenta recien inicializada con --initialize-insecure)
+set MYSQL_PWD=
 "!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '!MYSQL_ROOT_PASS!';" 2>nul
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
+set MYSQL_PWD=!MYSQL_ROOT_PASS!
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -e "SELECT 1;" >nul 2>&1
 if not errorlevel 1 goto :configurar_db_ok
 
 if defined MYSQL_RETRY (
@@ -427,7 +435,7 @@ echo [3/5] Configurando base de datos y usuarios (puerto !MYSQL_PORT!)...
 
 :: Detectar si ya existe una instalacion previa de GearMind
 set GEARMIND_EXISTS=
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -N -B -e "SHOW DATABASES LIKE 'gearmind';" 2>nul | findstr /b /c:"gearmind" >nul
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -N -B -e "SHOW DATABASES LIKE 'gearmind';" 2>nul | findstr /b /c:"gearmind" >nul
 if not errorlevel 1 set GEARMIND_EXISTS=1
 
 set RESET_DB=0
@@ -463,18 +471,19 @@ if defined GEARMIND_EXISTS (
 
 :reset_db
 :: Reset completo: eliminar BD y usuarios previos para empezar limpio
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP DATABASE IF EXISTS gearmind;" 2>nul
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!APP_DB_USER!'@'localhost';" 2>nul
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!APP_DB_USER!'@'%%';" 2>nul
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!SUPPORT_USER!'@'%%';" 2>nul
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP DATABASE IF EXISTS gearmind;" 2>nul
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!APP_DB_USER!'@'localhost';" 2>nul
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!APP_DB_USER!'@'%%';" 2>nul
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -e "DROP USER IF EXISTS '!SUPPORT_USER!'@'%%';" 2>nul
 
 :keep_db
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE DATABASE IF NOT EXISTS gearmind CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE USER IF NOT EXISTS '!APP_DB_USER!'@'%%' IDENTIFIED BY '!APP_DB_PASS!';"
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "GRANT ALL PRIVILEGES ON gearmind.* TO '!APP_DB_USER!'@'%%';"
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE USER IF NOT EXISTS '!SUPPORT_USER!'@'%%' IDENTIFIED BY '!SUPPORT_PASS!';"
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "GRANT SELECT, INSERT, UPDATE, DELETE ON gearmind.* TO '!SUPPORT_USER!'@'%%';"
-"!MYSQL_CMD!" -u root -p"!MYSQL_ROOT_PASS!" -P !MYSQL_PORT! -h 127.0.0.1 -e "FLUSH PRIVILEGES;"
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE DATABASE IF NOT EXISTS gearmind CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE USER IF NOT EXISTS '!APP_DB_USER!'@'%%' IDENTIFIED BY '!APP_DB_PASS!';"
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -e "GRANT ALL PRIVILEGES ON gearmind.* TO '!APP_DB_USER!'@'%%';"
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -e "CREATE USER IF NOT EXISTS '!SUPPORT_USER!'@'%%' IDENTIFIED BY '!SUPPORT_PASS!';"
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -e "GRANT SELECT, INSERT, UPDATE, DELETE ON gearmind.* TO '!SUPPORT_USER!'@'%%';"
+"!MYSQL_CMD!" -u root -P !MYSQL_PORT! -h 127.0.0.1 -e "FLUSH PRIVILEGES;"
+set MYSQL_PWD=
 echo       Base de datos y usuarios configurados.
 echo.
 

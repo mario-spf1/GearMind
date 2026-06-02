@@ -33,6 +33,20 @@ if errorlevel 1 (
   exit /b 1
 )
 
+:: Maven necesita un JDK (javac), no solo un JRE. Apuntamos JAVA_HOME al JDK
+:: derivando su ruta desde la ubicacion de javac, para no depender de una
+:: variable JAVA_HOME global que podria apuntar a un JRE.
+set "JAVAC_BIN="
+for /f "delims=" %%i in ('where javac 2^>nul') do if not defined JAVAC_BIN set "JAVAC_BIN=%%~dpi"
+if not defined JAVAC_BIN (
+  echo Error: no se encontro javac. Necesitas un JDK 21 ^(no solo un JRE^).
+  echo Instala el JDK de Eclipse Adoptium / Temurin y vuelve a intentarlo.
+  pause
+  exit /b 1
+)
+for %%j in ("!JAVAC_BIN!..") do set "JAVA_HOME=%%~fj"
+echo Usando JDK: !JAVA_HOME!
+
 set MVN_CMD=mvn
 mvn -version >nul 2>&1
 if errorlevel 1 (
