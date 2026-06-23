@@ -31,7 +31,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -242,13 +241,6 @@ public class FacturasController {
         smartTable = new SmartTable<>(tblFacturas, masterData, null, cmbPageSize, lblResumen, "facturas", null);
 
         tblFacturas.setFixedCellSize(28);
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblFacturas.getFixedCellSize() + 2;
-            tblFacturas.setPrefHeight(tableHeight);
-            tblFacturas.setMinHeight(Region.USE_PREF_SIZE);
-        });
 
         smartTable.addColumnFilter(filterClienteField, (b, text) -> safe(b.getClienteNombre()).contains(text));
         smartTable.addColumnFilter(filterNumeroField, (b, text) -> safe(b.getNumero()).contains(text));

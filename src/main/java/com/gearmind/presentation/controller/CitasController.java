@@ -161,16 +161,6 @@ public class CitasController {
         tblCitas.setFixedCellSize(28);
         smartTable = new SmartTable<>(tblCitas, masterData, null, cmbPageSize, lblResumen, "citas", this::matchesGlobalFilter);
 
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblCitas.getFixedCellSize() + 2;
-
-            tblCitas.setPrefHeight(tableHeight);
-            tblCitas.setMinHeight(Region.USE_PREF_SIZE);
-            tblCitas.setMaxHeight(Region.USE_PREF_SIZE);
-        });
-
         smartTable.addColumnFilter(filterClienteField, (cita, text) -> safe(getCustomerLabel(cita.getCustomerId())).contains(text));
         smartTable.addColumnFilter(filterVehiculoField, (cita, text) -> safe(getVehicleLabel(cita.getVehicleId())).contains(text));
         smartTable.addColumnFilter(filterEmpleadoField, (cita, text) -> safe(getEmployeeLabel(cita.getEmployeeId())).contains(text));

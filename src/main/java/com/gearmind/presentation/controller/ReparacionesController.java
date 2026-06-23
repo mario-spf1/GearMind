@@ -25,7 +25,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -236,14 +235,6 @@ public class ReparacionesController {
 
         applyColumnSizing(isSuperAdmin);
         smartTable = new SmartTable<>(tblReparaciones, masterData, null, cmbPageSize, lblResumen, "reparaciones", null);
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblReparaciones.getFixedCellSize() + 2;
-            tblReparaciones.setPrefHeight(tableHeight);
-            tblReparaciones.setMinHeight(Region.USE_PREF_SIZE);
-            tblReparaciones.setMaxHeight(Region.USE_PREF_SIZE);
-        });
 
         smartTable.addColumnFilter(filterClienteField, (r, text) -> safe(r.getClienteNombre()).contains(text));
         smartTable.addColumnFilter(filterVehiculoField, (r, text) -> safe(vehicleLabel(r)).contains(text));

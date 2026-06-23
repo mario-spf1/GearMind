@@ -18,7 +18,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.geometry.Pos;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -193,14 +192,6 @@ public class EmpresasController {
 
         smartTable = new SmartTable<>(tblEmpresas, masterData, txtBuscar, cmbPageSize, lblResumen, "empresas", this::matchesGlobalFilter);
         tblEmpresas.setFixedCellSize(28);
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblEmpresas.getFixedCellSize() + 2;
-
-            tblEmpresas.setPrefHeight(tableHeight);
-            tblEmpresas.setMinHeight(Region.USE_PREF_SIZE);
-        });
 
         smartTable.addColumnFilter(filterNombreField, (e, text) -> safe(e.getNombre()).contains(text));
         smartTable.addColumnFilter(filterCifField, (e, text) -> safe(e.getCif()).contains(text));

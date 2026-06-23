@@ -2,10 +2,14 @@ package com.gearmind.presentation.table;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +19,11 @@ import java.util.stream.Collectors;
 
 /**
  * Helper genérico para tablas con: - búsqueda global - filtros por columna
- * (fila de filtros) - límite de filas (page size)
+ * (fila de filtros) - paginación real (tamaño de página + navegación).
  */
 public class SmartTable<T> {
+
+    private static final double HEADER_HEIGHT = 28d;
 
     private final TableView<T> table;
     private final ObservableList<T> masterData;
@@ -33,6 +39,15 @@ public class SmartTable<T> {
 
     private int lastVisibleCount;
     private int lastTotalCount;
+    private int lastFromIndex;
+
+    // Paginación
+    private int currentPage;      // 0-based
+    private int lastTotalPages = 1;
+    private Button prevButton;
+    private Button nextButton;
+    private Label pageLabel;
+    private HBox paginationBox;
 
     private Runnable afterRefreshCallback;
 
@@ -51,12 +66,14 @@ public class SmartTable<T> {
         }
 
         if (this.globalSearchField != null) {
-            this.globalSearchField.textProperty().addListener((obs, o, n) -> refresh());
+            this.globalSearchField.textProperty().addListener((obs, o, n) -> resetToFirstPageAndRefresh());
         }
 
         if (this.pageSizeCombo != null) {
-            this.pageSizeCombo.valueProperty().addListener((obs, o, n) -> refresh());
+            this.pageSizeCombo.valueProperty().addListener((obs, o, n) -> resetToFirstPageAndRefresh());
         }
+
+        buildPaginationControls();
     }
 
     /**
@@ -79,7 +96,7 @@ public class SmartTable<T> {
         ColumnFilter<T> cf = new ColumnFilter<>(field, matcher);
         columnFilters.add(cf);
 
-        field.textProperty().addListener((obs, o, n) -> refresh());
+        field.textProperty().addListener((obs, o, n) -> resetToFirstPageAndRefresh());
     }
 
     /**
@@ -95,7 +112,7 @@ public class SmartTable<T> {
         ColumnFilter<T> cf = new ColumnFilter<>(combo, matcher);
         columnFilters.add(cf);
 
-        combo.valueProperty().addListener((obs, o, n) -> refresh());
+        combo.valueProperty().addListener((obs, o, n) -> resetToFirstPageAndRefresh());
     }
 
     /**
@@ -106,7 +123,11 @@ public class SmartTable<T> {
             table.setItems(FXCollections.observableArrayList());
             lastVisibleCount = 0;
             lastTotalCount = 0;
-            updateSummaryLabel();
+            lastFromIndex = 0;
+            currentPage = 0;
+            lastTotalPages = 1;
+            updatePaginationControls(0);
+            updateSummaryLabel(0);
             return;
         }
 
@@ -123,22 +144,77 @@ public class SmartTable<T> {
         filtered = filtered.stream().filter(this::matchesAllColumnFilters).collect(Collectors.toList());
         lastTotalCount = filtered.size();
 
-        int limit = filtered.size();
-        if (pageSizeCombo != null) {
-            Integer value = pageSizeCombo.getValue();
-            if (value != null && value > 0) {
-                limit = Math.min(value, filtered.size());
+        int pageSize = resolvePageSize();
+
+        List<T> visible;
+        if (pageSize <= 0) {
+            // "Todos": una sola página con todos los registros.
+            currentPage = 0;
+            lastTotalPages = 1;
+            lastFromIndex = 0;
+            visible = filtered;
+        } else {
+            lastTotalPages = Math.max(1, (int) Math.ceil((double) lastTotalCount / pageSize));
+            if (currentPage > lastTotalPages - 1) {
+                currentPage = lastTotalPages - 1;
             }
+            if (currentPage < 0) {
+                currentPage = 0;
+            }
+            int from = Math.min(currentPage * pageSize, lastTotalCount);
+            int to = Math.min(from + pageSize, lastTotalCount);
+            lastFromIndex = from;
+            visible = filtered.subList(from, to);
         }
 
-        List<T> visible = filtered.subList(0, limit);
         lastVisibleCount = visible.size();
         table.setItems(FXCollections.observableArrayList(visible));
-        updateSummaryLabel();
+        adjustTableHeight();
+        updatePaginationControls(pageSize);
+        updateSummaryLabel(pageSize);
 
         if (afterRefreshCallback != null) {
             afterRefreshCallback.run();
         }
+    }
+
+    private int resolvePageSize() {
+        if (pageSizeCombo == null) {
+            return 0;
+        }
+        Integer value = pageSizeCombo.getValue();
+        return (value != null && value > 0) ? value : 0;
+    }
+
+    /**
+     * Ajusta la altura de la tabla al alto de su contenido, pero sin estirarla
+     * (maxHeight = contenido) ni clavarla (minHeight = 0). Con VBox.vgrow="ALWAYS"
+     * en el FXML, la tabla queda en min(contenido, espacio disponible): compacta
+     * cuando hay pocas filas y con scroll interno cuando no caben.
+     */
+    private void adjustTableHeight() {
+        if (table == null) {
+            return;
+        }
+        double cellSize = table.getFixedCellSize();
+        if (cellSize <= 0) {
+            return; // sin celda de tamaño fijo no calculamos; se deja el vgrow tal cual
+        }
+        int rows = Math.max(lastVisibleCount, 1);
+        double content = HEADER_HEIGHT + rows * cellSize + 2;
+        table.setMinHeight(0);
+        table.setPrefHeight(content);
+        table.setMaxHeight(content);
+    }
+
+    private void resetToFirstPageAndRefresh() {
+        currentPage = 0;
+        refresh();
+    }
+
+    private void goToPage(int page) {
+        currentPage = page;
+        refresh();
     }
 
     private boolean matchesAllColumnFilters(T item) {
@@ -170,7 +246,48 @@ public class SmartTable<T> {
         return true;
     }
 
-    private void updateSummaryLabel() {
+    private void buildPaginationControls() {
+        if (summaryLabel == null || !(summaryLabel.getParent() instanceof Pane parent)) {
+            return;
+        }
+
+        prevButton = new Button("‹ Anterior");
+        prevButton.getStyleClass().add("tfx-btn-filter-clear");
+        prevButton.setOnAction(e -> goToPage(currentPage - 1));
+
+        nextButton = new Button("Siguiente ›");
+        nextButton.getStyleClass().add("tfx-btn-filter-clear");
+        nextButton.setOnAction(e -> goToPage(currentPage + 1));
+
+        pageLabel = new Label();
+        pageLabel.getStyleClass().add("tfx-muted");
+
+        paginationBox = new HBox(8, prevButton, pageLabel, nextButton);
+        paginationBox.setAlignment(Pos.CENTER_RIGHT);
+        paginationBox.setVisible(false);
+        paginationBox.setManaged(false);
+
+        parent.getChildren().add(paginationBox);
+    }
+
+    private void updatePaginationControls(int pageSize) {
+        if (paginationBox == null) {
+            return;
+        }
+
+        boolean paged = pageSize > 0 && lastTotalCount > pageSize;
+        paginationBox.setVisible(paged);
+        paginationBox.setManaged(paged);
+        if (!paged) {
+            return;
+        }
+
+        pageLabel.setText("Página " + (currentPage + 1) + " de " + lastTotalPages);
+        prevButton.setDisable(currentPage <= 0);
+        nextButton.setDisable(currentPage >= lastTotalPages - 1);
+    }
+
+    private void updateSummaryLabel(int pageSize) {
         if (summaryLabel == null) {
             return;
         }
@@ -180,10 +297,12 @@ public class SmartTable<T> {
             return;
         }
 
-        if (lastVisibleCount == lastTotalCount) {
+        if (pageSize <= 0 || lastVisibleCount == lastTotalCount) {
             summaryLabel.setText("Mostrando " + lastTotalCount + " " + entityLabelPlural + ".");
         } else {
-            summaryLabel.setText("Mostrando " + lastVisibleCount + " de " + lastTotalCount + " " + entityLabelPlural + ".");
+            int from = lastFromIndex + 1;
+            int to = lastFromIndex + lastVisibleCount;
+            summaryLabel.setText("Mostrando " + from + "–" + to + " de " + lastTotalCount + " " + entityLabelPlural + ".");
         }
     }
 

@@ -28,7 +28,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -221,13 +220,6 @@ public class PresupuestosController {
         smartTable = new SmartTable<>(tblPresupuestos, masterData, null, cmbPageSize, lblResumen, "presupuestos", null);
 
         tblPresupuestos.setFixedCellSize(28);
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblPresupuestos.getFixedCellSize() + 2;
-            tblPresupuestos.setPrefHeight(tableHeight);
-            tblPresupuestos.setMinHeight(Region.USE_PREF_SIZE);
-        });
 
         smartTable.addColumnFilter(filterClienteField, (b, text) -> safe(b.getClienteNombre()).contains(text));
         smartTable.addColumnFilter(filterVehiculoField, (b, text) -> safe(b.getVehiculoEtiqueta()).contains(text));

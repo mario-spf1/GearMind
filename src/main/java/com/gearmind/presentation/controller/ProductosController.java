@@ -319,13 +319,6 @@ public class ProductosController {
         smartTable = new SmartTable<>(tblProductos, masterData, null, cmbPageSize, lblResumen, "productos", null);
 
         tblProductos.setFixedCellSize(28);
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblProductos.getFixedCellSize() + 2;
-            tblProductos.setPrefHeight(tableHeight);
-            tblProductos.setMinHeight(Region.USE_PREF_SIZE);
-        });
 
         smartTable.addColumnFilter(filterNombreField, (p, text) -> safe(p.getNombre()).contains(text));
         smartTable.addColumnFilter(filterReferenciaField, (p, text) -> safe(p.getReferencia()).contains(text));

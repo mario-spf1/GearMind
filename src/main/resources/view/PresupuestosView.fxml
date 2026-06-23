@@ -66,9 +66,9 @@
                 </HBox>
             </children>
         </VBox>
-        <VBox spacing="6" styleClass="tfx-card">
+        <VBox spacing="6" styleClass="tfx-card" VBox.vgrow="ALWAYS">
             <children>
-                <TableView fx:id="tblPresupuestos">
+                <TableView fx:id="tblPresupuestos" VBox.vgrow="ALWAYS">
                     <columns>
                         <TableColumn fx:id="colEmpresa" text="Empresa" prefWidth="150"/>
                         <TableColumn fx:id="colCliente" text="Cliente"/>

@@ -200,20 +200,7 @@ public class FichajesController {
         } else {
             fichajes.setAll(fichajeRepository.findByFilters(empresaId, userId));
         }
-        updateTableHeight();
         updateTotalDia(userId, diaFiltro);
-    }
-
-    private void updateTableHeight() {
-        if (tblFichajes == null) {
-            return;
-        }
-        int rows = fichajes.size();
-        double headerHeight = 28;
-        double tableHeight = headerHeight + rows * tblFichajes.getFixedCellSize();
-        tblFichajes.setPrefHeight(tableHeight);
-        tblFichajes.setMinHeight(tableHeight);
-        tblFichajes.setMaxHeight(tableHeight);
     }
 
     private void updateTotalDia(Long userId, LocalDate diaFiltro) {

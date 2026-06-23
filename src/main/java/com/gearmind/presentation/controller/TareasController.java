@@ -296,16 +296,6 @@ public class TareasController {
                 null
         );
 
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblTareas.getFixedCellSize() + 2;
-
-            tblTareas.setPrefHeight(tableHeight);
-            tblTareas.setMinHeight(Region.USE_PREF_SIZE);
-            tblTareas.setMaxHeight(Region.USE_PREF_SIZE);
-        });
-
         smartTable.addColumnFilter(filterClienteField, (t, text) -> safe(t.getClienteNombre()).contains(text));
         smartTable.addColumnFilter(filterVehiculoField, (t, text) -> safe(t.getVehiculoMatricula()).contains(text));
         smartTable.addColumnFilter(filterProductosField, (t, text) -> safe(t.getRepairDescripcion()).contains(text));

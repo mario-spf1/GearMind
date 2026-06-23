@@ -196,13 +196,6 @@ public class VehiculosController {
         smartTable = new SmartTable<>(tblVehiculos, masterData, null, cmbPageSize, lblResumen, "vehículos", null);
 
         tblVehiculos.setFixedCellSize(28);
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblVehiculos.getFixedCellSize() + 2;
-            tblVehiculos.setPrefHeight(tableHeight);
-            tblVehiculos.setMinHeight(Region.USE_PREF_SIZE);
-        });
 
         smartTable.addColumnFilter(filterClienteField, (v, text) -> safe(v.getClienteNombre()).contains(text));
         smartTable.addColumnFilter(filterMatriculaField, (v, text) -> safe(v.getMatricula()).contains(text));

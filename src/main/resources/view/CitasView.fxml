@@ -117,7 +117,7 @@
                                     </padding>
 
                                     <children>
-                                        <TableView fx:id="tblCitas" prefHeight="400.0" styleClass="tfx-table">
+                                        <TableView fx:id="tblCitas" prefHeight="400.0" styleClass="tfx-table" VBox.vgrow="ALWAYS">
                                             <columns>
                                                 <TableColumn fx:id="colFechaHora" text="Fecha / Hora"/>
                                                 <TableColumn fx:id="colCliente" text="Cliente"/>

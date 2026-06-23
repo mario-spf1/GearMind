@@ -24,7 +24,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.Region;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -155,16 +154,6 @@ public class ReportesController {
 
         smartTable = new SmartTable<>(tblReportes, masterData, txtFiltro, cmbPageSize, lblResumen, "reportes", (item, text) -> matchesSearch(item, text));
         tblReportes.setFixedCellSize(28);
-
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblReportes.getFixedCellSize() + 2;
-
-            tblReportes.setPrefHeight(tableHeight);
-            tblReportes.setMinHeight(Region.USE_PREF_SIZE);
-            tblReportes.setMaxHeight(Region.USE_PREF_SIZE);
-        });
 
         configureColumnsFor(cmbTipo.getValue());
         onGenerar();

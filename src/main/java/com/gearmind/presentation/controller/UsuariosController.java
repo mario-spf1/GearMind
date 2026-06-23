@@ -184,13 +184,6 @@ public class UsuariosController {
 
         smartTable = new SmartTable<>(tblUsuarios, masterData, null, cmbPageSize, lblResumen, "usuarios", null);
         tblUsuarios.setFixedCellSize(28);
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblUsuarios.getFixedCellSize() + 2;
-            tblUsuarios.setPrefHeight(tableHeight);
-            tblUsuarios.setMinHeight(Region.USE_PREF_SIZE);
-        });
 
         smartTable.addColumnFilter(filterNombreField, (u, text) -> safe(u.getNombre()).contains(text));
         smartTable.addColumnFilter(filterEmailField, (u, text) -> safe(u.getEmail()).contains(text));

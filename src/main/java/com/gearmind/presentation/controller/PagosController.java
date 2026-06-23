@@ -25,7 +25,6 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -189,13 +188,6 @@ public class PagosController {
         smartTable = new SmartTable<>(tblPagos, masterData, null, cmbPageSize, lblResumen, "pagos", null);
 
         tblPagos.setFixedCellSize(28);
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblPagos.getFixedCellSize() + 2;
-            tblPagos.setPrefHeight(tableHeight);
-            tblPagos.setMinHeight(Region.USE_PREF_SIZE);
-        });
 
         smartTable.addColumnFilter(filterClienteField, (p, text) -> safe(p.getClienteNombre()).contains(text));
         smartTable.addColumnFilter(filterFacturaField, (p, text) -> safe(p.getFacturaNumero()).contains(text));

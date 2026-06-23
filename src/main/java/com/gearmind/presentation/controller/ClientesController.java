@@ -21,7 +21,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -272,13 +271,6 @@ public class ClientesController {
 
         smartTable = new SmartTable<>(tblClientes, masterData, null, cmbPageSize, lblResumen, "clientes", null);
         tblClientes.setFixedCellSize(28);
-        smartTable.setAfterRefreshCallback(() -> {
-            int rows = Math.max(smartTable.getLastVisibleCount(), 1);
-            double headerHeight = 28;
-            double tableHeight = headerHeight + rows * tblClientes.getFixedCellSize() + 2;
-            tblClientes.setPrefHeight(tableHeight);
-            tblClientes.setMinHeight(Region.USE_PREF_SIZE);
-        });
 
         smartTable.addColumnFilter(filterNombreField, (c, text) -> safe(c.getNombre()).contains(text));
         smartTable.addColumnFilter(filterDniField, (c, text) -> safe(c.getDni()).contains(text));
